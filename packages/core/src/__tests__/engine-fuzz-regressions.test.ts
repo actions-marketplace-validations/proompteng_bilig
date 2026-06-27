@@ -602,6 +602,35 @@ describe('engine fuzz regressions', () => {
     expect(normalizeSnapshotForSemanticComparison(engine.exportSnapshot())).toEqual(normalizeSnapshotForSemanticComparison(seedSnapshot))
   })
 
+  it('restores table headers after undoing a moved numeric header cell', async () => {
+    const seedSnapshot = await createEngineSeedSnapshot('named-structures', 'numeric-table-header-move-undo-regression')
+    const engine = new SpreadsheetEngine({
+      workbookName: seedSnapshot.workbook.name,
+      replicaId: 'numeric-table-header-move-undo-regression',
+    })
+    await engine.ready()
+    engine.importSnapshot(structuredClone(seedSnapshot))
+
+    const applied: CoreAction[] = [
+      { kind: 'insertRows', start: 0, count: 1 },
+      { kind: 'deleteRows', start: 1, count: 1 },
+    ]
+    engine.insertRows('Sheet1', 0, 1)
+    engine.deleteRows('Sheet1', 1, 1)
+    const expectedSnapshot = await exportReplaySnapshot(seedSnapshot, applied)
+
+    engine.moveRange(
+      { sheetName: 'Sheet1', startAddress: 'A1', endAddress: 'A2' },
+      { sheetName: 'Sheet1', startAddress: 'B1', endAddress: 'B2' },
+    )
+    expect(engine.getTable('Sales')).toMatchObject({ columnNames: ['Column1', '1'] })
+
+    expect(engine.undo()).toBe(true)
+    expect(normalizeSnapshotForSemanticComparison(engine.exportSnapshot())).toEqual(
+      normalizeSnapshotForSemanticComparison(expectedSnapshot),
+    )
+  })
+
   it('imports snapshots with structurally invalidated formula dependencies as ref errors', async () => {
     const seedSnapshot = await createEngineSeedSnapshot('formula-graph', 'invalid-range-dependency-import-regression')
     const engine = new SpreadsheetEngine({

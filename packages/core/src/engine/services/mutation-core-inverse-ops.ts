@@ -1,11 +1,13 @@
 import { parseCellAddress } from '@bilig/formula'
 import type { EngineOp } from '@bilig/workbook'
+import type { LiteralInput } from '@bilig/protocol'
 import { structuralTransformForOp } from '../../engine-structural-utils.js'
 import { sheetMetadataToOps } from '../../engine-snapshot-utils.js'
 import type { WorkbookStore } from '../../workbook-store.js'
 import { buildMutationMetadataInverseOps } from './mutation-inverse-metadata-ops.js'
 import { captureStructuralWorkbookMetadataOps, clearStructuralSheetMetadataOps } from './mutation-structural-metadata-ops.js'
 import { findTableHeaderCell } from './operation-table-header-rename.js'
+import { excelCompatibleTableColumnName, normalizeTableColumnName } from './table-column-name-helpers.js'
 
 export type MutationCoreCapturedInverseKind =
   | 'deleteSheet'
@@ -32,6 +34,13 @@ function isMutationCoreCapturedInverseOp(op: EngineOp): op is MutationCoreCaptur
   return mutationCoreCapturedInverseKinds.has(op.kind)
 }
 
+function tableColumnNameForRestoredLiteral(value: LiteralInput): string {
+  if (value === null) {
+    return ''
+  }
+  return (typeof value === 'boolean' ? (value ? 'TRUE' : 'FALSE') : String(value)).trim()
+}
+
 function restoreCellOpsWithTableHeaderRename(args: {
   readonly workbook: WorkbookStore
   readonly op: Extract<EngineOp, { kind: 'setCellValue' | 'setCellFormula' | 'clearCell' }>
@@ -43,31 +52,56 @@ function restoreCellOpsWithTableHeaderRename(args: {
     return [...args.restoreOps]
   }
 
+  const tableRestoreOp: EngineOp = { kind: 'upsertTable', table: structuredClone(header.table) }
+  const tableDeleteOp: EngineOp = { kind: 'deleteTable', name: header.table.name }
+  const headerName = header.table.columnNames[header.columnIndex] ?? ''
   const formulaRestoreIndex = args.restoreOps.findIndex(
     (restoreOp) =>
       restoreOp.kind === 'setCellFormula' && restoreOp.sheetName === args.op.sheetName && restoreOp.address === args.op.address,
   )
   if (formulaRestoreIndex < 0) {
-    if (args.op.kind === 'setCellFormula') {
-      const cellRestoreIndex = args.restoreOps.findIndex(
-        (restoreOp) =>
-          (restoreOp.kind === 'setCellValue' || restoreOp.kind === 'clearCell') &&
-          restoreOp.sheetName === args.op.sheetName &&
-          restoreOp.address === args.op.address,
-      )
-      if (cellRestoreIndex >= 0) {
-        // Formula writes do not rename table headers, but literal/empty restores can.
-        const tableRestoreOp: EngineOp = { kind: 'upsertTable', table: structuredClone(header.table) }
-        return [...args.restoreOps.slice(0, cellRestoreIndex + 1), tableRestoreOp, ...args.restoreOps.slice(cellRestoreIndex + 1)]
-      }
+    const cellRestoreIndex = args.restoreOps.findIndex(
+      (restoreOp) =>
+        (restoreOp.kind === 'setCellValue' || restoreOp.kind === 'clearCell') &&
+        restoreOp.sheetName === args.op.sheetName &&
+        restoreOp.address === args.op.address,
+    )
+    if (cellRestoreIndex >= 0) {
+      const cellRestoreOp = args.restoreOps[cellRestoreIndex]!
+      const shouldBypassHeaderRename = (() => {
+        if (cellRestoreOp.kind === 'clearCell') {
+          return true
+        }
+        if (cellRestoreOp.kind !== 'setCellValue') {
+          return false
+        }
+        const nextColumnName = excelCompatibleTableColumnName(
+          tableColumnNameForRestoredLiteral(cellRestoreOp.value),
+          header.table.columnNames,
+          header.columnIndex,
+        )
+        return normalizeTableColumnName(nextColumnName) !== normalizeTableColumnName(headerName)
+      })()
+      return [
+        ...args.restoreOps.slice(0, cellRestoreIndex),
+        ...(shouldBypassHeaderRename ? [tableDeleteOp] : []),
+        cellRestoreOp,
+        tableRestoreOp,
+        ...args.restoreOps.slice(cellRestoreIndex + 1),
+      ]
     }
-    return [...args.restoreOps]
+    return [...args.restoreOps, tableRestoreOp]
   }
 
-  const headerName = header.table.columnNames[header.columnIndex] ?? ''
   // Formula restores do not rename table headers, so replay the previous header label first.
   const headerRenameOp: EngineOp = { kind: 'setCellValue', sheetName: args.op.sheetName, address: args.op.address, value: headerName }
-  return [...args.restoreOps.slice(0, formulaRestoreIndex), headerRenameOp, ...args.restoreOps.slice(formulaRestoreIndex)]
+  return [
+    ...args.restoreOps.slice(0, formulaRestoreIndex),
+    headerRenameOp,
+    args.restoreOps[formulaRestoreIndex]!,
+    tableRestoreOp,
+    ...args.restoreOps.slice(formulaRestoreIndex + 1),
+  ]
 }
 
 function captureDeletedSheetInverseOps(

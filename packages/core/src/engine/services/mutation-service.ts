@@ -1,4 +1,5 @@
 import { Effect } from 'effect'
+import { parseCellAddress } from '@bilig/formula'
 import type { EngineOp, EngineOpBatch } from '@bilig/workbook'
 import { ValueTag, type CellRangeRef, type CellSnapshot } from '@bilig/protocol'
 import { createBatch } from '../../replica-state.js'
@@ -43,6 +44,7 @@ import type { EngineMutationService } from './mutation-service-types.js'
 import { tryExecuteMutationRenderCommitFastPath } from './mutation-render-commit-fast-path.js'
 import { createMutationRangeOperations } from './mutation-range-operations.js'
 import { createMutationCoreInverseOps } from './mutation-core-inverse-ops.js'
+import { isWorkbookTableHeaderCell } from './operation-table-header-rename.js'
 
 export type { EngineMutationService } from './mutation-service-types.js'
 
@@ -168,6 +170,10 @@ export function createEngineMutationService(args: {
     }
     const op = ops[0]!
     if (op.kind !== 'setCellValue' && op.kind !== 'setCellFormula' && op.kind !== 'clearCell') {
+      return null
+    }
+    const parsed = parseCellAddress(op.address, op.sheetName)
+    if (isWorkbookTableHeaderCell(args.state.workbook, op.sheetName, parsed.row, parsed.col)) {
       return null
     }
     const inverseOp = tryRestoreSimpleCellOpFromStore(op.sheetName, op.address)
