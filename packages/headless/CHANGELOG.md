@@ -4,6 +4,18 @@ All notable changes to `@bilig/headless` will be documented in this file.
 
 This package is released as part of the aligned bilig library package set.
 
+## 0.164.9
+
+- Release type: patch
+- Previous libraries tag: libraries-v0.164.8
+- Manual override: no
+
+## Fixes
+- fix(core): preserve table headers during undo (3b22698d)
+
+## Internal runtime changes
+- docs(discovery): deslop workpaper public surfaces (355eb34d)
+
 ## 0.164.8
 
 - Release type: patch

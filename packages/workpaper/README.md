@@ -47,7 +47,7 @@ The useful output is not a write-call status. It is readback proof:
   "door": "workpaper-service",
   "verified": true,
   "packageVersions": {
-    "@bilig/workpaper": "0.164.8"
+    "@bilig/workpaper": "0.164.9"
   },
   "evidence": {
     "editedCell": "Inputs!B2",
