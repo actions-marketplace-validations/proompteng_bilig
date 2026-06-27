@@ -1,7 +1,7 @@
 import type { CellRangeRef, EngineEvent } from '@bilig/protocol'
 import { addEngineCounter } from '../../perf/engine-counters.js'
 import { CellFlags } from '../../cell-store.js'
-import type { U32 } from '../runtime-state.js'
+import type { RuntimeDirectAggregateDescriptor, U32 } from '../runtime-state.js'
 import type { DirectFormulaIndexCollection } from './direct-formula-index-collection.js'
 import {
   canEvaluatePostRecalcDirectFormulasWithoutKernel,
@@ -69,6 +69,56 @@ export interface FinalizeOperationRecalcAndEventsArgs {
   }) => boolean
 }
 
+interface CycleDependencyFormulaRecord {
+  readonly dependencyIndices: { readonly length: number }
+  readonly directAggregate: RuntimeDirectAggregateDescriptor | undefined
+}
+
+export function createCachedCycleDependencyLookup(args: {
+  readonly formulas: {
+    readonly get: (cellIndex: number) => CycleDependencyFormulaRecord | undefined
+  }
+  readonly flags: ArrayLike<number | undefined>
+  readonly forEachFormulaDependencyCell: (cellIndex: number, fn: (dependencyCellIndex: number) => void) => void
+}): (cellIndex: number) => boolean {
+  const dependencyCache = new Map<string, boolean>()
+  const scan = (cellIndex: number): boolean => {
+    let found = false
+    args.forEachFormulaDependencyCell(cellIndex, (dependencyCellIndex) => {
+      if (!found && ((args.flags[dependencyCellIndex] ?? 0) & CellFlags.InCycle) !== 0) {
+        found = true
+      }
+    })
+    return found
+  }
+  return (cellIndex: number): boolean => {
+    const cacheKey = directAggregateDependencyCacheKey(args.formulas.get(cellIndex))
+    if (cacheKey === undefined) {
+      return scan(cellIndex)
+    }
+    const cached = dependencyCache.get(cacheKey)
+    if (cached !== undefined) {
+      return cached
+    }
+    const found = scan(cellIndex)
+    dependencyCache.set(cacheKey, found)
+    return found
+  }
+}
+
+function directAggregateDependencyCacheKey(formula: CycleDependencyFormulaRecord | undefined): string | undefined {
+  if (formula === undefined || formula.dependencyIndices.length !== 0) {
+    return undefined
+  }
+  const directAggregate = formula.directAggregate
+  if (directAggregate === undefined) {
+    return undefined
+  }
+  return [directAggregate.sheetName, directAggregate.rowStart, directAggregate.rowEnd, directAggregate.col, directAggregate.colEnd].join(
+    ':',
+  )
+}
+
 export function finalizeOperationRecalcAndEvents(input: FinalizeOperationRecalcAndEventsArgs): void {
   let changedInputCount = input.changedInputCount
   let formulaChangedCount = input.formulaChangedCount
@@ -105,15 +155,11 @@ export function finalizeOperationRecalcAndEvents(input: FinalizeOperationRecalcA
   let didRunRecalc = false
   let didFastDeferKernelSyncOnly = false
   let canComposeDisjointEventChanges = false
-  const hasCycleDependency = (cellIndex: number): boolean => {
-    let found = false
-    input.serviceArgs.forEachFormulaDependencyCell(cellIndex, (dependencyCellIndex) => {
-      if (!found && ((input.serviceArgs.state.workbook.cellStore.flags[dependencyCellIndex] ?? 0) & CellFlags.InCycle) !== 0) {
-        found = true
-      }
-    })
-    return found
-  }
+  const hasCycleDependency = createCachedCycleDependencyLookup({
+    formulas: input.serviceArgs.state.formulas,
+    flags: input.serviceArgs.state.workbook.cellStore.flags,
+    forEachFormulaDependencyCell: input.serviceArgs.forEachFormulaDependencyCell,
+  })
 
   const canFastDeferPrecomputedStructuralKernelSync =
     hasActiveFormulas &&
