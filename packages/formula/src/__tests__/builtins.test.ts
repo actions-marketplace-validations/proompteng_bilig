@@ -452,7 +452,7 @@ describe('formula builtins', () => {
   it('supports boolean and string builtins and builtin ids', () => {
     expect(getBuiltin('AND')?.({ tag: ValueTag.Number, value: 1 }, { tag: ValueTag.Empty })).toEqual({
       tag: ValueTag.Boolean,
-      value: true,
+      value: false,
     })
 
     expect(getBuiltin('OR')?.({ tag: ValueTag.Empty }, { tag: ValueTag.Boolean, value: true })).toEqual({
@@ -1022,8 +1022,8 @@ describe('formula builtins', () => {
       value: 15,
     })
     expect(getBuiltin('DECIMAL')?.({ tag: ValueTag.String, value: '', stringId: 3 }, { tag: ValueTag.Number, value: 2 })).toEqual({
-      tag: ValueTag.Number,
-      value: 0,
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
     })
     expect(getBuiltin('ROMAN')?.({ tag: ValueTag.Number, value: 14 })).toEqual({
       tag: ValueTag.String,
@@ -1169,8 +1169,8 @@ describe('formula builtins', () => {
       value: 4,
     })
     expect(getBuiltin('ARABIC')?.({ tag: ValueTag.String, value: 'VX', stringId: 1 })).toEqual({
-      tag: ValueTag.Number,
-      value: 5,
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
     })
     expect(
       getBuiltin('RANDARRAY')?.(

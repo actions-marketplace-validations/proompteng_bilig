@@ -6,13 +6,13 @@ mcpServers:
     type: stdio
     command: npm
     args:
-      - "exec"
-      - "--yes"
-      - "--package"
-      - "@bilig/workpaper@latest"
-      - "--"
-      - "bilig-workpaper-mcp"
-      - "--workpaper"
-      - "__WORKPAPER_PATH__"
-      - "--init-demo-workpaper"
-      - "--writable"
+      - 'exec'
+      - '--yes'
+      - '--package'
+      - '@bilig/workpaper@latest'
+      - '--'
+      - 'bilig-workpaper-mcp'
+      - '--workpaper'
+      - '__WORKPAPER_PATH__'
+      - '--init-demo-workpaper'
+      - '--writable'

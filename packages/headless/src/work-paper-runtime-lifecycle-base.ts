@@ -239,7 +239,7 @@ export abstract class WorkPaperRuntimeLifecycleBase extends WorkPaperRuntimeFast
     this.engineEvents.detach()
     this.engineEventsAttached = false
     releaseWorkPaperEngine(this.engine)
-    this.engine = createWorkPaperEngine(config)
+    this.engine = createWorkPaperEngine(config, { fresh: true })
     this.sheetDimensionCache = new WorkPaperSheetDimensionCache(this.engine)
   }
 }

@@ -1490,7 +1490,7 @@ describe('datetime builtins', () => {
       ),
     ).toEqual({
       tag: ValueTag.Number,
-      value: 53,
+      value: 52,
     })
 
     expect(datetimeBuiltins.EDATE({ tag: ValueTag.Number, value: jan31 }, { tag: ValueTag.Error, code: ErrorCode.Ref })).toEqual({

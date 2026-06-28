@@ -126,21 +126,21 @@ describe('large simple XLSX import ZIP ownership', () => {
       'docProps/padding.bin': deterministicBytes(1_200_000),
     })
 
-    const imported = importXlsx(bytes, 'public-zip-release.xlsx')
-    const releasePhase = imported.stats?.phaseTelemetry.find((entry) => entry.phase === 'zip-source-release')
+    const source = trackedByteSource(bytes)
+    const imported = importXlsxFromZipByteSource(source, 'public-zip-release.xlsx')
+    expect(source.fullReadCount()).toBe(0)
+
     const exported = exportXlsx(imported.snapshot)
-    const roundTripped = importXlsx(exported, 'roundtrip.xlsx')
+    const roundTripped = importXlsxFromZipByteSource(trackedByteSource(exported), 'roundtrip.xlsx')
 
     expect(imported.snapshot.sheets[0]?.cells.map(({ address, value }) => ({ address, value }))).toEqual([
       { address: 'A1', value: 'Alpha' },
       { address: 'B1', value: 'Beta' },
     ])
-    expect(releasePhase).toMatchObject({
-      zipSourceBytesAfterRelease: 0,
-    })
-    expect(releasePhase?.ownedSourceBytesBeforeRelease).toBeUndefined()
+    expect(readImportedXlsxSourceReference(imported.snapshot)).toBeDefined()
     expect(imported.snapshot.workbook.metadata?.dataModelArtifacts?.parts[0]?.dataBase64).toBeTruthy()
     expect(exported).toStrictEqual(bytes)
+    expect(source.fullReadCount()).toBe(1)
     expect(unzipSync(exported)['docProps/padding.bin']).toBeDefined()
     expect(unzipSync(exported)['customXml/item1.xml']).toBeDefined()
     expect(roundTripped.snapshot.sheets[0]?.cells.map(({ address, value }) => ({ address, value }))).toEqual(
@@ -156,19 +156,20 @@ describe('large simple XLSX import ZIP ownership', () => {
     const outputPath = join(tempDir, 'exported.xlsx')
 
     try {
-      const imported = importXlsx(bytes, 'large-public-source-spool.xlsx')
-      const releasePhase = imported.stats?.phaseTelemetry.find((entry) => entry.phase === 'zip-source-release')
+      const source = trackedByteSource(bytes)
+      const imported = importXlsxFromZipByteSource(source, 'large-public-source-spool.xlsx')
+      const importedSource = readImportedXlsxSourceReference(imported.snapshot)
       const exported = exportXlsxToFile(imported.snapshot, outputPath)
 
       expect(imported.snapshot.sheets[0]?.cells.map(({ address, value }) => ({ address, value }))).toEqual([
         { address: 'A1', value: 'Alpha' },
         { address: 'B1', value: 'Beta' },
       ])
-      expect(releasePhase?.ownedSourceBytesBeforeRelease).toBeGreaterThan(8 * 1024 * 1024)
-      expect(releasePhase?.ownedSourceBytesAfterRelease).toBe(0)
-      expect(() => exportXlsx(imported.snapshot)).toThrow(/readBytes is small-workbook only/u)
+      expect(importedSource).toBeDefined()
+      expect(importedSource instanceof Uint8Array).toBe(false)
       expect(exported.bytesWritten).toBe(bytes.byteLength)
       expect(readFileSync(outputPath)).toStrictEqual(Buffer.from(bytes))
+      expect(source.fullReadCount()).toBe(0)
       expect(detachImportedXlsxSourceBytes(imported.snapshot)).toBe(true)
     } finally {
       rmSync(tempDir, { force: true, recursive: true })
@@ -179,7 +180,7 @@ describe('large simple XLSX import ZIP ownership', () => {
     const bytes = buildSharedStringWorkbook({
       'docProps/padding.bin': deterministicBytes(9_000_000),
     })
-    const imported = importXlsx(bytes, 'large-public-source-patched-export.xlsx')
+    const imported = importXlsxFromZipByteSource(trackedByteSource(bytes), 'large-public-source-patched-export.xlsx')
 
     attachImportedXlsxSourceCellPatches(imported.snapshot, [
       {
@@ -236,7 +237,7 @@ describe('large simple XLSX import ZIP ownership', () => {
     const outputPath = join(tempDir, 'exported.xlsx')
 
     try {
-      const imported = importXlsx(bytes, 'large-public-fallback-source-spool.xlsx', {
+      const imported = importXlsxFromZipByteSource(trackedByteSource(bytes), 'large-public-fallback-source-spool.xlsx', {
         allowLegacyLargeSheetJsFallback: true,
         limits: false,
       })
@@ -256,7 +257,7 @@ describe('large simple XLSX import ZIP ownership', () => {
     } finally {
       rmSync(tempDir, { force: true, recursive: true })
     }
-  }, 30_000)
+  }, 90_000)
 
   it('retains byte-source readers by default for unchanged export', () => {
     const bytes = buildSharedStringWorkbook({

@@ -132,7 +132,7 @@ export function createRadixBuiltins({ toNumber, integerValue, valueError, number
       return numError()
     }
     if (raw === '') {
-      return numberResult(0)
+      return numError()
     }
     if (raw === 'NaN' || !isValidBaseDigits(raw, radixValue)) {
       return numError()
@@ -328,6 +328,10 @@ function arabicValue(text: string): number | undefined {
       return undefined
     }
     if (next !== undefined && current < next) {
+      const pair = `${roman[index] ?? ''}${roman[index + 1] ?? ''}`
+      if (!isAllowedArabicSubtractivePair(pair) || roman[index - 1] === roman[index]) {
+        return undefined
+      }
       total += next - current
       index += 2
       continue
@@ -336,6 +340,10 @@ function arabicValue(text: string): number | undefined {
     index += 1
   }
   return sign * total
+}
+
+function isAllowedArabicSubtractivePair(pair: string): boolean {
+  return new Set(['IM', 'ID', 'VM', 'VD', 'XM', 'XD', 'LM', 'LD', 'CM', 'CD', 'IC', 'IL', 'VC', 'VL', 'XC', 'XL', 'IX', 'IV']).has(pair)
 }
 
 function isValidBaseDigits(raw: string, radix: number): boolean {

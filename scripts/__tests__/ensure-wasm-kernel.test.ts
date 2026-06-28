@@ -6,8 +6,11 @@ describe('ensureWasmKernelArtifact', () => {
     const spawnSync = vi.fn()
     const artifactPath = ensureWasmKernelArtifact({
       rootDir: '/repo',
-      existsSync: (path) => path === '/repo/packages/wasm-kernel/build/release.wasm',
+      existsSync: (path) => path === '/repo/packages/wasm-kernel/build/release.wasm' || path === '/repo/packages/wasm-kernel/dist/index.js',
       spawnSync,
+      sourcePaths: ['/repo/packages/wasm-kernel/src/index.ts'],
+      outputPaths: ['/repo/packages/wasm-kernel/build/release.wasm', '/repo/packages/wasm-kernel/dist/index.js'],
+      statSync: (path) => ({ mtimeMs: path.endsWith('index.ts') ? 1 : 2 }),
     })
 
     expect(artifactPath).toBe('/repo/packages/wasm-kernel/build/release.wasm')
@@ -21,6 +24,7 @@ describe('ensureWasmKernelArtifact', () => {
       expect(args).toEqual(['wasm:build'])
       expect(options.cwd).toBe('/repo')
       existingPaths.add('/repo/packages/wasm-kernel/build/release.wasm')
+      existingPaths.add('/repo/packages/wasm-kernel/dist/index.js')
       return {
         status: 0,
         stdout: Buffer.alloc(0),
@@ -33,6 +37,30 @@ describe('ensureWasmKernelArtifact', () => {
       existsSync: (path) => existingPaths.has(path),
       spawnSync,
       env: {},
+      sourcePaths: ['/repo/packages/wasm-kernel/src/index.ts'],
+      outputPaths: ['/repo/packages/wasm-kernel/build/release.wasm', '/repo/packages/wasm-kernel/dist/index.js'],
+      statSync: (path) => ({ mtimeMs: path.endsWith('index.ts') ? 2 : 3 }),
+    })
+
+    expect(artifactPath).toBe('/repo/packages/wasm-kernel/build/release.wasm')
+    expect(spawnSync).toHaveBeenCalledTimes(1)
+  })
+
+  it('rebuilds when ignored wasm kernel output is older than source', () => {
+    const spawnSync = vi.fn(() => ({
+      status: 0,
+      stdout: Buffer.alloc(0),
+      stderr: Buffer.alloc(0),
+    }))
+
+    const artifactPath = ensureWasmKernelArtifact({
+      rootDir: '/repo',
+      existsSync: () => true,
+      spawnSync,
+      env: {},
+      sourcePaths: ['/repo/packages/wasm-kernel/src/index.ts'],
+      outputPaths: ['/repo/packages/wasm-kernel/build/release.wasm', '/repo/packages/wasm-kernel/dist/index.js'],
+      statSync: (path) => ({ mtimeMs: path.endsWith('index.ts') ? 10 : 5 }),
     })
 
     expect(artifactPath).toBe('/repo/packages/wasm-kernel/build/release.wasm')
@@ -50,6 +78,9 @@ describe('ensureWasmKernelArtifact', () => {
           stderr: Buffer.from('boom'),
         }),
         env: {},
+        sourcePaths: ['/repo/packages/wasm-kernel/src/index.ts'],
+        outputPaths: ['/repo/packages/wasm-kernel/build/release.wasm', '/repo/packages/wasm-kernel/dist/index.js'],
+        statSync: () => ({ mtimeMs: 1 }),
       }),
     ).toThrow('Failed to build wasm kernel artifact: boom')
   })
@@ -65,6 +96,9 @@ describe('ensureWasmKernelArtifact', () => {
           stderr: Buffer.alloc(0),
         }),
         env: {},
+        sourcePaths: ['/repo/packages/wasm-kernel/src/index.ts'],
+        outputPaths: ['/repo/packages/wasm-kernel/build/release.wasm'],
+        statSync: () => ({ mtimeMs: 1 }),
       }),
     ).toThrow("did not create '/repo/packages/wasm-kernel/build/release.wasm'")
   })

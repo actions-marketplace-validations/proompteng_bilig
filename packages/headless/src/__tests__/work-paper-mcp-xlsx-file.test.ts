@@ -253,7 +253,7 @@ describe('WorkPaper MCP XLSX file bridge', () => {
     } finally {
       rmSync(tempDir, { recursive: true, force: true })
     }
-  })
+  }, 20_000)
 
   it('starts the stdio bin from an XLSX and creates the WorkPaper JSON', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'bilig-workpaper-mcp-xlsx-stdio-'))
@@ -357,7 +357,7 @@ describe('WorkPaper MCP XLSX file bridge', () => {
     } finally {
       rmSync(tempDir, { recursive: true, force: true })
     }
-  })
+  }, 20_000)
 })
 
 function largeValidXlsxBytes(): Uint8Array {

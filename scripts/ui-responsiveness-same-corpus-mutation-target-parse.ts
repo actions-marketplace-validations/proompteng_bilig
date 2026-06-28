@@ -313,6 +313,7 @@ function parseSameCorpusMutationTargetReadbackSource(value: string): SameCorpusM
     value === 'google-sheets-xlsx-export' ||
     value === 'visible-formula-bar' ||
     value === 'visible-grid-cell' ||
+    value === 'visible-grid-target-screenshot' ||
     value === 'unknown'
   ) {
     return value

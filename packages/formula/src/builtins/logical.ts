@@ -9,7 +9,7 @@ function emptyValue(): CellValue {
   return { tag: ValueTag.Empty }
 }
 
-function errorValue(code: ErrorCode): CellValue {
+function errorValue(code: ErrorCode): Extract<CellValue, { tag: ValueTag.Error }> {
   return { tag: ValueTag.Error, code }
 }
 
@@ -76,6 +76,9 @@ function coerceAggregateLogicalValue(
 ): { kind: 'value'; value: boolean } | { kind: 'ignored' } | { kind: 'error'; error: Extract<CellValue, { tag: ValueTag.Error }> } {
   if (value.tag === ValueTag.String) {
     const normalized = value.value.toUpperCase()
+    if (normalized === '') {
+      return { kind: 'value', value: false }
+    }
     if (normalized === 'TRUE') {
       return { kind: 'value', value: true }
     }
@@ -85,7 +88,7 @@ function coerceAggregateLogicalValue(
     return { kind: 'ignored' }
   }
   if (value.tag === ValueTag.Empty) {
-    return { kind: 'ignored' }
+    return { kind: 'value', value: false }
   }
   const coerced = coerceLogicalValue(value)
   return coerced.ok ? { kind: 'value', value: coerced.value } : { kind: 'error', error: coerced.error }

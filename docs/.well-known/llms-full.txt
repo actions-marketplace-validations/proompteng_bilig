@@ -6406,9 +6406,8 @@ Source: https://github.com/proompteng/bilig/blob/main/packages/workbook/README.m
 
 Transport-neutral workbook intent for runtime adapters.
 
-`@bilig/workbook` defines generic, inspectable workbook intent for products,
-tool hosts, and runtime adapters. It does not depend on hardcoded business
-models or human spreadsheet UI assumptions.
+`@bilig/workbook` defines generic, inspectable workbook intent for products, tool hosts,
+and runtime adapters. It does not depend on hardcoded business models or human spreadsheet UI assumptions.
 
 Use this package when a consumer wants to define their own workbook model and
 hand a runtime a portable plan. Bilig supplies the generic model API, selectors,
@@ -6487,12 +6486,12 @@ The core flow:
 
 ## Which Package
 
-| Package            | Choose when                                                                                   | Do not use for                                     |
-| ------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Package            | Choose when                                                                                      | Do not use for                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
 | `@bilig/workbook`  | Defining generic workbook intent, refs, formulas, checks, plan data, schemas, and proof handoff. | Calculating formulas or owning workbook state.     |
-| `@bilig/workpaper` | Running workbook tools, MCP, or product workflows around persisted WorkPaper state.           | Designing a reusable model API for other runtimes. |
-| `@bilig/headless`  | Owning workbook state inside Node with formula recalculation and import/export.               | Publishing generic intent contracts.               |
-| `@bilig/core`      | Implementing calculation or mutation internals.                                               | Consumer-facing model definitions.                 |
+| `@bilig/workpaper` | Running workbook tools, MCP, or product workflows around persisted WorkPaper state.              | Designing a reusable model API for other runtimes. |
+| `@bilig/headless`  | Owning workbook state inside Node with formula recalculation and import/export.                  | Publishing generic intent contracts.               |
+| `@bilig/core`      | Implementing calculation or mutation internals.                                                  | Consumer-facing model definitions.                 |
 
 The root export keeps the ordinary adapter path: models, refs, checks,
 formulas, plans, runtime proof, command results, schemas, and low-level ops.

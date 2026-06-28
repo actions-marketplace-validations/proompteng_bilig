@@ -34,8 +34,11 @@ export function workPaperEvaluationTimeoutErrorFrom(error: unknown): WorkPaperEv
   return undefined
 }
 
-export function createWorkPaperEngine(config: WorkPaperConfig): SpreadsheetEngine {
-  const engine = pooledWorkPaperEngines.pop() ?? new SpreadsheetEngine({ workbookName: 'Workbook', trackReplicaVersions: false })
+export function createWorkPaperEngine(config: WorkPaperConfig, options: { readonly fresh?: boolean } = {}): SpreadsheetEngine {
+  const engine =
+    options.fresh === true
+      ? new SpreadsheetEngine({ workbookName: 'Workbook', trackReplicaVersions: false })
+      : (pooledWorkPaperEngines.pop() ?? new SpreadsheetEngine({ workbookName: 'Workbook', trackReplicaVersions: false }))
   engine.setUseColumnIndexEnabled(config.useColumnIndex ?? true)
   engine.setEvaluationTimeoutMs(config.evaluationTimeoutMs)
   engine.resetPerformanceCounters()

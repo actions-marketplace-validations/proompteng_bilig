@@ -85,8 +85,9 @@ function parsedCellRef(column: string, rowText: string, sheetName?: string): Par
     return undefined
   }
   const localAddress = `${normalizedColumn}${rowText}`
+  const address = sheetName === undefined ? localAddress : `${sheetName}!${localAddress}`
   return {
-    address: localAddress,
+    address,
     ...(sheetName === undefined ? {} : { sheetName, explicitSheet: true }),
     row,
     col: columnToIndex(normalizedColumn),
@@ -98,7 +99,7 @@ function parsedCellRef(column: string, rowText: string, sheetName?: string): Par
 function cellNode(ref: ParsedCellReferenceInfo): FormulaNode {
   return {
     kind: 'CellRef',
-    ref: ref.address,
+    ref: localCellAddress(ref),
     ...(ref.sheetName === undefined ? {} : { sheetName: ref.sheetName }),
   }
 }
@@ -165,6 +166,22 @@ export interface SimpleDirectScalarParsedReferenceSet {
   readonly symbolicRefs: string[]
   readonly parsedDeps: ParsedDependencyReference[]
   readonly parsedSymbolicRefs: ParsedCellReferenceInfo[]
+}
+
+function localCellAddress(ref: ParsedCellReferenceInfo): string {
+  return ref.sheetName === undefined ? ref.address : ref.address.slice(`${ref.sheetName}!`.length)
+}
+
+function formatDependencyRef(ref: ParsedCellReferenceInfo): string {
+  return ref.address
+}
+
+function pushCellInstruction(ref: ParsedCellReferenceInfo): JsPlanInstruction {
+  return {
+    opcode: 'push-cell',
+    address: localCellAddress(ref),
+    ...(ref.sheetName === undefined ? {} : { sheetName: ref.sheetName }),
+  }
 }
 
 function parsedTranslatedSourceRef(
@@ -249,10 +266,11 @@ function simpleDirectSourceHasResultOffset(source: string): boolean {
 function translatedCompiledFormula(
   compiled: CompiledFormula,
   source: string,
-  deps: string[],
+  symbolicRefs: string[],
   parsedDeps: ParsedDependencyReference[],
   parsedSymbolicRefs: ParsedCellReferenceInfo[],
 ): CompiledFormula {
+  const deps = parsedDeps.map((dep) => (dep.kind === 'cell' ? formatDependencyRef(dep) : dep.address))
   const translated: CompiledFormula = {
     id: compiled.id,
     source,
@@ -280,7 +298,7 @@ function translatedCompiledFormula(
     jsPlan: compiled.jsPlan,
     program: compiled.program,
     constants: compiled.constants,
-    symbolicRefs: deps,
+    symbolicRefs,
     parsedSymbolicRefs,
     symbolicRanges: compiled.symbolicRanges,
     symbolicStrings: compiled.symbolicStrings,
@@ -491,11 +509,7 @@ export function tryCompileSimpleDirectScalarFormula(source: string): CompiledFor
       encodeInstruction(Opcode.CallBuiltin, (BuiltinId.Abs << 8) | 1),
       encodeInstruction(Opcode.Ret),
     )
-    const jsPlan: JsPlanInstruction[] = [
-      { opcode: 'push-cell', address: ref.address },
-      { opcode: 'call', callee: 'ABS', argc: 1 },
-      { opcode: 'return' },
-    ]
+    const jsPlan: JsPlanInstruction[] = [pushCellInstruction(ref), { opcode: 'call', callee: 'ABS', argc: 1 }, { opcode: 'return' }]
     const baseRecord: FormulaRecord = {
       id: 0,
       source: trimmed,
@@ -516,7 +530,7 @@ export function tryCompileSimpleDirectScalarFormula(source: string): CompiledFor
       ast,
       optimizedAst: ast,
       astMatchesSource: true,
-      deps: [ref.address],
+      deps: [formatDependencyRef(ref)],
       parsedDeps: [{ kind: 'cell', ...ref } satisfies ParsedDependencyReference],
       symbolicNames: EMPTY_STRINGS,
       symbolicTables: EMPTY_STRINGS,
@@ -580,6 +594,7 @@ export function tryCompileSimpleDirectScalarFormula(source: string): CompiledFor
         }
 
   const symbolicRefs = rightRef ? [leftRef.address, rightRef.address] : [leftRef.address]
+  const deps = rightRef ? [formatDependencyRef(leftRef), formatDependencyRef(rightRef)] : [formatDependencyRef(leftRef)]
   const parsedSymbolicRefs = rightRef ? [leftRef, rightRef] : [leftRef]
   const constants = rightRef
     ? resultOffset === undefined
@@ -599,8 +614,8 @@ export function tryCompileSimpleDirectScalarFormula(source: string): CompiledFor
   programInstructions.push(encodeInstruction(Opcode.Ret))
   const program = Uint32Array.from(programInstructions)
   const jsPlan: JsPlanInstruction[] = [
-    { opcode: 'push-cell', address: leftRef.address },
-    rightRef ? { opcode: 'push-cell', address: rightRef.address } : { opcode: 'push-number', value: rightNumber! },
+    pushCellInstruction(leftRef),
+    rightRef ? pushCellInstruction(rightRef) : { opcode: 'push-number', value: rightNumber! },
     { opcode: 'binary', operator },
   ]
   if (resultOffset !== undefined) {
@@ -627,7 +642,7 @@ export function tryCompileSimpleDirectScalarFormula(source: string): CompiledFor
     ast,
     optimizedAst: ast,
     astMatchesSource: true,
-    deps: symbolicRefs,
+    deps,
     parsedDeps: parsedSymbolicRefs.map((ref) => ({ kind: 'cell', ...ref }) satisfies ParsedDependencyReference),
     symbolicNames: EMPTY_STRINGS,
     symbolicTables: EMPTY_STRINGS,

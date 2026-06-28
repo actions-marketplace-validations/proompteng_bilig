@@ -101,11 +101,11 @@ describe('UI responsiveness live browser scorecard', () => {
       requiredMutationTargetProofCaseCount: 3,
       mutationTargetProofCaseCount: 0,
       requiredMutationTargetProofSampleCount: 18,
-      mutationTargetProofSampleCount: 9,
+      mutationTargetProofSampleCount: 13,
       requiredCommittedTargetProofTimingCaseCount: 3,
       committedTargetProofTimingCaseCount: 0,
       requiredCommittedTargetProofTimingSampleCount: 18,
-      committedTargetProofTimingSampleCount: 9,
+      committedTargetProofTimingSampleCount: 11,
       legacyInsufficientRenderedGridProofCaseCount: 0,
       tenXMeanAndP95CaseCount: 1,
       claimReadinessState: 'diagnostic-capture-incomplete',
@@ -117,11 +117,11 @@ describe('UI responsiveness live browser scorecard', () => {
     expect(scorecard.sameCorpusProof.runManifest?.invalidReasons).toContain('semantic UI proof covers 6/9 cases')
     expect(scorecard.sameCorpusProof.runManifest?.invalidReasons).toContain('mutation target proof covers 0/3 mutating cases')
     expect(scorecard.sameCorpusProof.runManifest?.invalidReasons).toContain(
-      'mutation target proof covers 9/18 required per-sample product proofs',
+      'mutation target proof covers 13/18 required per-sample product proofs',
     )
     expect(scorecard.sameCorpusProof.runManifest?.invalidReasons).toContain('committed target proof timing covers 0/3 mutating cases')
     expect(scorecard.sameCorpusProof.runManifest?.invalidReasons).toContain(
-      'committed target proof timing covers 9/18 required per-sample product timings',
+      'committed target proof timing covers 11/18 required per-sample product timings',
     )
     expect(scorecard.sameCorpusProof.runManifest?.invalidReasons).toContain('proof archive covers 42/99 required proof artifacts')
     expect(scorecard.sameCorpusProof.runManifest?.invalidReasons).toContain('not every required workload is 10x against Google Sheets')

@@ -440,16 +440,16 @@ mcpServers:
     type: stdio
     command: npm
     args:
-      - "exec"
-      - "--yes"
-      - "--package"
-      - "${workpaperPackageSpec}"
-      - "--"
-      - "bilig-workpaper-mcp"
-      - "--workpaper"
-      - "./.bilig/pricing.workpaper.json"
-      - "--init-demo-workpaper"
-      - "--writable"
+      - 'exec'
+      - '--yes'
+      - '--package'
+      - '${workpaperPackageSpec}'
+      - '--'
+      - 'bilig-workpaper-mcp'
+      - '--workpaper'
+      - './.bilig/pricing.workpaper.json'
+      - '--init-demo-workpaper'
+      - '--writable'
 `
 }
 

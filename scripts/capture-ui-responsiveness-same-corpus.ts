@@ -348,11 +348,8 @@ async function startServedBiligProductionRuntime(args: CaptureArgs): Promise<Ser
   console.log(`Serving @bilig/web production bundle for same-corpus capture at ${url}...`)
   const previewProcess = Bun.spawn(
     [
-      'pnpm',
-      '--dir',
-      join(rootDir, 'apps/web'),
-      'exec',
-      'vite',
+      'node',
+      join(rootDir, 'node_modules', 'vite', 'bin', 'vite.js'),
       'preview',
       '--host',
       args.biligProductionHost,
@@ -361,7 +358,7 @@ async function startServedBiligProductionRuntime(args: CaptureArgs): Promise<Ser
       '--strictPort',
     ],
     {
-      cwd: rootDir,
+      cwd: join(rootDir, 'apps/web'),
       stdin: 'ignore',
       stdout: 'inherit',
       stderr: 'inherit',

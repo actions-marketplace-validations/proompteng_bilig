@@ -1,0 +1,21 @@
+{
+  "artifactPath": "packages/benchmarks/baselines/ui-responsiveness-same-corpus/same-corpus-capture.json.proof/same-corpus-wide-mixed-250k-fill-format-change/committed-state/google-sheets-sample-2-before.json",
+  "capturedAtMs": 480684.263084,
+  "exportUrl": "https://docs.google.com/spreadsheets/d/1o0qSHUht9gl7YVN9yBX7fEbQ1ns4sb-HG2aytBtdWxc/export?format=xlsx&biligProofNonce=mqye18mz-qle0qb7x0wp",
+  "phase": "before",
+  "product": "google-sheets",
+  "readback": {
+    "fillColor": null,
+    "formula": null,
+    "source": "google-sheets-xlsx-export",
+    "value": "segment-6",
+    "visibleText": "segment-6"
+  },
+  "sampleIndex": 1,
+  "sheetId": "gid:160971404",
+  "sheetName": "WideGrid",
+  "targetRange": "B6",
+  "workbookByteSize": 1440407,
+  "workbookSha256": "2db71026312239b33a940efccd24bcead3c69a5aa5ac1a3f872db5aff0a06afb",
+  "workload": "fill-format-change"
+}

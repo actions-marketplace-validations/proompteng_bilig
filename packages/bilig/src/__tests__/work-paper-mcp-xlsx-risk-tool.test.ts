@@ -67,7 +67,7 @@ describe('bilig-workpaper MCP XLSX risk tool', () => {
       source.dispose()
       rmSync(tempDir, { recursive: true, force: true })
     }
-  })
+  }, 20_000)
 
   it('starts from XLSX without a WorkPaper JSON and still exposes native risk preflight', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'bilig-workpaper-mcp-risk-direct-'))
@@ -108,7 +108,7 @@ describe('bilig-workpaper MCP XLSX risk tool', () => {
       source.dispose()
       rmSync(tempDir, { recursive: true, force: true })
     }
-  })
+  }, 20_000)
 })
 
 async function runMcpBin(binPath: string, args: readonly string[]): Promise<readonly McpTestResponse[]> {

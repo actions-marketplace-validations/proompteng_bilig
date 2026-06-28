@@ -156,7 +156,14 @@ interface BrowserCaseSample {
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
 const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'ui-responsiveness-live-browser-scorecard.json')
-const defaultSameCorpusCapturePath = join(rootDir, '.cache', 'ui-responsiveness', 'same-corpus-capture.json')
+const defaultSameCorpusCapturePath = join(
+  rootDir,
+  'packages',
+  'benchmarks',
+  'baselines',
+  'ui-responsiveness-same-corpus',
+  'same-corpus-capture.json',
+)
 const sampleCount = 3
 const viewport = { width: 1440, height: 900 } as const
 const microsoftExcelSourceWorkbook =

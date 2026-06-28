@@ -11,6 +11,7 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(core): stabilize direct aggregate fast paths (07448bd4)
 
 ## 0.164.9
@@ -20,9 +21,11 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(core): preserve table headers during undo (3b22698d)
 
 ## Internal runtime changes
+
 - docs(discovery): deslop workpaper public surfaces (355eb34d)
 
 ## 0.164.8
@@ -32,10 +35,12 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(headless): clarify workpaper proof limits (5d4f7a2b)
 - fix(release): sync workpaper service proof versions (b9664688)
 
 ## Internal runtime changes
+
 - examples(hono): add WorkPaper route smoke (d449b623)
 - docs(workpaper): clarify recompute boundary (414f52d1)
 - chore(release): runtime packages v0.164.6 (db4eec32)
@@ -49,9 +54,11 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(headless): clarify workpaper proof limits (5d4f7a2b)
 
 ## Internal runtime changes
+
 - examples(hono): add WorkPaper route smoke (d449b623)
 - docs(workpaper): clarify recompute boundary (414f52d1)
 - chore(release): runtime packages v0.164.6 (db4eec32)
@@ -64,9 +71,11 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(headless): clarify workpaper proof limits (5d4f7a2b)
 
 ## Internal runtime changes
+
 - examples(hono): add WorkPaper route smoke (d449b623)
 - docs(workpaper): clarify recompute boundary (414f52d1)
 
@@ -77,6 +86,7 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(create-workpaper): retarget starter package metadata (484c96cd)
 
 ## 0.164.4
@@ -86,9 +96,11 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(discovery): retarget unscoped runtime package metadata (76601f5b)
 
 ## Internal runtime changes
+
 - docs(discovery): align workpaper public surfaces (aff81268)
 - docs(discovery): retarget runtime package metadata (9387f24b)
 
@@ -99,6 +111,7 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(create-workpaper): clean starter discovery metadata (2890512f)
 
 ## 0.164.2
@@ -108,9 +121,11 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(workpaper): clean runtime discovery metadata (38445ee8)
 
 ## Internal runtime changes
+
 - docs(growth): remove forced star copy (cf9fc858)
 - docs(agent): make WorkPaper skill metadata primary (92c834a1)
 - docs(growth): remove stale xlsx public route (5e0946d3)
@@ -129,6 +144,7 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: yes
 
 ## Fixes
+
 - fix(release): publish missing runtime packages first (3af29ee5)
 
 ## 0.164.0
@@ -138,6 +154,7 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: yes
 
 ## Features
+
 - feat(xlsx): route simple exports through @bilig/xlsx writer (0402b079)
 - feat(xlsx): export bordered simple workbooks with @bilig/xlsx (f569640d)
 - feat(xlsx): export sparse style artifacts with @bilig/xlsx (46e9ef1e)
@@ -173,6 +190,7 @@ This package is released as part of the aligned bilig library package set.
 - feat(xlsx): report native recalc fallback status (dd95d6d9)
 
 ## Fixes
+
 - fix(xlsx): hydrate external caches natively (231bd902)
 - fix(headless): route workpaper xlsx export through @bilig/xlsx (c5759851)
 - fix(excel-import): make SheetJS fallback optional (2ffc9daf)
@@ -225,6 +243,7 @@ This package is released as part of the aligned bilig library package set.
 - fix(workpaper): expose xlsx recalc dependency (85d0ae6a)
 
 ## Internal runtime changes
+
 - chore(xlsx): normalize @bilig/xlsx naming (975c7b67)
 - test(xlsx): use native fixture builders (bb1dcff9)
 - docs(agent): guard public rule targets (e05188d1)
@@ -279,6 +298,7 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: yes
 
 ## Fixes
+
 - fix(release): allow first-time runtime npm packages (c0196223)
 - fix(xlsx): drop SheetJS CDN dependency pin (97f6e659)
 
@@ -289,14 +309,17 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: yes
 
 ## Features
+
 - feat(xlsx): add @bilig/xlsx source-preserving package (75c1b926)
 - feat(xlsx): expose @bilig/xlsx source patch exports (64fb24be)
 
 ## Fixes
+
 - fix(headless): drop direct xlsx dependency (21e8e75a)
 - fix(headless): build @bilig/xlsx before package checks (dbbf2c61)
 
 ## Internal runtime changes
+
 - docs(discovery): add agent framework mcp recipes (dbf468bf)
 - docs(agent): add Aider WorkPaper conventions (bafb31fe)
 - docs(agent): add Goose WorkPaper MCP recipe (bd0da1d2)
@@ -316,6 +339,7 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Features
+
 - feat(agent): add xlsx mcp startup guidance (d92fd792)
 
 ## 0.160.2

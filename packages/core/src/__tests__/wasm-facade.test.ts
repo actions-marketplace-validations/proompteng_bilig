@@ -49,6 +49,34 @@ describe('WasmKernelFacade', () => {
     expect(Array.from(facade.rangeMembers.slice(0, 2))).toEqual([0, 1])
   })
 
+  it('refreshes cached views after raw bridge allocations grow wasm memory', async () => {
+    const facade = new WasmKernelFacade()
+    await facade.init()
+
+    const initialTags = facade.tags
+    let memoryGrew = false
+    for (const valueCount of [131_072, 524_288, 2_097_152]) {
+      facade.evalDenseNumericRowAggregateBatch({
+        aggregateKind: 1,
+        values: new Float64Array(valueCount),
+        rowCount: 0,
+        prefixColCount: 0,
+        startColOffset: 0,
+        aggregateColCount: 0,
+        resultOffset: 0,
+        outNumbers: new Float64Array(),
+      })
+      memoryGrew = initialTags.buffer.byteLength === 0
+      if (memoryGrew) {
+        break
+      }
+    }
+
+    expect(memoryGrew).toBe(true)
+    expect(() => facade.resetStoreState()).not.toThrow()
+    expect(facade.tags.byteLength).toBeGreaterThan(0)
+  })
+
   it('syncs sparse cell updates into kernel-backed views and back to the store', async () => {
     const facade = new WasmKernelFacade()
     await facade.init()

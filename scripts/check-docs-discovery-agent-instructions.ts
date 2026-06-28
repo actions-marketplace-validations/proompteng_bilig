@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { requireIncludes, requireNotIncludes, requirePackageKeywords } from './check-docs-discovery-core.ts'
+import { requireIncludes, requireMatches, requireNotIncludes, requirePackageKeywords } from './check-docs-discovery-core.ts'
 
 export async function requireAgentInstructionDiscovery(input: {
   readonly repoRoot: string
@@ -436,14 +436,22 @@ export async function requireAgentInstructionDiscovery(input: {
     '- name: Bilig WorkPaper File',
     'type: stdio',
     'command: npm',
-    '- "--package"',
-    '- "@bilig/workpaper@latest"',
-    '- "bilig-workpaper-mcp"',
-    '- "./.bilig/pricing.workpaper.json"',
-    '- "--init-demo-workpaper"',
-    '- "--writable"',
   ] as const) {
     requireIncludes(continueMcpConfig, required, '.continue/mcpServers/bilig-workpaper.yaml')
+  }
+  for (const requiredArg of [
+    'exec',
+    '--yes',
+    '--package',
+    '@bilig/workpaper@latest',
+    '--',
+    'bilig-workpaper-mcp',
+    '--workpaper',
+    './.bilig/pricing.workpaper.json',
+    '--init-demo-workpaper',
+    '--writable',
+  ] as const) {
+    requireYamlListValue(continueMcpConfig, requiredArg, '.continue/mcpServers/bilig-workpaper.yaml')
   }
   for (const required of [
     '"mcpServers"',
@@ -606,4 +614,14 @@ export async function requireAgentInstructionDiscovery(input: {
   requireIncludes(rootSkillNotes, 'currently published package', 'skills/bilig-workpaper/SKILL.md')
   requireNotIncludes(rootSkillNotes, 'allowed-tools:', 'skills/bilig-workpaper/SKILL.md')
   requireNotIncludes(rootSkillNotes, 'argument-hint:', 'skills/bilig-workpaper/SKILL.md')
+}
+
+function requireYamlListValue(content: string, value: string, context: string): void {
+  const escapedValue = value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
+  requireMatches(
+    content,
+    new RegExp(`^\\s*-\\s*(?:"${escapedValue}"|'${escapedValue}'|${escapedValue})\\s*$`, 'mu'),
+    `list value ${value}`,
+    context,
+  )
 }

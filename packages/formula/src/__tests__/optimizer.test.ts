@@ -20,8 +20,8 @@ describe('optimizer', () => {
 
   it('folds IF, unary operators, and special call rewrites into ordinary AST', () => {
     expect(optimizeFormula(parseFormula('IF("",1,2)'))).toEqual({
-      kind: 'NumberLiteral',
-      value: 2,
+      kind: 'ErrorLiteral',
+      code: ErrorCode.Value,
     })
     expect(optimizeFormula(parseFormula('IF("TRUE",1,2)'))).toEqual({
       kind: 'NumberLiteral',

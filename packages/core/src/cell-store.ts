@@ -107,6 +107,7 @@ export class CellStore {
   }
 
   allocateReserved(sheetId: number, row: number, col: number): number {
+    this.ensureCapacity(this.size + 1)
     const index = this.size
     this.size += 1
     this.sheetIds[index] = sheetId

@@ -273,7 +273,7 @@ describe('@bilig/workbook package boundary', () => {
     expect(readme).toContain('Choose when')
     expect(readme).toContain('Do not use for')
     expect(readme).toContain('| `@bilig/workbook`')
-    expect(readme).toContain('Defining generic agent intent')
+    expect(readme).toContain('Defining generic workbook intent')
     expect(readme).toContain('| `@bilig/workpaper`')
     expect(readme).toContain('Running workbook tools, MCP, or product workflows')
     expect(readme).toContain('| `@bilig/headless`')

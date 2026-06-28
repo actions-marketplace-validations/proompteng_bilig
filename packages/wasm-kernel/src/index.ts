@@ -673,50 +673,62 @@ class KernelHandle implements SpreadsheetKernel {
   }
 
   readTags(): Uint8Array {
+    this.ensureViewsFresh()
     return this.tags
   }
 
   readNumbers(): Float64Array {
+    this.ensureViewsFresh()
     return this.numbers
   }
 
   readStringIds(): Uint32Array {
+    this.ensureViewsFresh()
     return this.stringIds
   }
 
   readErrors(): Uint16Array {
+    this.ensureViewsFresh()
     return this.errors
   }
 
   readProgramOffsets(): Uint32Array {
+    this.ensureViewsFresh()
     return this.programOffsets
   }
 
   readProgramLengths(): Uint32Array {
+    this.ensureViewsFresh()
     return this.programLengths
   }
 
   readConstantOffsets(): Uint32Array {
+    this.ensureViewsFresh()
     return this.constantOffsets
   }
 
   readConstantLengths(): Uint32Array {
+    this.ensureViewsFresh()
     return this.constantLengths
   }
 
   readConstants(): Float64Array {
+    this.ensureViewsFresh()
     return this.constants
   }
 
   readRangeOffsets(): Uint32Array {
+    this.ensureViewsFresh()
     return this.rangeOffsets
   }
 
   readRangeLengths(): Uint32Array {
+    this.ensureViewsFresh()
     return this.rangeLengths
   }
 
   readRangeMembers(): Uint32Array {
+    this.ensureViewsFresh()
     return this.rangeMembers
   }
 
@@ -743,26 +755,32 @@ class KernelHandle implements SpreadsheetKernel {
   }
 
   readSpillRows(): Uint32Array {
+    this.ensureViewsFresh()
     return this.spillRows
   }
 
   readSpillCols(): Uint32Array {
+    this.ensureViewsFresh()
     return this.spillCols
   }
 
   readSpillOffsets(): Uint32Array {
+    this.ensureViewsFresh()
     return this.spillOffsets
   }
 
   readSpillLengths(): Uint32Array {
+    this.ensureViewsFresh()
     return this.spillLengths
   }
 
   readSpillTags(): Uint8Array {
+    this.ensureViewsFresh()
     return this.spillTags
   }
 
   readSpillNumbers(): Float64Array {
+    this.ensureViewsFresh()
     return this.spillNumbers
   }
 
@@ -788,6 +806,12 @@ class KernelHandle implements SpreadsheetKernel {
 
   getMemberCapacity(): number {
     return this.raw.getMemberCapacity()
+  }
+
+  private ensureViewsFresh(): void {
+    if (this.tags.buffer !== this.raw.memory.buffer) {
+      this.refreshViews()
+    }
   }
 
   private refreshViews(): void {

@@ -120,9 +120,12 @@ describe('js evaluator', () => {
     const cases = [
       ['AND("TRUE","true")', { tag: ValueTag.Boolean, value: true }],
       ['AND("FALSE",TRUE())', { tag: ValueTag.Boolean, value: false }],
-      ['AND("",TRUE())', { tag: ValueTag.Boolean, value: true }],
+      ['AND("",TRUE())', { tag: ValueTag.Boolean, value: false }],
       ['OR("FALSE","")', { tag: ValueTag.Boolean, value: false }],
       ['OR("TRUE","FALSE")', { tag: ValueTag.Boolean, value: true }],
+      ['AND("")', { tag: ValueTag.Boolean, value: false }],
+      ['NOT("")', err(ErrorCode.Value)],
+      ['IF("",1,2)', err(ErrorCode.Value)],
       ['XOR("TRUE","FALSE","")', { tag: ValueTag.Boolean, value: true }],
       ['NOT("FALSE")', { tag: ValueTag.Boolean, value: true }],
       ['NOT("TRUE")', { tag: ValueTag.Boolean, value: false }],
@@ -141,17 +144,7 @@ describe('js evaluator', () => {
       expect(evaluatePlan(compileFormula(formula).jsPlan, context), formula).toEqual(expected)
     }
 
-    const invalidCases = [
-      'AND("")',
-      'AND("x")',
-      'OR("x")',
-      'XOR("x")',
-      'NOT("")',
-      'NOT("x")',
-      'IF("",1,2)',
-      'IF("x",1,2)',
-      'IFS("x",1,TRUE(),2)',
-    ]
+    const invalidCases = ['AND("x")', 'OR("x")', 'XOR("x")', 'NOT("x")', 'IF("x",1,2)', 'IFS("x",1,TRUE(),2)']
     for (const formula of invalidCases) {
       const expected = { tag: ValueTag.Error, code: ErrorCode.Value }
       expect(evaluatePlan(lowerToPlan(parseFormula(formula)), context), formula).toEqual(expected)
