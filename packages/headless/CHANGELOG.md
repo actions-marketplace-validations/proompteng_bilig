@@ -4,6 +4,15 @@ All notable changes to `@bilig/headless` will be documented in this file.
 
 This package is released as part of the aligned bilig library package set.
 
+## 0.164.11
+
+- Release type: patch
+- Previous libraries tag: libraries-v0.164.10
+- Manual override: no
+
+## Fixes
+- fix(ci): restore green debt baseline (7cdfb765)
+
 ## 0.164.10
 
 - Release type: patch
