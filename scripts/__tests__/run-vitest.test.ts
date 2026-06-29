@@ -31,6 +31,24 @@ function readPackageScripts(packageJsonPath: string): Record<string, string> {
 }
 
 describe('run-vitest wrapper arguments', () => {
+  it('bounds Vitest run mode outside CI so pnpm test uses the stable runner path', () => {
+    expect(buildVitestArgs(['--run'], {})).toEqual([
+      '--run',
+      '--maxWorkers',
+      '1',
+      '--pool',
+      'forks',
+      '--configLoader',
+      'runner',
+      '--reporter',
+      'verbose',
+    ])
+  })
+
+  it('leaves watch mode raw outside CI', () => {
+    expect(buildVitestArgs([], {})).toEqual([])
+  })
+
   it('bounds Vitest workers in CI by default', () => {
     expect(buildVitestArgs(['--run', 'sample.test.ts'], { BILIG_CI_PROFILE: 'fast' })).toEqual([
       '--run',
@@ -46,8 +64,14 @@ describe('run-vitest wrapper arguments', () => {
     ])
   })
 
+  it('bounds focused local Vitest run invocations without splitting them', () => {
+    expect(buildVitestArgBatches(['--run', 'sample.test.ts'], {})).toEqual([
+      ['--run', 'sample.test.ts', '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose'],
+    ])
+  })
+
   it('preserves an explicit maxWorkers flag', () => {
-    expect(buildVitestArgs(['--run', '--maxWorkers=1'], { BILIG_CI_PROFILE: 'fast' })).toEqual([
+    expect(buildVitestArgs(['--run', '--maxWorkers=1'], {})).toEqual([
       '--run',
       '--maxWorkers=1',
       '--pool',

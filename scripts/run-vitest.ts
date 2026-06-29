@@ -12,7 +12,7 @@ const DEFAULT_CI_BATCH_COOLDOWN_MS = 1_000
 const BROAD_CORPUS_FILE_THRESHOLD = 4
 
 export function buildVitestArgs(args: readonly string[], env: NodeJS.ProcessEnv = process.env): string[] {
-  if (!env['BILIG_CI_PROFILE']) {
+  if (!shouldUseBoundedVitestDefaults(args, env)) {
     return [...args]
   }
 
@@ -22,6 +22,10 @@ export function buildVitestArgs(args: readonly string[], env: NodeJS.ProcessEnv 
   const pooledArgs = hasArg(boundedWorkerArgs, '--pool') ? boundedWorkerArgs : [...boundedWorkerArgs, '--pool', 'forks']
   const configLoadedArgs = hasArg(pooledArgs, '--configLoader') ? pooledArgs : [...pooledArgs, '--configLoader', 'runner']
   return hasArg(configLoadedArgs, '--reporter') ? configLoadedArgs : [...configLoadedArgs, '--reporter', 'verbose']
+}
+
+function shouldUseBoundedVitestDefaults(args: readonly string[], env: NodeJS.ProcessEnv): boolean {
+  return Boolean(env['BILIG_CI_PROFILE']) || args.includes('--run')
 }
 
 export function buildVitestArgBatches(args: readonly string[], env: NodeJS.ProcessEnv = process.env): string[][] {
