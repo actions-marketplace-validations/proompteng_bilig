@@ -34,6 +34,10 @@ function workflowJobs(workflow: Record<string, unknown>): Record<string, unknown
   return asRecord(workflow['jobs'], 'workflow.jobs')
 }
 
+function workflowConcurrency(workflow: Record<string, unknown>): Record<string, unknown> {
+  return asRecord(workflow['concurrency'], 'workflow.concurrency')
+}
+
 describe('forgejo workflows', () => {
   it('keeps manual deep correctness out of push-triggered release images', () => {
     const releaseImages = readWorkflow('.forgejo/workflows/release-images.yml')
@@ -57,5 +61,16 @@ describe('forgejo workflows', () => {
     expect(workflow.match(/test "\$\(bun --version\)" = "1\.3\.10"/gu)).toHaveLength(2)
     expect(manualDeep).toContain('npm install -g bun@1.3.10')
     expect(manualDeep).toContain('test "$(bun --version)" = "1.3.10"')
+  })
+
+  it('cancels stale per-ref Forgejo runs when a newer commit is pushed', () => {
+    for (const path of ['.forgejo/workflows/forgejo-ci.yml', '.forgejo/workflows/release-images.yml']) {
+      const workflow = readWorkflow(path)
+
+      expect(workflowConcurrency(workflow)).toEqual({
+        group: '${{ github.workflow }}-${{ github.ref }}',
+        'cancel-in-progress': true,
+      })
+    }
   })
 })
