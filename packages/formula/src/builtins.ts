@@ -9,7 +9,6 @@ import { countLeadingZeros, formatFixed, parseDollarDecimal, toColumnLabel } fro
 import {
   buildIdentityMatrix,
   combinationValue,
-  collectNumericArgs,
   createNumericBuiltinHelpers,
   doubleFactorialValue,
   evenValue,
@@ -27,7 +26,6 @@ import { enforceBuiltinArities } from './builtins/arity.js'
 import { toDirectAggregateNumber, toNumber, toScalarMathNumber } from './builtins/scalar-coercion.js'
 import { createMathBuiltins } from './builtins/math-builtins.js'
 import { createRadixBuiltins } from './builtins/radix.js'
-import { populationVariance, sampleVariance } from './builtins/statistics.js'
 import { createStatisticalBuiltins } from './builtins/statistical-builtins.js'
 import { createDateTimeBuiltins, datetimeBuiltins, type ExcelDateSystem } from './builtins/datetime.js'
 import { convertBuiltin, euroconvertBuiltin } from './builtins/convert.js'
@@ -39,6 +37,7 @@ import { getExternalScalarFunction, hasExternalFunction } from './external-funct
 import { coerceLogicalValue } from './logical-coercion.js'
 import type { ArrayValue, EvaluationResult } from './runtime-values.js'
 import { createTextBuiltins, textBuiltins } from './builtins/text.js'
+import { createScalarAggregateBuiltins } from './builtins/scalar-aggregate-builtins.js'
 import { quoteSheetNameIfNeeded } from './translation-reference-utils.js'
 
 type Builtin = (...args: CellValue[]) => EvaluationResult
@@ -46,14 +45,6 @@ type Builtin = (...args: CellValue[]) => EvaluationResult
 export function normalizeBuiltinLookupName(name: string): string {
   const upper = name.toUpperCase()
   return upper.startsWith('_XLFN.') || upper.startsWith('_XLWS.') ? upper.slice(6) : upper
-}
-
-function isCountedDirectNumber(value: CellValue): boolean {
-  return (
-    value.tag === ValueTag.Number ||
-    value.tag === ValueTag.Boolean ||
-    (value.tag === ValueTag.String && toDirectAggregateNumber(value) !== undefined)
-  )
 }
 
 function numberResult(value: number): CellValue {
@@ -304,6 +295,15 @@ const mathBuiltins = createMathBuiltins({
   gcdPair,
   lcmPair,
 })
+const scalarAggregateBuiltins = createScalarAggregateBuiltins({
+  toDirectAggregateNumber,
+  toNumber,
+  firstError,
+  numberResult,
+  valueError,
+  div0Error,
+  numError,
+})
 
 function coercePaymentType(value: CellValue | undefined, fallback: number): number | undefined {
   const type = scalarIntegerValue(value, fallback)
@@ -323,68 +323,6 @@ function coerceDollarFraction(value: CellValue | undefined): number | CellValue 
   }
   const fraction = Math.trunc(numeric)
   return fraction < 1 ? div0Error() : fraction
-}
-
-function toZeroNumericValue(value: CellValue): number | undefined {
-  if (value.tag === ValueTag.String) {
-    return 0
-  }
-  return toNumber(value)
-}
-
-function collectDirectAggregateNumbers(args: readonly CellValue[]): number[] | CellValue {
-  const values: number[] = []
-  for (const arg of args) {
-    const numeric = toDirectAggregateNumber(arg)
-    if (numeric === undefined) {
-      return valueError()
-    }
-    values.push(numeric)
-  }
-  return values
-}
-
-function aggregateByCode(functionNum: number, values: CellValue[], options: { readonly propagateErrors?: boolean } = {}): CellValue {
-  if (options.propagateErrors) {
-    const error = firstError(values)
-    if (error) {
-      return error
-    }
-  }
-  const normalized = functionNum > 100 ? functionNum - 100 : functionNum
-  const numericValues = collectNumericArgs(values, toNumber)
-  switch (normalized) {
-    case 1:
-      return numericValues.length === 0
-        ? div0Error()
-        : numberResult(numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length)
-    case 2:
-      return numberResult(values.filter((value) => value.tag === ValueTag.Number || value.tag === ValueTag.Boolean).length)
-    case 3:
-      return numberResult(values.filter((value) => value.tag !== ValueTag.Empty).length)
-    case 4:
-      return numberResult(numericValues.length === 0 ? 0 : Math.max(...numericValues))
-    case 5:
-      return numberResult(numericValues.length === 0 ? 0 : Math.min(...numericValues))
-    case 6:
-      return numberResult(numericValues.length === 0 ? 0 : numericValues.reduce((product, value) => product * value, 1))
-    case 7:
-      return numberResult(Math.sqrt(sampleVariance(numericValues)))
-    case 8:
-      return numberResult(Math.sqrt(populationVariance(numericValues)))
-    case 9:
-      return numberResult(numericValues.reduce((sum, value) => sum + value, 0))
-    case 10:
-      return numberResult(sampleVariance(numericValues))
-    case 11:
-      return numberResult(populationVariance(numericValues))
-    default:
-      return valueError()
-  }
-}
-
-function aggregateOptionIgnoresErrors(option: number): boolean {
-  return option === 2 || option === 3 || option === 6 || option === 7
 }
 
 const scalarPlaceholderBuiltins = createBlockedBuiltinMap(scalarPlaceholderBuiltinNames)
@@ -441,35 +379,7 @@ const externalScalarBuiltins = Object.fromEntries(
 ) as Record<string, Builtin>
 
 const scalarBuiltins: Record<string, Builtin> = {
-  SUM: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const values = collectDirectAggregateNumbers(args)
-    if (!Array.isArray(values)) return values
-    return numberResult(values.reduce((sum, value) => sum + value, 0))
-  },
-  AVERAGEA: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const numbers = args.map((arg) => toZeroNumericValue(arg)).filter((value): value is number => value !== undefined)
-    return numbers.length === 0 ? div0Error() : numberResult(numbers.reduce((sum, value) => sum + value, 0) / numbers.length)
-  },
-  AVERAGE: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const numbers = collectDirectAggregateNumbers(args)
-    if (!Array.isArray(numbers)) return numbers
-    if (numbers.length === 0) return div0Error()
-    return numberResult(numbers.reduce((sum, value) => sum + value, 0) / numbers.length)
-  },
-  AVG: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const numbers = collectDirectAggregateNumbers(args)
-    if (!Array.isArray(numbers)) return numbers
-    if (numbers.length === 0) return div0Error()
-    return numberResult(numbers.reduce((sum, value) => sum + value, 0) / numbers.length)
-  },
+  ...scalarAggregateBuiltins,
   CHOOSE: (indexValue, ...values) => {
     if (indexValue?.tag === ValueTag.Error) {
       return indexValue
@@ -486,57 +396,6 @@ const scalarBuiltins: Record<string, Builtin> = {
       return valueError()
     }
     return value
-  },
-  MIN: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const values: number[] = []
-    for (const arg of args) {
-      const numeric = toDirectAggregateNumber(arg)
-      if (numeric === undefined) {
-        return valueError()
-      }
-      values.push(numeric)
-    }
-    return values.length === 0 ? numberResult(0) : numberResult(Math.min(...values))
-  },
-  MAX: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const values: number[] = []
-    for (const arg of args) {
-      const numeric = toDirectAggregateNumber(arg)
-      if (numeric === undefined) {
-        return valueError()
-      }
-      values.push(numeric)
-    }
-    return values.length === 0 ? numberResult(0) : numberResult(Math.max(...values))
-  },
-  MAXA: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const values = args.map((arg) => toZeroNumericValue(arg)).filter((value): value is number => value !== undefined)
-    return values.length === 0 ? numberResult(0) : numberResult(Math.max(...values))
-  },
-  MINA: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const values = args.map((arg) => toZeroNumericValue(arg)).filter((value): value is number => value !== undefined)
-    return values.length === 0 ? numberResult(0) : numberResult(Math.min(...values))
-  },
-  COUNT: (...args) => {
-    return numberResult(args.filter(isCountedDirectNumber).length)
-  },
-  COUNTA: (...args) => numberResult(args.filter((arg) => arg.tag !== ValueTag.Empty).length),
-  COUNTBLANK: (...args) => {
-    let blanks = 0
-    for (const arg of args) {
-      if (arg.tag === ValueTag.Empty || (arg.tag === ValueTag.String && arg.value === '')) {
-        blanks += 1
-      }
-    }
-    return numberResult(blanks)
   },
   ABS: (value) => {
     const error = firstError([value])
@@ -678,42 +537,6 @@ const scalarBuiltins: Record<string, Builtin> = {
     const outputValue = `${integerPart + carry}.${String(numerator).padStart(width, '0')}`
     return numberResult(sign * Number(outputValue))
   },
-  GEOMEAN: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const numbers: number[] = []
-    for (const arg of args) {
-      const numeric = toDirectAggregateNumber(arg)
-      if (numeric === undefined) {
-        return valueError()
-      }
-      numbers.push(numeric)
-    }
-    if (numbers.length === 0) {
-      return valueError()
-    }
-    if (numbers.some((value) => value <= 0)) {
-      return numError()
-    }
-    const logSum = numbers.reduce((sum, value) => sum + Math.log(value), 0)
-    return numberResult(Math.exp(logSum / numbers.length))
-  },
-  HARMEAN: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const numbers: number[] = []
-    for (const arg of args) {
-      const numeric = toDirectAggregateNumber(arg)
-      if (numeric === undefined) {
-        return valueError()
-      }
-      numbers.push(numeric)
-    }
-    if (numbers.length === 0 || numbers.some((value) => value <= 0)) {
-      return numbers.length === 0 ? valueError() : numError()
-    }
-    return numberResult(numbers.length / numbers.reduce((sum, value) => sum + 1 / value, 0))
-  },
   ...mathBuiltins,
   ...fixedIncomeBuiltins,
   RANDBETWEEN: (bottomArg, topArg) => {
@@ -793,13 +616,6 @@ const scalarBuiltins: Record<string, Builtin> = {
     }
     const result = Math.sqrt(numeric * Math.PI)
     return numeric < 0 || !Number.isFinite(result) ? numError() : numberResult(result)
-  },
-  SUMSQ: (...args) => {
-    const error = firstError(args)
-    if (error) return error
-    const values = collectDirectAggregateNumbers(args)
-    if (!Array.isArray(values)) return values
-    return numberResult(values.reduce((sum, value) => sum + value ** 2, 0))
   },
   CONVERT: (numberArg, fromUnitArg, toUnitArg) => convertBuiltin(numberArg, fromUnitArg, toUnitArg),
   EUROCONVERT: (numberArg, sourceArg, targetArg, fullPrecisionArg, triangulationPrecisionArg) =>
@@ -922,20 +738,6 @@ const scalarBuiltins: Record<string, Builtin> = {
     return Number.isFinite(result) ? numberResult(result) : numError()
   },
   ...distributionBuiltins,
-  SUBTOTAL: (functionNumArg, ...args) => {
-    const functionNum = integerValue(functionNumArg)
-    return functionNum === undefined ? valueError() : aggregateByCode(functionNum, args, { propagateErrors: true })
-  },
-  AGGREGATE: (functionNumArg, optionsArg, ...args) => {
-    const functionNum = integerValue(functionNumArg)
-    const options = integerValue(optionsArg)
-    if (functionNum === undefined || options === undefined || options < 0 || options > 7) {
-      return valueError()
-    }
-    const ignoreErrors = aggregateOptionIgnoresErrors(options)
-    const values = ignoreErrors ? args.filter((value) => value.tag !== ValueTag.Error) : args
-    return aggregateByCode(functionNum, values, { propagateErrors: !ignoreErrors })
-  },
   SEQUENCE: (...args) => sequenceResult(args[0], args[1], args[2], args[3]),
   ...googleSheetsScalarBuiltins,
   ...externalScalarBuiltins,

@@ -27,11 +27,7 @@ import { createOperationDirectPostRecalcMarkers } from './operation-direct-post-
 import { createOperationDerivedOpApplier } from './operation-derived-op-helpers.js'
 import { canSkipOperationDirtyTraversalForChangedInputs } from './operation-dirty-traversal-helpers.js'
 import { countOperationPostRecalcDirectFormulaMetric, type DirectFormulaMetricCounts } from './operation-post-recalc-direct-formulas.js'
-import {
-  tryApplySingleDirectAggregateLiteralMutationFastPath as tryApplySingleDirectAggregateLiteralMutationFastPathWithArgs,
-  tryApplyTrustedColumnDirectAggregateExistingNumericMutation as tryApplyTrustedColumnDirectAggregateExistingNumericMutationWithArgs,
-  tryApplyTrustedSingleRangeDirectAggregateExistingNumericMutation as tryApplyTrustedSingleRangeDirectAggregateExistingNumericMutationWithArgs,
-} from './operation-direct-aggregate-literal-fast-path.js'
+import { createOperationDirectAggregateMutationFastPaths } from './operation-direct-aggregate-mutation-fast-paths.js'
 import { tryApplyTrustedDirectScalarClosureExistingNumericMutation as tryApplyTrustedDirectScalarClosureExistingNumericMutationWithArgs } from './operation-direct-scalar-closure-fast-path.js'
 import {
   tryApplyFormulaLeafExistingLiteralMutation as tryApplyFormulaLeafExistingLiteralMutationWithArgs,
@@ -343,105 +339,28 @@ export function createEngineOperationService(args: CreateEngineOperationServiceA
     canSkipDirectFormulaColumnVersion: canSkipFormulaColumnVersion,
   })
 
-  const tryApplySingleDirectAggregateLiteralMutationFastPath = (request: {
-    existingIndex: number
-    sheetId?: number
-    sheetName: string
-    row: number
-    col: number
-    value: LiteralInput
-    delta: number
-    emitTracked: boolean
-    singleRangeEntityDependent?: number
-  }): EngineExistingNumericCellMutationResult | null =>
-    tryApplySingleDirectAggregateLiteralMutationFastPathWithArgs(
-      {
-        state: args.state,
-        directRangePostRecalcLimit: DIRECT_RANGE_POST_RECALC_LIMIT,
-        getSingleEntityDependent: args.getSingleEntityDependent,
-        collectAffectedDirectRangeDependents,
-        collectSingleApplicableDirectAggregateDependent,
-        canApplyDirectAggregateLiteralDeltaForRequest,
-        canApplyDirectAggregateLiteralDelta,
-        writeFastPathLiteralToExistingCell,
-        writeTrustedExistingNumericLiteralToCell,
-        applyTerminalDirectFormulaNumericDeltaAndReturn,
-        applyDirectFormulaNumericDelta,
-        applyDirectFormulaNumericDeltaBatch,
-        cellsShareVersionColumn,
-        withOptionalColumnVersionBatch,
-        deferSingleCellKernelSync,
-        makeSingleLiteralSkipMetrics,
-      },
-      request,
-    )
-
-  const tryApplyTrustedSingleRangeDirectAggregateExistingNumericMutation = (request: {
-    existingIndex: number
-    rangeEntityDependent: number
-    sheet: SheetRecord
-    sheetId: number
-    col: number
-    value: number
-    delta: number
-    hasExactLookupDependents: boolean
-    hasSortedLookupDependents: boolean
-  }): EngineExistingNumericCellMutationResult | null =>
-    tryApplyTrustedSingleRangeDirectAggregateExistingNumericMutationWithArgs(
-      {
-        state: args.state,
-        directRangePostRecalcLimit: DIRECT_RANGE_POST_RECALC_LIMIT,
-        getSingleEntityDependent: args.getSingleEntityDependent,
-        collectAffectedDirectRangeDependents,
-        collectSingleApplicableDirectAggregateDependent,
-        canApplyDirectAggregateLiteralDeltaForRequest,
-        canApplyDirectAggregateLiteralDelta,
-        writeFastPathLiteralToExistingCell,
-        writeTrustedExistingNumericLiteralToCell,
-        applyTerminalDirectFormulaNumericDeltaAndReturn,
-        applyDirectFormulaNumericDelta,
-        applyDirectFormulaNumericDeltaBatch,
-        cellsShareVersionColumn,
-        withOptionalColumnVersionBatch,
-        deferSingleCellKernelSync,
-        makeSingleLiteralSkipMetrics,
-      },
-      request,
-    )
-
-  const tryApplyTrustedColumnDirectAggregateExistingNumericMutation = (request: {
-    existingIndex: number
-    sheet: SheetRecord
-    sheetId: number
-    sheetName: string
-    row: number
-    col: number
-    value: number
-    delta: number
-    hasExactLookupDependents: boolean
-    hasSortedLookupDependents: boolean
-  }): EngineExistingNumericCellMutationResult | null =>
-    tryApplyTrustedColumnDirectAggregateExistingNumericMutationWithArgs(
-      {
-        state: args.state,
-        directRangePostRecalcLimit: DIRECT_RANGE_POST_RECALC_LIMIT,
-        getSingleEntityDependent: args.getSingleEntityDependent,
-        collectAffectedDirectRangeDependents,
-        collectSingleApplicableDirectAggregateDependent,
-        canApplyDirectAggregateLiteralDeltaForRequest,
-        canApplyDirectAggregateLiteralDelta,
-        writeFastPathLiteralToExistingCell,
-        writeTrustedExistingNumericLiteralToCell,
-        applyTerminalDirectFormulaNumericDeltaAndReturn,
-        applyDirectFormulaNumericDelta,
-        applyDirectFormulaNumericDeltaBatch,
-        cellsShareVersionColumn,
-        withOptionalColumnVersionBatch,
-        deferSingleCellKernelSync,
-        makeSingleLiteralSkipMetrics,
-      },
-      request,
-    )
+  const {
+    tryApplySingleDirectAggregateLiteralMutationFastPath,
+    tryApplyTrustedSingleRangeDirectAggregateExistingNumericMutation,
+    tryApplyTrustedColumnDirectAggregateExistingNumericMutation,
+  } = createOperationDirectAggregateMutationFastPaths({
+    state: args.state,
+    directRangePostRecalcLimit: DIRECT_RANGE_POST_RECALC_LIMIT,
+    getSingleEntityDependent: args.getSingleEntityDependent,
+    collectAffectedDirectRangeDependents,
+    collectSingleApplicableDirectAggregateDependent,
+    canApplyDirectAggregateLiteralDeltaForRequest,
+    canApplyDirectAggregateLiteralDelta,
+    writeFastPathLiteralToExistingCell,
+    writeTrustedExistingNumericLiteralToCell,
+    applyTerminalDirectFormulaNumericDeltaAndReturn,
+    applyDirectFormulaNumericDelta,
+    applyDirectFormulaNumericDeltaBatch,
+    cellsShareVersionColumn,
+    withOptionalColumnVersionBatch,
+    deferSingleCellKernelSync,
+    makeSingleLiteralSkipMetrics,
+  })
 
   const tryApplyTrustedDirectScalarClosureExistingNumericMutation = (request: {
     existingIndex: number
