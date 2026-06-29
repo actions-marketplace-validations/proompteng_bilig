@@ -11,6 +11,7 @@ This package is released as part of the aligned bilig library package set.
 - Manual override: no
 
 ## Fixes
+
 - fix(ci): restore green debt baseline (7cdfb765)
 
 ## 0.164.10
