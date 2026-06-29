@@ -1,6 +1,6 @@
-import { CellFlags, type EngineCellMutationRef, type SheetRecord } from '@bilig/core/headless-runtime'
-import type { CellRangeRef, CellValue, LiteralInput, WorkbookSnapshot } from '@bilig/protocol'
-import { formatAddress, parseCellAddress } from '@bilig/formula'
+import type { EngineCellMutationRef, SheetRecord } from '@bilig/core/headless-runtime'
+import type { CellRangeRef, LiteralInput, WorkbookSnapshot } from '@bilig/protocol'
+import { formatAddress } from '@bilig/formula'
 import { assertRange, valuesEqual } from './work-paper-runtime-helpers.js'
 import { formatTrackedA1, sourceRangeRef } from './work-paper-address-format.js'
 import {
@@ -20,7 +20,6 @@ import {
   captureWorkPaperNamedExpressionValueSnapshot,
   computeWorkPaperNamedExpressionChanges,
   type InternalNamedExpression,
-  type WorkPaperNamedExpressionValueSnapshot,
 } from './work-paper-named-expression-helpers.js'
 import type { WorkPaperEngineEventTracker } from './work-paper-engine-event-tracker.js'
 import type { WorkPaperMutationQueues } from './work-paper-mutation-queues.js'
@@ -51,6 +50,14 @@ import {
   withEventChanges,
   type QueuedEvent,
 } from './work-paper-tracked-event-helpers.js'
+import {
+  EMPTY_NAMED_EXPRESSION_VALUES,
+  FORMULA_REBUILD_VALUE_FLAGS,
+  cellAddressInRange,
+  shouldPreferLazyPublicChanges,
+  type NamedExpressionValueSnapshot,
+  type RebuildValueSnapshot,
+} from './work-paper-runtime-surface-helpers.js'
 import { tryRenameWorkPaperSheetWithoutVisibilitySnapshots } from './work-paper-sheet-rename-fast-path.js'
 import { WORKPAPER_PUBLIC_ERROR_NAMES } from './work-paper-config.js'
 import { cloneWorkPaperSnapshotWithRuntimeImage } from './work-paper-snapshot-clone.js'
@@ -64,35 +71,6 @@ import type {
   WorkPaperStats,
 } from './work-paper-types.js'
 import { WorkPaperRuntimeMetadataSurface } from './work-paper-runtime-metadata-surface.js'
-
-type NamedExpressionValueSnapshot = WorkPaperNamedExpressionValueSnapshot
-type RebuildValueSnapshot = Map<number, CellValue>
-const FORMULA_REBUILD_VALUE_FLAGS = CellFlags.HasFormula | CellFlags.SpillChild | CellFlags.PivotOutput
-export const EMPTY_NAMED_EXPRESSION_VALUES: NamedExpressionValueSnapshot = new Map()
-
-function shouldPreferLazyPublicChanges(events: readonly TrackedEngineEvent[], shouldEmitValuesUpdated: boolean): boolean {
-  if (!shouldEmitValuesUpdated) {
-    return true
-  }
-  return events.some(
-    (event) =>
-      event.changedCellIndices.length > TINY_TRACKED_CHANGE_LIMIT &&
-      event.invalidation !== 'full' &&
-      event.patches === undefined &&
-      !event.hasInvalidatedRanges &&
-      !event.hasInvalidatedRows &&
-      !event.hasInvalidatedColumns,
-  )
-}
-
-function cellAddressInRange(row: number, col: number, range: CellRangeRef): boolean {
-  const start = parseCellAddress(range.startAddress, range.sheetName)
-  const end = parseCellAddress(range.endAddress, range.sheetName)
-  if (!start || !end) {
-    return false
-  }
-  return row >= start.row && row <= end.row && col >= start.col && col <= end.col
-}
 
 export abstract class WorkPaperRuntimeSurface extends WorkPaperRuntimeMetadataSurface {
   protected abstract readonly namedExpressions: Map<string, InternalNamedExpression>

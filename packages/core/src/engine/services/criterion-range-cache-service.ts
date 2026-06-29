@@ -1,16 +1,37 @@
-import { ErrorCode, ValueTag, type CellValue } from '@bilig/protocol'
-import {
-  compileCriteriaMatcher,
-  matchesCompiledCriteria,
-  normalizeExactLookupNumber,
-  type CompiledCriteriaMatcher,
-  type CriteriaOperator,
-} from '@bilig/formula'
+import { ErrorCode, type CellValue } from '@bilig/protocol'
+import { compileCriteriaMatcher } from '@bilig/formula'
 import type { EngineRuntimeColumnStoreService, RuntimeColumnView } from './runtime-column-store-service.js'
-import { sliceAbsoluteRowsToRangeView, type CriterionRowSetView } from './criterion-rowset-view.js'
-import { getOrBuildIndexedPredicateAggregateFromColumnViews } from './criterion-range-indexed-predicate-aggregate.js'
 import type { DepPatternStore } from '../../deps/dep-pattern-store.js'
 import type { RegionGraph } from '../../deps/region-graph.js'
+import { getOrBuildIndexedPredicateAggregateFromColumnViews } from './criterion-range-indexed-predicate-aggregate.js'
+import {
+  addExactAggregateBucket,
+  addExactAggregateMatch,
+  createExactAggregateBucket,
+  exactAggregateBucketValue,
+  exactAggregateValueFromBucket,
+  type CriterionExactAggregateBucket,
+  type CriterionExactAggregateIndex,
+} from './criterion-range-aggregate.js'
+import {
+  compoundExactAggregateCacheKey,
+  compoundExactAggregateIndexCacheKey,
+  compoundExactTupleKey,
+  criteriaCacheKey,
+  exactAggregateIndexCacheKey,
+} from './criterion-range-cache-keys.js'
+import {
+  equalityIndexKeyForPredicate,
+  equalityIndexKeyForStoredValue,
+  readIndexedEqualityRows,
+  type CriterionEqualityIndexKey,
+} from './criterion-range-equality-index.js'
+import { buildSlicePredicate, slicePredicateMatches, slicePredicateMatchesEmpty } from './criterion-range-predicate.js'
+import { countNonEmptyRowsInView, forEachNonEmptyRowOffsetInView } from './criterion-range-row-iteration.js'
+import { decodeValueTag, errorValue, materializeSliceValue } from './criterion-range-values.js'
+
+export type { CriterionExactAggregateBucket } from './criterion-range-aggregate.js'
+export type { SliceFastPredicate } from './criterion-range-predicate.js'
 
 export interface CriterionRangeDescriptor {
   readonly sheetName: string
@@ -38,15 +59,6 @@ export interface CriterionRangeCacheService {
   readonly getOrBuildIndexedPredicateAggregate: (request: CriterionCompoundExactAggregateRequest) => CellValue | undefined
 }
 
-interface CriterionCacheEntry {
-  readonly rows: Uint32Array
-  readonly length: number
-  readonly pairVersions: ReadonlyArray<{
-    columnVersion: number
-    structureVersion: number
-  }>
-}
-
 export interface CriterionExactAggregateRequest {
   readonly criteriaPair: CriterionRangePair
   readonly aggregateRange?: CriterionRangeDescriptor
@@ -60,544 +72,11 @@ export interface CriterionCompoundExactAggregateRequest {
   readonly useCompoundBucketIndex?: boolean
 }
 
-export interface CriterionExactAggregateBucket {
-  count: number
-  sum: number
-  numericCount: number
-  minimum: number
-  maximum: number
-  firstError?: CellValue
-}
-
-interface CriterionExactAggregateIndex {
-  readonly numbers: ReadonlyMap<number, CriterionExactAggregateBucket>
-  readonly strings: ReadonlyMap<string, CriterionExactAggregateBucket>
-}
-
 interface CriterionCompoundExactAggregateIndex {
   readonly buckets: ReadonlyMap<string, CriterionExactAggregateBucket>
 }
 
-interface CriterionEqualityRowIndex {
-  readonly numbers: ReadonlyMap<number, Uint32Array>
-  readonly strings: ReadonlyMap<string, Uint32Array>
-}
-
-type CriterionEqualityIndexKey =
-  | {
-      readonly kind: 'number'
-      readonly value: number
-    }
-  | {
-      readonly kind: 'string'
-      readonly value: string
-    }
-
-export type SliceFastPredicate =
-  | {
-      kind: 'eq-empty'
-      negate: boolean
-    }
-  | {
-      kind: 'eq-bool'
-      negate: boolean
-      value: boolean
-    }
-  | {
-      kind: 'eq-number'
-      negate: boolean
-      value: number
-    }
-  | {
-      kind: 'eq-string'
-      negate: boolean
-      value: string
-    }
-  | {
-      kind: 'cmp-number'
-      operator: Exclude<CriteriaOperator, '=' | '<>'>
-      value: number
-    }
-  | {
-      kind: 'generic'
-      compiled: CompiledCriteriaMatcher
-    }
-
-const equalityRowIndexes = new WeakMap<RuntimeColumnView['owner'], CriterionEqualityRowIndex>()
 const COMPOUND_EXACT_AGGREGATE_BUCKET_LIMIT = 16_384
-
-function errorValue(code: ErrorCode): CellValue {
-  return { tag: ValueTag.Error, code }
-}
-
-function numberValue(value: number): CellValue {
-  return { tag: ValueTag.Number, value }
-}
-
-function criteriaCacheKey(value: CellValue): string {
-  switch (value.tag) {
-    case ValueTag.Empty:
-      return 'e:'
-    case ValueTag.Number:
-      return `n:${normalizeExactLookupNumber(value.value)}`
-    case ValueTag.Boolean:
-      return value.value ? 'b:1' : 'b:0'
-    case ValueTag.String:
-      return `s:${value.value}`
-    case ValueTag.Error:
-      return `r:${value.code}`
-  }
-}
-
-function decodeValueTag(rawTag: number | undefined): ValueTag {
-  if (rawTag === undefined) {
-    return ValueTag.Empty
-  }
-  switch (rawTag) {
-    case 1:
-      return ValueTag.Number
-    case 2:
-      return ValueTag.Boolean
-    case 3:
-      return ValueTag.String
-    case 4:
-      return ValueTag.Error
-    case 0:
-    default:
-      return ValueTag.Empty
-  }
-}
-
-function normalizeSliceString(runtimeColumnStore: EngineRuntimeColumnStoreService, stringId: number): string {
-  return stringId === 0 ? '' : runtimeColumnStore.normalizeStringId(stringId)
-}
-
-function materializeSliceValue(view: RuntimeColumnView, offset: number, runtimeColumnStore: EngineRuntimeColumnStoreService): CellValue {
-  const tag = decodeValueTag(view.readTagAt(offset))
-  switch (tag) {
-    case ValueTag.Empty:
-      return { tag: ValueTag.Empty }
-    case ValueTag.Number:
-      return { tag: ValueTag.Number, value: view.readNumberAt(offset) }
-    case ValueTag.Boolean:
-      return { tag: ValueTag.Boolean, value: view.readNumberAt(offset) !== 0 }
-    case ValueTag.String: {
-      const stringId = view.readStringIdAt(offset)
-      return {
-        tag: ValueTag.String,
-        value: stringId === 0 ? '' : runtimeColumnStore.normalizeStringId(stringId),
-        stringId,
-      }
-    }
-    case ValueTag.Error:
-      return { tag: ValueTag.Error, code: view.readErrorAt(offset) ?? ErrorCode.None }
-  }
-}
-
-function buildSlicePredicate(compiled: CompiledCriteriaMatcher): SliceFastPredicate {
-  const { operator, operand, wildcardPattern } = compiled
-  if (wildcardPattern) {
-    return { kind: 'generic', compiled }
-  }
-  if (operator === '=' || operator === '<>') {
-    const negate = operator === '<>'
-    switch (operand.tag) {
-      case ValueTag.Empty:
-        return { kind: 'eq-empty', negate }
-      case ValueTag.Boolean:
-        return { kind: 'eq-bool', negate, value: operand.value }
-      case ValueTag.Number:
-        return {
-          kind: 'eq-number',
-          negate,
-          value: normalizeExactLookupNumber(operand.value),
-        }
-      case ValueTag.String:
-        return { kind: 'eq-string', negate, value: operand.value.toUpperCase() }
-      case ValueTag.Error:
-        return { kind: 'generic', compiled }
-    }
-  }
-  if (operand.tag === ValueTag.Number) {
-    return {
-      kind: 'cmp-number',
-      operator,
-      value: normalizeExactLookupNumber(operand.value),
-    }
-  }
-  return { kind: 'generic', compiled }
-}
-
-function slicePredicateMatches(
-  predicate: SliceFastPredicate,
-  view: RuntimeColumnView,
-  offset: number,
-  runtimeColumnStore: EngineRuntimeColumnStoreService,
-): boolean {
-  switch (predicate.kind) {
-    case 'eq-empty': {
-      const tag = decodeValueTag(view.readTagAt(offset))
-      const matches =
-        tag === ValueTag.Empty || (tag === ValueTag.String && normalizeSliceString(runtimeColumnStore, view.readStringIdAt(offset)) === '')
-      return predicate.negate ? !matches : matches
-    }
-    case 'eq-bool': {
-      const tag = decodeValueTag(view.readTagAt(offset))
-      const numeric = tag === ValueTag.Number || tag === ValueTag.Boolean || tag === ValueTag.Empty ? view.readNumberAt(offset) : undefined
-      const matches = numeric !== undefined && (Object.is(numeric, -0) ? 0 : numeric) === (predicate.value ? 1 : 0)
-      return predicate.negate ? !matches : matches
-    }
-    case 'eq-number': {
-      const tag = decodeValueTag(view.readTagAt(offset))
-      const numeric = normalizeExactLookupNumber(view.readNumberAt(offset))
-      const matches = (tag === ValueTag.Number || tag === ValueTag.Boolean || tag === ValueTag.Empty) && numeric === predicate.value
-      return predicate.negate ? !matches : matches
-    }
-    case 'eq-string': {
-      const tag = decodeValueTag(view.readTagAt(offset))
-      if (predicate.negate && predicate.value === '') {
-        return tag !== ValueTag.Empty && tag !== ValueTag.Error
-      }
-      const matches =
-        (tag === ValueTag.String || tag === ValueTag.Empty) &&
-        (tag === ValueTag.Empty ? '' : normalizeSliceString(runtimeColumnStore, view.readStringIdAt(offset))) === predicate.value
-      return predicate.negate ? !matches : matches
-    }
-    case 'cmp-number': {
-      const tag = decodeValueTag(view.readTagAt(offset))
-      if (tag !== ValueTag.Number && tag !== ValueTag.Boolean) {
-        return false
-      }
-      const numeric = normalizeExactLookupNumber(view.readNumberAt(offset))
-      switch (predicate.operator) {
-        case '>':
-          return numeric > predicate.value
-        case '>=':
-          return numeric >= predicate.value
-        case '<':
-          return numeric < predicate.value
-        case '<=':
-          return numeric <= predicate.value
-        default:
-          return false
-      }
-    }
-    case 'generic':
-      return matchesCompiledCriteria(materializeSliceValue(view, offset, runtimeColumnStore), predicate.compiled)
-  }
-}
-
-function slicePredicateMatchesEmpty(predicate: SliceFastPredicate): boolean {
-  switch (predicate.kind) {
-    case 'eq-empty':
-      return !predicate.negate
-    case 'eq-bool':
-      return predicate.negate ? predicate.value : !predicate.value
-    case 'eq-number':
-      return predicate.negate ? predicate.value !== 0 : predicate.value === 0
-    case 'eq-string':
-      return predicate.negate ? predicate.value !== '' : predicate.value === ''
-    case 'cmp-number':
-      return false
-    case 'generic':
-      return matchesCompiledCriteria({ tag: ValueTag.Empty }, predicate.compiled)
-  }
-}
-
-function equalityIndexKeyForPredicate(predicate: SliceFastPredicate): CriterionEqualityIndexKey | undefined {
-  if (predicate.kind === 'eq-number' && !predicate.negate && predicate.value !== 0) {
-    return { kind: 'number', value: predicate.value }
-  }
-  if (predicate.kind === 'eq-bool' && !predicate.negate && predicate.value) {
-    return { kind: 'number', value: 1 }
-  }
-  if (predicate.kind === 'eq-string' && !predicate.negate && predicate.value !== '') {
-    return { kind: 'string', value: predicate.value }
-  }
-  return undefined
-}
-
-function equalityIndexKeyForStoredValue(
-  tag: ValueTag,
-  number: number,
-  stringId: number,
-  runtimeColumnStore: EngineRuntimeColumnStoreService,
-): CriterionEqualityIndexKey | undefined {
-  if (tag === ValueTag.Number) {
-    const value = normalizeExactLookupNumber(number)
-    return value === 0 ? undefined : { kind: 'number', value }
-  }
-  if (tag === ValueTag.Boolean) {
-    return number === 0 ? undefined : { kind: 'number', value: 1 }
-  }
-  if (tag === ValueTag.String) {
-    const value = normalizeSliceString(runtimeColumnStore, stringId)
-    return value === '' ? undefined : { kind: 'string', value }
-  }
-  return undefined
-}
-
-function sortedUint32Rows(rows: number[]): Uint32Array {
-  if (rows.length === 0) {
-    return new Uint32Array(0)
-  }
-  rows.sort((left, right) => left - right)
-  return Uint32Array.from(rows)
-}
-
-function getOrBuildEqualityRowIndex(
-  view: RuntimeColumnView,
-  runtimeColumnStore: EngineRuntimeColumnStoreService,
-): CriterionEqualityRowIndex {
-  const cached = equalityRowIndexes.get(view.owner)
-  if (cached !== undefined) {
-    return cached
-  }
-
-  const numbers = new Map<number, number[]>()
-  const strings = new Map<string, number[]>()
-  view.owner.pages.forEach((page) => {
-    if (page.nonEmptyCount === 0) {
-      return
-    }
-    const rowEnd = page.rowStart + page.tags.length - 1
-    for (let row = page.rowStart; row <= rowEnd; row += 1) {
-      const localRow = row - page.rowStart
-      const tag = decodeValueTag(page.tags[localRow])
-      const key = equalityIndexKeyForStoredValue(tag, page.numbers[localRow] ?? 0, page.stringIds[localRow] ?? 0, runtimeColumnStore)
-      if (key?.kind === 'number') {
-        let rows = numbers.get(key.value)
-        if (rows === undefined) {
-          rows = []
-          numbers.set(key.value, rows)
-        }
-        rows.push(row)
-        continue
-      }
-      if (key?.kind === 'string') {
-        let rows = strings.get(key.value)
-        if (rows === undefined) {
-          rows = []
-          strings.set(key.value, rows)
-        }
-        rows.push(row)
-      }
-    }
-  })
-
-  const index: CriterionEqualityRowIndex = {
-    numbers: new Map([...numbers].map(([value, rows]) => [value, sortedUint32Rows(rows)])),
-    strings: new Map([...strings].map(([value, rows]) => [value, sortedUint32Rows(rows)])),
-  }
-  equalityRowIndexes.set(view.owner, index)
-  return index
-}
-
-function readIndexedEqualityRows(
-  view: RuntimeColumnView,
-  predicate: SliceFastPredicate,
-  runtimeColumnStore: EngineRuntimeColumnStoreService,
-): CriterionRowSetView | undefined {
-  const key = equalityIndexKeyForPredicate(predicate)
-  if (key === undefined) {
-    return undefined
-  }
-  const index = getOrBuildEqualityRowIndex(view, runtimeColumnStore)
-  const rows = key.kind === 'number' ? index.numbers.get(key.value) : index.strings.get(key.value)
-  return sliceAbsoluteRowsToRangeView(rows ?? new Uint32Array(0), view.rowStart, view.rowEnd)
-}
-
-function createExactAggregateBucket(): CriterionExactAggregateBucket {
-  return {
-    count: 0,
-    sum: 0,
-    numericCount: 0,
-    minimum: Number.POSITIVE_INFINITY,
-    maximum: Number.NEGATIVE_INFINITY,
-  }
-}
-
-function addExactAggregateMatch(bucket: CriterionExactAggregateBucket, aggregateView: RuntimeColumnView | undefined, offset: number): void {
-  bucket.count += 1
-  if (aggregateView === undefined) {
-    return
-  }
-  const tag = decodeValueTag(aggregateView.readTagAt(offset))
-  if (tag === ValueTag.Error) {
-    bucket.firstError ??= { tag: ValueTag.Error, code: aggregateView.readErrorAt(offset) ?? ErrorCode.None }
-    return
-  }
-  if (tag === ValueTag.Number) {
-    const numeric = aggregateView.readNumberAt(offset)
-    bucket.sum += numeric
-    bucket.numericCount += 1
-    bucket.minimum = Math.min(bucket.minimum, numeric)
-    bucket.maximum = Math.max(bucket.maximum, numeric)
-    return
-  }
-  if (tag === ValueTag.Boolean) {
-    bucket.sum += aggregateView.readNumberAt(offset) !== 0 ? 1 : 0
-    bucket.numericCount += 1
-    return
-  }
-  if (tag === ValueTag.Empty) {
-    bucket.numericCount += 1
-  }
-}
-
-function addExactAggregateBucket(
-  index: { numbers: Map<number, CriterionExactAggregateBucket>; strings: Map<string, CriterionExactAggregateBucket> },
-  key: CriterionEqualityIndexKey,
-  aggregateView: RuntimeColumnView | undefined,
-  offset: number,
-): void {
-  let bucket = key.kind === 'number' ? index.numbers.get(key.value) : index.strings.get(key.value)
-  if (bucket === undefined) {
-    bucket = createExactAggregateBucket()
-    if (key.kind === 'number') {
-      index.numbers.set(key.value, bucket)
-    } else {
-      index.strings.set(key.value, bucket)
-    }
-  }
-  addExactAggregateMatch(bucket, aggregateView, offset)
-}
-
-function exactAggregateValueFromBucket(
-  bucket: CriterionExactAggregateBucket | undefined,
-  aggregateKind: CriterionExactAggregateRequest['aggregateKind'],
-): CellValue {
-  if (bucket === undefined) {
-    return aggregateKind === 'average' ? errorValue(ErrorCode.Div0) : numberValue(0)
-  }
-  if (aggregateKind === 'count') {
-    return numberValue(bucket.count)
-  }
-  if (bucket.firstError) {
-    return bucket.firstError
-  }
-  if (aggregateKind === 'sum') {
-    return numberValue(bucket.sum)
-  }
-  if (aggregateKind === 'average') {
-    return bucket.numericCount === 0 ? errorValue(ErrorCode.Div0) : numberValue(bucket.sum / bucket.numericCount)
-  }
-  if (aggregateKind === 'min') {
-    return numberValue(bucket.minimum === Number.POSITIVE_INFINITY ? 0 : bucket.minimum)
-  }
-  return numberValue(bucket.maximum === Number.NEGATIVE_INFINITY ? 0 : bucket.maximum)
-}
-
-function exactAggregateBucketValue(
-  index: CriterionExactAggregateIndex,
-  key: CriterionEqualityIndexKey,
-  aggregateKind: CriterionExactAggregateRequest['aggregateKind'],
-): CellValue {
-  return exactAggregateValueFromBucket(key.kind === 'number' ? index.numbers.get(key.value) : index.strings.get(key.value), aggregateKind)
-}
-
-function exactAggregateIndexCacheKey(request: {
-  readonly criteriaRegionId: number
-  readonly criteriaView: RuntimeColumnView
-  readonly aggregateRegionId?: number
-  readonly aggregateView?: RuntimeColumnView
-}): string {
-  return [
-    request.criteriaRegionId,
-    request.criteriaView.columnVersion,
-    request.criteriaView.structureVersion,
-    request.aggregateRegionId ?? -1,
-    request.aggregateView?.columnVersion ?? -1,
-    request.aggregateView?.structureVersion ?? -1,
-  ].join('\u0001')
-}
-
-function exactKeyCachePart(key: CriterionEqualityIndexKey): string {
-  return key.kind === 'number' ? `n:${key.value}` : `s:${key.value}`
-}
-
-function compoundExactTupleKey(keys: readonly CriterionEqualityIndexKey[]): string {
-  return keys.map(exactKeyCachePart).join('\u0002')
-}
-
-function compoundExactAggregateCacheKey(request: {
-  readonly aggregateKind: CriterionExactAggregateRequest['aggregateKind']
-  readonly criteriaPairs: readonly {
-    readonly regionId: number
-    readonly view: RuntimeColumnView
-    readonly key: CriterionEqualityIndexKey
-  }[]
-  readonly aggregateRegionId?: number
-  readonly aggregateView?: RuntimeColumnView
-}): string {
-  return [
-    request.aggregateKind,
-    request.criteriaPairs
-      .map(({ regionId, view, key }) => `${regionId}:${view.columnVersion}:${view.structureVersion}:${exactKeyCachePart(key)}`)
-      .join('\u0002'),
-    request.aggregateRegionId ?? -1,
-    request.aggregateView?.columnVersion ?? -1,
-    request.aggregateView?.structureVersion ?? -1,
-  ].join('\u0001')
-}
-
-function compoundExactAggregateIndexCacheKey(request: {
-  readonly criteriaPairs: readonly {
-    readonly regionId: number
-    readonly view: RuntimeColumnView
-  }[]
-  readonly aggregateRegionId?: number
-  readonly aggregateView?: RuntimeColumnView
-}): string {
-  return [
-    request.criteriaPairs.map(({ regionId, view }) => `${regionId}:${view.columnVersion}:${view.structureVersion}`).join('\u0002'),
-    request.aggregateRegionId ?? -1,
-    request.aggregateView?.columnVersion ?? -1,
-    request.aggregateView?.structureVersion ?? -1,
-  ].join('\u0001')
-}
-
-function countNonEmptyRowsInView(view: RuntimeColumnView): number {
-  let count = 0
-  view.owner.pages.forEach((page) => {
-    const rowStart = Math.max(view.rowStart, page.rowStart)
-    const rowEnd = Math.min(view.rowEnd, page.rowStart + page.tags.length - 1)
-    if (rowStart > rowEnd || page.nonEmptyCount === 0) {
-      return
-    }
-    if (rowStart === page.rowStart && rowEnd === page.rowStart + page.tags.length - 1) {
-      count += page.nonEmptyCount
-      return
-    }
-    for (let row = rowStart; row <= rowEnd; row += 1) {
-      if (decodeValueTag(page.tags[row - page.rowStart]) !== ValueTag.Empty) {
-        count += 1
-      }
-    }
-  })
-  return count
-}
-
-function forEachNonEmptyRowOffsetInView(view: RuntimeColumnView, fn: (rowOffset: number) => void): void {
-  view.owner.pages.forEach((page) => {
-    const rowStart = Math.max(view.rowStart, page.rowStart)
-    const rowEnd = Math.min(view.rowEnd, page.rowStart + page.tags.length - 1)
-    if (rowStart > rowEnd || page.nonEmptyCount === 0) {
-      return
-    }
-    if (rowStart === page.rowStart && rowEnd === page.rowStart + page.tags.length - 1 && page.nonEmptyCount === page.tags.length) {
-      for (let row = rowStart; row <= rowEnd; row += 1) {
-        fn(row - view.rowStart)
-      }
-      return
-    }
-    for (let row = rowStart; row <= rowEnd; row += 1) {
-      if (decodeValueTag(page.tags[row - page.rowStart]) !== ValueTag.Empty) {
-        fn(row - view.rowStart)
-      }
-    }
-  })
-}
 
 export function createCriterionRangeCacheService(args: {
   readonly runtimeColumnStore: EngineRuntimeColumnStoreService
@@ -632,7 +111,7 @@ export function createCriterionRangeCacheService(args: {
       structureVersion: slice.structureVersion,
       sheetColumnVersions: slice.sheetColumnVersions,
       readTagAt(offset) {
-        return slice.tags[offset] ?? ValueTag.Empty
+        return slice.tags[offset] ?? 0
       },
       readNumberAt(offset) {
         return slice.numbers[offset] ?? 0
@@ -924,7 +403,7 @@ export function createCriterionRangeCacheService(args: {
     const predicates = criteriaPairs.map((pair) => buildSlicePredicate(compileCriteriaMatcher(pair.criteria)))
     const matchingRows: number[] = []
     let limitingPairIndex: number | undefined
-    let limitingIndexedRows: CriterionRowSetView | undefined
+    let limitingIndexedRows: ReturnType<typeof readIndexedEqualityRows> | undefined
     let limitingPairNonEmptyRows = Number.POSITIVE_INFINITY
     for (let pairIndex = 0; pairIndex < predicates.length; pairIndex += 1) {
       const indexedRows = readIndexedEqualityRows(resolvedPairs[pairIndex]!.view, predicates[pairIndex]!, args.runtimeColumnStore)
@@ -972,20 +451,12 @@ export function createCriterionRangeCacheService(args: {
       forEachNonEmptyRowOffsetInView(resolvedPairs[limitingPairIndex]!.view, visitCandidate)
     }
 
-    const entry: CriterionCacheEntry = {
-      rows: Uint32Array.from(matchingRows),
-      length: matchingRows.length,
-      pairVersions: resolvedPairs.map(({ view }) => ({
-        columnVersion: view.columnVersion,
-        structureVersion: view.structureVersion,
-      })),
-    }
     return args.depPatternStore.setCriteriaPattern({
       regionIds: resolvedPairs.map(({ regionId }) => regionId),
       criteriaKeys: resolvedPairs.map(({ criteria }) => criteriaCacheKey(criteria)),
       versionStamp,
-      rows: entry.rows,
-      length: entry.length,
+      rows: Uint32Array.from(matchingRows),
+      length: matchingRows.length,
     })
   }
 

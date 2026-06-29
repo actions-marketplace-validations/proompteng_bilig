@@ -1,6 +1,5 @@
 import { readFileSync, statSync, writeFileSync } from 'node:fs'
 import { basename, dirname, extname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import { ValueTag, type LiteralInput } from '@bilig/protocol'
 import {
@@ -13,6 +12,12 @@ import {
 } from '@bilig/xlsx'
 
 import { recalculateXlsxFileToFile } from './file-recalc.js'
+import {
+  defaultGithubActionPackageVersionForHelp,
+  parseGithubActionWorkflowArgs,
+  printGithubActionWorkflow,
+  type CliInspectLimit,
+} from './cli-github-action.js'
 import type {
   XlsxFormulaRecalcCellValue,
   XlsxFormulaRecalcEdit,
@@ -33,23 +38,12 @@ interface CliOptions {
   readonly reads: readonly string[]
   readonly externalWorkbooks: readonly CliExternalWorkbook[]
   readonly inspect: boolean
-  readonly inspectLimit: number | 'all'
+  readonly inspectLimit: CliInspectLimit
   readonly timeoutMs?: number
   readonly engine?: XlsxFormulaRecalcEngine
   readonly maxRssBytes?: number
   readonly fallbackPolicy?: XlsxFormulaRecalcFallbackPolicy
   readonly json: boolean
-}
-
-interface GithubActionWorkflowOptions {
-  readonly workbooks: string
-  readonly changedFilesOnly: boolean
-  readonly failOnStale: boolean
-  readonly inspectLimit: CliOptions['inspectLimit']
-  readonly jsonOutput: string
-  readonly markdownOutput: string
-  readonly packageVersion: string
-  readonly workflowName: string
 }
 
 export interface XlsxFormulaRecalcCliContext {
@@ -61,7 +55,12 @@ export interface XlsxFormulaRecalcCliContext {
 const defaultInspectFormulaLimit = 2000
 const cacheDoctorCommandName = 'xlsx-cache-doctor'
 const printGithubActionOption = '--print-github-action'
-const defaultGithubActionPackageVersion = readPackageVersion()
+const defaultGithubActionPackageVersion = defaultGithubActionPackageVersionForHelp()
+const githubActionParseHelpers = {
+  defaultInspectFormulaLimit,
+  parseInspectLimit,
+  requireNextArg,
+}
 
 export function runXlsxFormulaRecalcCli(args: readonly string[], context: XlsxFormulaRecalcCliContext = {}): number {
   const commandName = context.commandName ?? 'xlsx-recalc'
@@ -75,7 +74,7 @@ export function runXlsxFormulaRecalcCli(args: readonly string[], context: XlsxFo
     }
 
     if (commandName === cacheDoctorCommandName && args.includes(printGithubActionOption)) {
-      printGithubActionWorkflow(parseGithubActionWorkflowArgs(args, commandName), writeStdout)
+      printGithubActionWorkflow(parseGithubActionWorkflowArgs(args, commandName, githubActionParseHelpers), writeStdout)
       return 0
     }
 
@@ -154,7 +153,7 @@ export async function runXlsxFormulaRecalcCliAsync(args: readonly string[], cont
     }
 
     if (commandName === cacheDoctorCommandName && args.includes(printGithubActionOption)) {
-      printGithubActionWorkflow(parseGithubActionWorkflowArgs(args, commandName), writeStdout)
+      printGithubActionWorkflow(parseGithubActionWorkflowArgs(args, commandName, githubActionParseHelpers), writeStdout)
       return 0
     }
 
@@ -225,161 +224,6 @@ export async function runXlsxFormulaRecalcCliAsync(args: readonly string[], cont
     }
     return 1
   }
-}
-
-function readPackageVersion(): string {
-  const packageJsonPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json')
-  const parsed: unknown = JSON.parse(readFileSync(packageJsonPath, 'utf8'))
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-    throw new Error(`Expected package.json object at ${packageJsonPath}`)
-  }
-  const version = (parsed as { readonly version?: unknown }).version
-  if (typeof version !== 'string' || version.length === 0) {
-    throw new Error(`Expected package.json version at ${packageJsonPath}`)
-  }
-  return version
-}
-
-function parseGithubActionWorkflowArgs(args: readonly string[], commandName: string): GithubActionWorkflowOptions {
-  let workbooks: string | undefined
-  let changedFilesOnly = true
-  let failOnStale = false
-  let inspectLimit: CliOptions['inspectLimit'] = defaultInspectFormulaLimit
-  let jsonOutput = '${{ runner.temp }}/xlsx-cache-doctor.json'
-  let markdownOutput = '${{ runner.temp }}/xlsx-cache-doctor.md'
-  let packageVersion = defaultGithubActionPackageVersion
-  let workflowName = 'xlsx-cache-doctor'
-
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index]
-    if (arg === undefined) {
-      throw new Error(`Unexpected missing ${commandName} argument`)
-    }
-    switch (arg) {
-      case printGithubActionOption:
-        break
-      case '--workbook':
-      case '--workbooks':
-        workbooks = requireNextArg(args, index, arg)
-        index += 1
-        break
-      case '--changed-files-only':
-        changedFilesOnly = parseBooleanOption(requireNextArg(args, index, '--changed-files-only'), '--changed-files-only')
-        index += 1
-        break
-      case '--fail-on-stale':
-        failOnStale = parseBooleanOption(requireNextArg(args, index, '--fail-on-stale'), '--fail-on-stale')
-        index += 1
-        break
-      case '--inspect-limit':
-        inspectLimit = parseInspectLimit(requireNextArg(args, index, '--inspect-limit'))
-        index += 1
-        break
-      case '--json-output':
-        jsonOutput = requireNextArg(args, index, '--json-output')
-        index += 1
-        break
-      case '--markdown-output':
-        markdownOutput = requireNextArg(args, index, '--markdown-output')
-        index += 1
-        break
-      case '--package-version':
-        packageVersion = requireNextArg(args, index, '--package-version')
-        index += 1
-        break
-      case '--workflow-name':
-        workflowName = requireNextArg(args, index, '--workflow-name')
-        index += 1
-        break
-      default:
-        if (arg.startsWith('-')) {
-          throw new Error(`Unknown ${commandName} option for ${printGithubActionOption}: ${arg}`)
-        }
-        if (workbooks !== undefined) {
-          throw new Error(`Unexpected extra workbook glob for ${printGithubActionOption}: ${arg}`)
-        }
-        workbooks = arg
-    }
-  }
-
-  if (!workbooks) {
-    throw new Error(`Expected workbook path or glob after ${printGithubActionOption}`)
-  }
-
-  return {
-    workbooks,
-    changedFilesOnly,
-    failOnStale,
-    inspectLimit,
-    jsonOutput,
-    markdownOutput,
-    packageVersion,
-    workflowName,
-  }
-}
-
-function printGithubActionWorkflow(options: GithubActionWorkflowOptions, writeStdout: (text: string) => void): void {
-  writeStdout(
-    [
-      `name: ${yamlDoubleQuote(options.workflowName)}`,
-      '',
-      'on:',
-      '  pull_request:',
-      '    paths:',
-      '      - "**/*.xlsx"',
-      '  workflow_dispatch:',
-      '',
-      'permissions:',
-      '  contents: read',
-      '',
-      'jobs:',
-      '  inspect-xlsx-formula-caches:',
-      '    runs-on: ubuntu-latest',
-      '    steps:',
-      '      - uses: actions/checkout@v5',
-      '        with:',
-      '          fetch-depth: 0',
-      '',
-      '      - uses: actions/setup-node@v6',
-      '        with:',
-      '          node-version: "22"',
-      '          package-manager-cache: false',
-      '',
-      '      - id: cache-doctor',
-      '        uses: proompteng/bilig@v1',
-      '        with:',
-      `          workbooks: ${yamlDoubleQuote(options.workbooks)}`,
-      `          changed-files-only: ${yamlDoubleQuote(String(options.changedFilesOnly))}`,
-      `          package-version: ${yamlDoubleQuote(options.packageVersion)}`,
-      `          inspect-limit: ${yamlDoubleQuote(String(options.inspectLimit))}`,
-      `          json-output: ${yamlDoubleQuote(options.jsonOutput)}`,
-      `          markdown-output: ${yamlDoubleQuote(options.markdownOutput)}`,
-      `          fail-on-stale: ${yamlDoubleQuote(String(options.failOnStale))}`,
-      '',
-      '      - uses: actions/upload-artifact@v4',
-      '        if: always()',
-      '        with:',
-      '          name: xlsx-cache-doctor-report',
-      '          path: |',
-      '            ${{ steps.cache-doctor.outputs.json }}',
-      '            ${{ steps.cache-doctor.outputs.markdown }}',
-      '',
-    ].join('\n'),
-  )
-}
-
-function parseBooleanOption(raw: string, option: string): boolean {
-  if (raw === 'true') {
-    return true
-  }
-  if (raw === 'false') {
-    return false
-  }
-  throw new Error(`Expected ${option} to be "true" or "false", received: ${raw}`)
-}
-
-function yamlDoubleQuote(value: string): string {
-  return JSON.stringify(value)
 }
 
 function normalizeCliArgsForCommand(args: readonly string[], commandName: string): readonly string[] {
