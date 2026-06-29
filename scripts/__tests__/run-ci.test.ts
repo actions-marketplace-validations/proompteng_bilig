@@ -110,9 +110,10 @@ describe('run-ci', () => {
     const packageJson = readFileSync(resolve(repoRoot, 'package.json'), 'utf8')
     const prePushSource = readFileSync(resolve(repoRoot, 'scripts/run-pre-push.ts'), 'utf8')
 
-    expect(packageJson).toContain('"hooks:pre-push": "tsx scripts/run-pre-push.ts"')
+    expect(packageJson).toContain('"pre-commit": "corepack pnpm@10.32.1 hooks:pre-commit"')
+    expect(packageJson).toContain('"pre-push": "corepack pnpm@10.32.1 hooks:pre-push"')
     expect(prePushSource).toContain("assertLocalCiResourceGuardAllowsRun(rootDir, process.env, { runLabel: 'pre-push lint' })")
-    expect(prePushSource).toContain("await run('pnpm', ['lint'])")
+    expect(prePushSource).toContain("await run('corepack', ['pnpm@10.32.1', 'lint'])")
   })
 
   it('uses the deterministic CI profile for the GitHub release gate', () => {

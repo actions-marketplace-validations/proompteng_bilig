@@ -262,8 +262,8 @@
     "yaml": "2.8.3"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm hooks:pre-commit",
-    "pre-push": "pnpm hooks:pre-push"
+    "pre-commit": "corepack pnpm@10.32.1 hooks:pre-commit",
+    "pre-push": "corepack pnpm@10.32.1 hooks:pre-push"
   },
   "lint-staged": {
     "*.{js,cjs,mjs,jsx,ts,tsx,json,css,html}": [

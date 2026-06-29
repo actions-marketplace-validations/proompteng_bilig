@@ -7,7 +7,7 @@ const rootDir = fileURLToPath(new URL('..', import.meta.url))
 
 try {
   assertLocalCiResourceGuardAllowsRun(rootDir, process.env, { runLabel: 'pre-push lint' })
-  const lintExitCode = await run('pnpm', ['lint'])
+  const lintExitCode = await run('corepack', ['pnpm@10.32.1', 'lint'])
   process.exit(lintExitCode)
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error))
