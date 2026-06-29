@@ -421,10 +421,10 @@ test('@browser-ci web app keeps selected row headers and body cells on a single 
   const headerLastPixel = await sampleCompositedViewportPixel(page, grid.x + PRODUCT_ROW_MARKER_WIDTH - 1, seamY)
   const bodyFirstPixel = await sampleCompositedViewportPixel(page, grid.x + PRODUCT_ROW_MARKER_WIDTH, seamY)
   const headerInternalSeamPixel = await sampleCompositedViewportPixel(page, grid.x + PRODUCT_ROW_MARKER_WIDTH - 12, internalRowSeamY)
-  const selectedHeaderTextPixels = await countDarkViewportPixels(page, {
-    height: PRODUCT_ROW_HEIGHT,
-    width: PRODUCT_ROW_MARKER_WIDTH - 16,
-    x: grid.x + 8,
+  const selectedHeaderTextProof = await readSelectedRowHeaderNativeTextProof(page, {
+    height: PRODUCT_ROW_HEIGHT * 8,
+    width: PRODUCT_ROW_MARKER_WIDTH,
+    x: grid.x,
     y: grid.y + PRODUCT_HEADER_HEIGHT + rowTop,
   })
 
@@ -451,7 +451,16 @@ test('@browser-ci web app keeps selected row headers and body cells on a single 
     maxPixelChannelDistance(headerInteriorPixel, headerInternalSeamPixel),
     'selected row-header range should cover internal row separators instead of drawing a double border between selected headers',
   ).toBeLessThanOrEqual(1)
-  expect(selectedHeaderTextPixels, 'selected row header numbers should remain above selection fills').toBeGreaterThan(4)
+  expect(selectedHeaderTextProof.textLayerZIndex, 'selected row header text should render above the TypeGPU fill layer').toBeGreaterThan(
+    selectedHeaderTextProof.typeGpuLayerZIndex,
+  )
+  expect(selectedHeaderTextProof.labels, 'selected row header numbers should remain mounted above selection fills').toEqual(
+    expect.arrayContaining(['8', '15']),
+  )
+  expect(
+    selectedHeaderTextProof.labels.length,
+    'all selected row header numbers should remain mounted above selection fills',
+  ).toBeGreaterThanOrEqual(8)
   expect(bodyFirstPixel.green, 'first body pixel should remain selected-row fill, not a border').toBeGreaterThan(bodyFirstPixel.red)
 })
 
@@ -1437,7 +1446,7 @@ async function sampleCompositedViewportPixel(
   )
 }
 
-async function countDarkViewportPixels(
+async function readSelectedRowHeaderNativeTextProof(
   page: Page,
   clip: {
     readonly height: number
@@ -1445,50 +1454,54 @@ async function countDarkViewportPixels(
     readonly x: number
     readonly y: number
   },
-): Promise<number> {
-  const buffer = await page.screenshot({
-    animations: 'disabled',
-    caret: 'hide',
-    clip: {
-      height: Math.max(1, Math.round(clip.height)),
-      width: Math.max(1, Math.round(clip.width)),
-      x: Math.round(clip.x),
-      y: Math.round(clip.y),
-    },
-  })
-  return await page.evaluate(
-    async ({ dataUrl }) => {
-      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const element = new Image()
-        element.addEventListener('load', () => resolve(element), { once: true })
-        element.addEventListener('error', () => reject(new Error('Failed to decode dark-pixel screenshot')), { once: true })
-        element.src = dataUrl
-      })
-      const canvas = document.createElement('canvas')
-      canvas.width = image.naturalWidth
-      canvas.height = image.naturalHeight
-      const context = canvas.getContext('2d')
-      if (!context) {
-        throw new Error('Missing 2d context for dark-pixel screenshot analysis')
-      }
-      context.drawImage(image, 0, 0)
-      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
-      let darkPixels = 0
-      for (let index = 0; index < pixels.length; index += 4) {
-        const alpha = pixels[index + 3] ?? 0
-        const red = pixels[index] ?? 255
-        const green = pixels[index + 1] ?? 255
-        const blue = pixels[index + 2] ?? 255
-        if (alpha > 200 && red < 120 && green < 120 && blue < 120) {
-          darkPixels += 1
+): Promise<{
+  readonly labels: readonly string[]
+  readonly textLayerZIndex: number
+  readonly typeGpuLayerZIndex: number
+}> {
+  return await page.evaluate((viewportClip) => {
+    const textLayer = document.querySelector<HTMLElement>('[data-testid="grid-native-text-layer"]')
+    const typeGpuLayer = document.querySelector<HTMLElement>('[data-testid="grid-pane-renderer"]')
+    if (!textLayer || !typeGpuLayer) {
+      throw new Error('Missing workbook text or TypeGPU layer for selected row-header proof')
+    }
+    const textLayerZIndex = Number.parseInt(window.getComputedStyle(textLayer).zIndex || '0', 10)
+    const typeGpuLayerZIndex = Number.parseInt(window.getComputedStyle(typeGpuLayer).zIndex || '0', 10)
+    const clipRight = viewportClip.x + viewportClip.width
+    const clipBottom = viewportClip.y + viewportClip.height
+    const labels = Array.from(textLayer.querySelectorAll<HTMLElement>('[data-native-text-run]'))
+      .filter((run) => {
+        if (run.getAttribute('data-native-text-run-row') || run.getAttribute('data-native-text-run-col')) {
+          return false
         }
-      }
-      return darkPixels
-    },
-    { dataUrl: `data:image/png;base64,${buffer.toString('base64')}` },
-  )
-}
+        const text = run.textContent?.trim() ?? ''
+        if (!/^\d+$/u.test(text)) {
+          return false
+        }
+        const rect = run.getBoundingClientRect()
+        if (
+          rect.width <= 0 ||
+          rect.height <= 0 ||
+          rect.right <= viewportClip.x ||
+          rect.left >= clipRight ||
+          rect.bottom <= viewportClip.y ||
+          rect.top >= clipBottom
+        ) {
+          return false
+        }
+        const inner = run.firstElementChild
+        if (!(inner instanceof HTMLElement)) {
+          return false
+        }
+        const style = window.getComputedStyle(inner)
+        return style.display !== 'none' && style.visibility !== 'hidden' && Number.parseFloat(style.opacity || '1') > 0
+      })
+      .map((run) => run.textContent?.trim() ?? '')
+      .toSorted((left, right) => Number(left) - Number(right))
 
+    return { labels, textLayerZIndex, typeGpuLayerZIndex }
+  }, clip)
+}
 function isSelectionAccentPixel(pixel: { readonly blue: number; readonly green: number; readonly red: number }): boolean {
   return Math.abs(pixel.red - 33) <= 6 && Math.abs(pixel.green - 115) <= 8 && Math.abs(pixel.blue - 70) <= 6
 }
