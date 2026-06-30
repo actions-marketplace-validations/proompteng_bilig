@@ -248,7 +248,7 @@ describe('same-corpus UI responsiveness capture CLI', () => {
     ).toThrow('Use either --serve-bilig-production or --bilig-url, not both.')
   })
 
-  it('fails fast before dominance captures use the default dev Bilig URL', () => {
+  it('fails fast before claim-grade captures use the default dev Bilig URL', () => {
     const args = parseCaptureArgs([
       '--output',
       'tmp/ui-capture.json',

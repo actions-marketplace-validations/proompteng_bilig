@@ -490,19 +490,19 @@ export function emitSameCorpusXlsx(args: EmitXlsxArgs): void {
         publicForgejoRawUrl: `https://code.proompteng.ai/kalmyk/bilig/raw/branch/main/packages/benchmarks/baselines/ui-same-corpus/${corpus.id}.xlsx`,
         microsoftExcelWebUrl: `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(publicGithubRawUrl)}`,
         googleSheetsAuthStateCommand:
-          'pnpm ui:same-corpus:capture -- --save-storage-state <state.json> --auth-product google-sheets --google-sheets-url <url> [--corpus wide-mixed-250k]',
+          'pnpm research:ui-same-corpus:capture -- --save-storage-state <state.json> --auth-product google-sheets --google-sheets-url <url> [--corpus wide-mixed-250k]',
         microsoftExcelWebAuthStateCommand:
-          'pnpm ui:same-corpus:capture -- --save-storage-state <state.json> --auth-product microsoft-excel-web --microsoft-excel-web-url <url> [--corpus wide-mixed-250k]',
+          'pnpm research:ui-same-corpus:capture -- --save-storage-state <state.json> --auth-product microsoft-excel-web --microsoft-excel-web-url <url> [--corpus wide-mixed-250k]',
         biligProductionRuntimeRequirement:
           'Use --serve-bilig-production or --bilig-url <production-bilig-url> for public claim evidence. The default localhost dev URL is only valid with --allow-incomplete-evidence.',
         preflightCommand:
-          'pnpm ui:same-corpus:capture -- --preflight --google-sheets-url <url> --microsoft-excel-web-url <url> [--google-sheets-storage-state <state.json>] [--microsoft-excel-web-storage-state <state.json>]',
+          'pnpm research:ui-same-corpus:capture -- --preflight --google-sheets-url <url> --microsoft-excel-web-url <url> [--google-sheets-storage-state <state.json>] [--microsoft-excel-web-storage-state <state.json>]',
         captureCommand:
-          'pnpm ui:same-corpus:capture -- --serve-bilig-production --output <capture.json> --google-sheets-url <url> --microsoft-excel-web-url <url> [--google-sheets-storage-state <state.json>] [--microsoft-excel-web-storage-state <state.json>]',
+          'pnpm research:ui-same-corpus:capture -- --serve-bilig-production --output <capture.json> --google-sheets-url <url> --microsoft-excel-web-url <url> [--google-sheets-storage-state <state.json>] [--microsoft-excel-web-storage-state <state.json>]',
         externalProductionCaptureCommand:
-          'pnpm ui:same-corpus:capture -- --output <capture.json> --bilig-url <production-bilig-url> --google-sheets-url <url> --microsoft-excel-web-url <url> [--google-sheets-storage-state <state.json>] [--microsoft-excel-web-storage-state <state.json>]',
+          'pnpm research:ui-same-corpus:capture -- --output <capture.json> --bilig-url <production-bilig-url> --google-sheets-url <url> --microsoft-excel-web-url <url> [--google-sheets-storage-state <state.json>] [--microsoft-excel-web-storage-state <state.json>]',
         diagnosticCaptureCommand:
-          'pnpm ui:same-corpus:capture -- --output <capture.json> --google-sheets-url <url> --allow-incomplete-evidence',
+          'pnpm research:ui-same-corpus:capture -- --output <capture.json> --google-sheets-url <url> --allow-incomplete-evidence',
       },
       null,
       2,

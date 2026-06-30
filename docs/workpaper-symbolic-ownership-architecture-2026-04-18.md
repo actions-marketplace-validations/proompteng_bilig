@@ -16,7 +16,6 @@ Related documents:
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-performance-acceleration-plan.md`
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-hyperformula-prior-art-audit-2026-04-12.md`
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-hyperformula-targeted-reread-2026-04-13.md`
-- `/Users/gregkonush/github.com/bilig2/docs/workpaper-engine-leadership-program.md`
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-sota-performance-whitepaper-roadmap-2026-04-16.md`
 
 ## Purpose

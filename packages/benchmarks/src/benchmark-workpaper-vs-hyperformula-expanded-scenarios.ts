@@ -2,7 +2,7 @@ import type { ComparativeBenchmarkSuiteOptions } from './benchmark-workpaper-vs-
 import { DEFAULT_COMPETITIVE_WARMUP_COUNT, DEFAULT_EXPANDED_COMPETITIVE_SAMPLE_COUNT } from './benchmark-workpaper-vs-hyperformula.js'
 import {
   runComparableScenario,
-  runLeadershipScenario,
+  runUnsupportedCapabilityScenario,
   type ExpandedComparativeBenchmarkResult,
 } from './benchmark-workpaper-vs-hyperformula-expanded-runner.js'
 import type { ExpandedComparativeBenchmarkWorkload } from './expanded-competitive-workloads.js'
@@ -127,7 +127,7 @@ import {
   measureWorkPaperDynamicArraySortSample,
   measureWorkPaperDynamicArrayUniqueSample,
   measureWorkPaperReverseSearchLookupSample,
-} from './benchmark-workpaper-vs-hyperformula-expanded-leadership-workloads.js'
+} from './benchmark-workpaper-vs-hyperformula-expanded-unsupported-capability-workloads.js'
 
 export interface ExpandedComparativeBenchmarkSuiteOptions extends ComparativeBenchmarkSuiteOptions {
   workloads?: readonly ExpandedComparativeBenchmarkWorkload[]
@@ -141,7 +141,7 @@ export function runWorkPaperVsHyperFormulaExpandedBenchmarkSuite(
   const runtimeOptions = resolveSuiteOptions(options)
   const selectedWorkloads = options.workloads ? new Set(options.workloads) : undefined
   const runComparable = createComparableScenarioSelector(selectedWorkloads)
-  const runLeadership = createLeadershipScenarioSelector(selectedWorkloads)
+  const runUnsupportedCapability = createUnsupportedCapabilityScenarioSelector(selectedWorkloads)
   return [
     runComparable(
       'build-from-sheets',
@@ -857,7 +857,7 @@ export function runWorkPaperVsHyperFormulaExpandedBenchmarkSuite(
       () => measureWorkPaperTextLookupSample(10_000),
       () => measureHyperFormulaTextLookupSample(10_000),
     ),
-    runLeadership(
+    runUnsupportedCapability(
       'lookup-reverse-search',
       { rowCount: 5_000, functionName: 'XMATCH', searchMode: -1 },
       runtimeOptions,
@@ -868,7 +868,7 @@ export function runWorkPaperVsHyperFormulaExpandedBenchmarkSuite(
         reason: 'HyperFormula 3.2.0 does not provide an equivalent XMATCH reverse-search result for this workload.',
       },
     ),
-    runLeadership(
+    runUnsupportedCapability(
       'dynamic-array-filter',
       { rowCount: 750, formula: '=FILTER(A2:A751,A2:A751>B1)' },
       runtimeOptions,
@@ -882,7 +882,7 @@ export function runWorkPaperVsHyperFormulaExpandedBenchmarkSuite(
         reason: 'HyperFormula 3.2.0 documents dynamic arrays as unsupported.',
       },
     ),
-    runLeadership(
+    runUnsupportedCapability(
       'dynamic-array-sort',
       { rowCount: 750, formula: '=SORT(A2:A751)' },
       runtimeOptions,
@@ -896,7 +896,7 @@ export function runWorkPaperVsHyperFormulaExpandedBenchmarkSuite(
         reason: 'HyperFormula 3.2.0 documents dynamic arrays as unsupported.',
       },
     ),
-    runLeadership(
+    runUnsupportedCapability(
       'dynamic-array-unique',
       { rowCount: 750, formula: '=UNIQUE(A2:A751)' },
       runtimeOptions,
@@ -929,12 +929,14 @@ function createComparableScenarioSelector(selectedWorkloads: SelectedWorkloadSet
   }
 }
 
-function createLeadershipScenarioSelector(selectedWorkloads: SelectedWorkloadSet) {
-  return (...args: Parameters<typeof runLeadershipScenario>): ReturnType<typeof runLeadershipScenario> | undefined => {
+function createUnsupportedCapabilityScenarioSelector(selectedWorkloads: SelectedWorkloadSet) {
+  return (
+    ...args: Parameters<typeof runUnsupportedCapabilityScenario>
+  ): ReturnType<typeof runUnsupportedCapabilityScenario> | undefined => {
     if (!isWorkloadSelected(selectedWorkloads, args[0])) {
       return undefined
     }
-    return runLeadershipScenario(...args)
+    return runUnsupportedCapabilityScenario(...args)
   }
 }
 

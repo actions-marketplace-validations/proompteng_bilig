@@ -41,9 +41,8 @@ Microsoft Excel objective.
 It complements:
 
 - `docs/workpaper-platform-design.md`
-- `docs/workpaper-engine-leadership-program.md`
 
-Those documents define the product contract and the top-level leadership program. This document
+That document defines the product contract. This document
 defines the engine architecture, mutation-path changes, native-boundary changes, and proof gates
 required to close the measured performance gap.
 
@@ -78,7 +77,7 @@ described below:
 
 - Total workloads: `51`.
 - Scorecard-eligible comparable workloads: `46`.
-- Leadership-only or non-scorecard workloads: `4`.
+- Unsupported-capability or non-scorecard workloads: `4`.
 - Overall scorecard: WorkPaper `46`, HyperFormula `0`.
 - Public lane: WorkPaper `38`, HyperFormula `0`.
 - Holdout lane: WorkPaper `8`, HyperFormula `0`.
@@ -400,7 +399,7 @@ Primary repo surfaces to change:
 
 ### E. Recalc and Mutation Overhead
 
-Lookup is the biggest red zone, but build and recalculation are still too slow to claim leadership.
+Lookup is the biggest red zone, but build and recalculation are still too slow for the target performance envelope.
 
 Required changes:
 
@@ -571,8 +570,7 @@ Every performance patch in this program must follow this loop:
 2. run the affected correctness suites
 3. run the competitive benchmark generator
 4. update the checked-in artifact only if the change is understood
-5. update this document or `docs/workpaper-engine-leadership-program.md` if the measured state
-   changes materially
+5. update this document if the measured state changes materially
 
 Required commands:
 
@@ -621,7 +619,7 @@ This document is complete only when all of the following are true:
    - updated benchmark artifact
    - green correctness tests
    - green external smoke
-   - updated leadership document
+   - updated acceleration plan
 
 ## Immediate Next Patch
 

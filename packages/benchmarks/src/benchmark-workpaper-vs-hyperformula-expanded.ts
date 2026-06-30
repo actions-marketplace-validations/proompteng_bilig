@@ -13,7 +13,7 @@ export type {
   EngineCounterNumericSummary,
   ExpandedComparativeBenchmarkResult,
   ExpandedComparativeComparableResult,
-  ExpandedComparativeLeadershipResult,
+  ExpandedComparativeUnsupportedCapabilityResult,
 } from './benchmark-workpaper-vs-hyperformula-expanded-runner.js'
 
 export interface ExpandedComparativeBenchmarkReport {

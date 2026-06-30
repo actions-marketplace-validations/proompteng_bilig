@@ -22,7 +22,6 @@ const nativeXlsxFixtureScripts = [
   ...liveScorecardFixtureScripts,
   'e2e/tests/web-shell-import.pw.ts',
   'scripts/gen-import-export-fidelity-scorecard.ts',
-  'scripts/gen-security-posture-scorecard.ts',
   'scripts/gen-workpaper-xlsx-corpus-fixtures.ts',
 ] as const
 const nativeXlsxCorpusProofScripts = ['scripts/check-workpaper-xlsx-corpus.ts', 'scripts/workpaper-xlsx-volatile-dependencies.ts'] as const

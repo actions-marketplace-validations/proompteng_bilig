@@ -88,11 +88,8 @@ next action would otherwise be UI automation. It keeps the workbook local,
 calls `analyze_workbook_risk` first, then requires `set_cell_contents_and_readback`
 and `export_workpaper_document` before the agent reports success.
 
-If the reviewer asks what a successful agent session looks like, send the
-[agent proof transcripts](agent-proof-transcripts.md) after this matrix. The
-transcripts show prompt, tool call, result, workbook state change, formula
-readback, JSON export, and restart readback verification for Codex, Claude Code,
-Copilot, Cursor, and Continue.
+If the reviewer asks what a successful agent session looks like, send them to
+the evaluator commands above and require fresh JSON output with `verified: true`.
 
 ## Limits
 
@@ -105,7 +102,6 @@ manual UI workflows.
 
 - [Evaluate Bilig as an agent MCP workbook tool](eval-agent-mcp.md)
 - [Agent XLSX risk preflight](agent-xlsx-risk-preflight.md)
-- [Agent proof transcripts](agent-proof-transcripts.md)
 - [MCP spreadsheet formula server for coding agents](mcp-spreadsheet-formula-server-for-coding-agents.md)
 - [Microsoft Agent Framework WorkPaper MCP tools](microsoft-agent-framework-workpaper-mcp.md)
 - [Vercel AI SDK spreadsheet tool: generateText and streamText with formula readback](vercel-ai-sdk-spreadsheet-tool-formula-readback.md)

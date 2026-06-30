@@ -82,7 +82,7 @@ const EXPANDED_COMPARATIVE_FAMILY_METADATA = {
   'lookup-text': { scorecardEligible: true },
   'dynamic-array': {
     scorecardEligible: false,
-    exclusionReason: 'Leadership-only support lane; not an apples-to-apples performance scorecard input.',
+    exclusionReason: 'Unsupported-capability support lane; not an apples-to-apples performance scorecard input.',
   },
 } as const satisfies Record<ExpandedCompetitiveFamily, { scorecardEligible: boolean; exclusionReason?: string }>
 
@@ -211,7 +211,7 @@ export interface ExpandedCompetitiveFamilySummary {
   exclusionReason: string | null
   resultCount: number
   comparableCount: number
-  leadershipCount: number
+  unsupportedCapabilityCount: number
   workpaperWins: number
   hyperformulaWins: number
   decisiveWorkpaperWins: number
@@ -312,7 +312,7 @@ export function summarizeExpandedCompetitiveFamilies(
       exclusionReason: 'exclusionReason' in metadata ? metadata.exclusionReason : null,
       resultCount: familyResults.length,
       comparableCount: comparableResults.length,
-      leadershipCount: familyResults.length - comparableResults.length,
+      unsupportedCapabilityCount: familyResults.length - comparableResults.length,
       workpaperWins,
       hyperformulaWins,
       decisiveWorkpaperWins,

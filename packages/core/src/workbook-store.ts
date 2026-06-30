@@ -8,27 +8,20 @@ import { createWorkbookMetadataService, runWorkbookMetadataEffect, type Workbook
 import {
   createWorkbookMetadataRecord,
   type WorkbookAxisMetadataRecord,
-  type WorkbookCalculationSettingsRecord,
   type WorkbookChartRecord,
   type WorkbookConditionalFormatRecord,
   type WorkbookSheetConditionalFormatArtifactsRecord,
   type WorkbookDataValidationRecord,
-  type WorkbookDrawingArtifactsRecord,
-  type WorkbookExternalLinkArtifactsRecord,
   type WorkbookCellNumberFormatRecord,
   type WorkbookCellStyleRecord,
-  type WorkbookDefinedNameRecord,
   type WorkbookFilterRecord,
   type WorkbookFormatRangeRecord,
   type WorkbookFreezePaneRecord,
   type WorkbookHyperlinkRecord,
   type WorkbookImageRecord,
-  type WorkbookMacroPayloadRecord,
   type WorkbookMergeRangeRecord,
   type WorkbookMetadataRecord,
   type WorkbookPivotRecord,
-  type WorkbookProtectionRecord,
-  type WorkbookPropertyRecord,
   type WorkbookRangeProtectionRecord,
   type WorkbookSheetDrawingArtifactsRecord,
   type WorkbookSheetProtectionRecord,
@@ -38,8 +31,6 @@ import {
   type WorkbookSortRecord,
   type WorkbookSpillRecord,
   type WorkbookStyleRangeRecord,
-  type WorkbookTableRecord,
-  type WorkbookVolatileContextRecord,
   type WorkbookNoteRecord,
 } from './workbook-metadata-types.js'
 import {
@@ -73,13 +64,13 @@ import { WorkbookSheetRegistryStore } from './workbook-sheet-registry-store.js'
 import { WorkbookStructuralCellStore } from './workbook-structural-cell-store.js'
 import { WorkbookStructuralAxisOperations } from './workbook-structural-axis-operations.js'
 import { hasStructuralMetadataForSheetRecord, hasWorkbookMetadataForSheetRename } from './workbook-store-metadata-presence.js'
-import { WorkbookStoreCommentAccessors } from './workbook-store-comment-accessors.js'
+import { WorkbookStoreMetadataAccessors } from './workbook-store-metadata-accessors.js'
 
 export { makeCellKey, makeLogicalCellKey } from './workbook-cell-key-index.js'
 export { normalizeDefinedName, normalizeWorkbookObjectName, imageKey, pivotKey, shapeKey } from './workbook-metadata-types.js'
 export type * from './workbook-store-types.js'
 
-export class WorkbookStore extends WorkbookStoreCommentAccessors {
+export class WorkbookStore extends WorkbookStoreMetadataAccessors {
   static readonly defaultStyleId = WORKBOOK_DEFAULT_STYLE_ID
   static readonly defaultFormatId = WORKBOOK_DEFAULT_FORMAT_ID
   readonly cellStore = new CellStore()
@@ -420,110 +411,6 @@ export class WorkbookStore extends WorkbookStoreCommentAccessors {
 
   getRangeFormatId(sheetName: string, row: number, col: number): string {
     return readRangeFormatId(this.getSheet(sheetName), row, col, WorkbookStore.defaultFormatId)
-  }
-
-  setWorkbookProperty(key: string, value: Protocol.LiteralInput): WorkbookPropertyRecord | undefined {
-    return runWorkbookMetadataEffect(this.metadataService.setWorkbookProperty(key, value))
-  }
-
-  getWorkbookProperty(key: string): WorkbookPropertyRecord | undefined {
-    return runWorkbookMetadataEffect(this.metadataService.getWorkbookProperty(key))
-  }
-
-  listWorkbookProperties(): WorkbookPropertyRecord[] {
-    return runWorkbookMetadataEffect(this.metadataService.listWorkbookProperties())
-  }
-
-  setWorkbookProtection(record: Protocol.WorkbookProtectionSnapshot): WorkbookProtectionRecord {
-    return runWorkbookMetadataEffect(this.metadataService.setWorkbookProtection(record))
-  }
-
-  getWorkbookProtection(): WorkbookProtectionRecord | undefined {
-    return runWorkbookMetadataEffect(this.metadataService.getWorkbookProtection())
-  }
-
-  setMacroPayload(record: Protocol.WorkbookMacroPayloadSnapshot): WorkbookMacroPayloadRecord {
-    return runWorkbookMetadataEffect(this.metadataService.setMacroPayload(record))
-  }
-
-  listMacroPayloads(): WorkbookMacroPayloadRecord[] {
-    return runWorkbookMetadataEffect(this.metadataService.listMacroPayloads())
-  }
-
-  setCalculationSettings(settings: Protocol.WorkbookCalculationSettingsSnapshot): WorkbookCalculationSettingsRecord {
-    return runWorkbookMetadataEffect(this.metadataService.setCalculationSettings(settings))
-  }
-
-  getCalculationSettings(): WorkbookCalculationSettingsRecord {
-    return runWorkbookMetadataEffect(this.metadataService.getCalculationSettings())
-  }
-
-  setVolatileContext(context: Protocol.WorkbookVolatileContextSnapshot): WorkbookVolatileContextRecord {
-    return runWorkbookMetadataEffect(this.metadataService.setVolatileContext(context))
-  }
-
-  getVolatileContext(): WorkbookVolatileContextRecord {
-    return runWorkbookMetadataEffect(this.metadataService.getVolatileContext())
-  }
-
-  setDrawingArtifacts(artifacts: Protocol.WorkbookDrawingArtifactsSnapshot): WorkbookDrawingArtifactsRecord {
-    return runWorkbookMetadataEffect(this.metadataService.setDrawingArtifacts(artifacts))
-  }
-
-  getDrawingArtifacts(): WorkbookDrawingArtifactsRecord | undefined {
-    return runWorkbookMetadataEffect(this.metadataService.getDrawingArtifacts())
-  }
-
-  clearDrawingArtifacts(): boolean {
-    return runWorkbookMetadataEffect(this.metadataService.clearDrawingArtifacts())
-  }
-
-  setExternalLinkArtifacts(artifacts: Protocol.WorkbookExternalLinkArtifactsSnapshot): WorkbookExternalLinkArtifactsRecord {
-    return runWorkbookMetadataEffect(this.metadataService.setExternalLinkArtifacts(artifacts))
-  }
-
-  getExternalLinkArtifacts(): WorkbookExternalLinkArtifactsRecord | undefined {
-    return runWorkbookMetadataEffect(this.metadataService.getExternalLinkArtifacts())
-  }
-
-  clearExternalLinkArtifacts(): boolean {
-    return runWorkbookMetadataEffect(this.metadataService.clearExternalLinkArtifacts())
-  }
-
-  setDefinedName(name: string, value: Protocol.WorkbookDefinedNameValueSnapshot, scopeSheetName?: string): WorkbookDefinedNameRecord {
-    return runWorkbookMetadataEffect(this.metadataService.setDefinedName(name, value, scopeSheetName))
-  }
-
-  getDefinedName(name: string, scopeSheetName?: string): WorkbookDefinedNameRecord | undefined {
-    return runWorkbookMetadataEffect(this.metadataService.getDefinedName(name, scopeSheetName))
-  }
-
-  deleteDefinedName(name: string, scopeSheetName?: string): boolean {
-    return runWorkbookMetadataEffect(this.metadataService.deleteDefinedName(name, scopeSheetName))
-  }
-
-  listDefinedNames(): WorkbookDefinedNameRecord[] {
-    return runWorkbookMetadataEffect(this.metadataService.listDefinedNames())
-  }
-
-  setTable(record: Protocol.WorkbookTableSnapshot): WorkbookTableRecord {
-    return runWorkbookMetadataEffect(this.metadataService.setTable(record))
-  }
-
-  getTable(name: string): WorkbookTableRecord | undefined {
-    return runWorkbookMetadataEffect(this.metadataService.getTable(name))
-  }
-
-  deleteTable(name: string): boolean {
-    return runWorkbookMetadataEffect(this.metadataService.deleteTable(name))
-  }
-
-  hasTables(): boolean {
-    return this.metadata.tables.size > 0
-  }
-
-  listTables(): WorkbookTableRecord[] {
-    return runWorkbookMetadataEffect(this.metadataService.listTables())
   }
 
   setRowMetadata(

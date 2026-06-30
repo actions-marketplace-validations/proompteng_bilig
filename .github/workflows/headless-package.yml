@@ -34,7 +34,7 @@ on:
       - 'pnpm-workspace.yaml'
       - 'scripts/check-package-publish.ts'
       - 'scripts/check-runtime-commit-policy.ts'
-      - 'scripts/gen-formula-dominance-snapshot.ts'
+      - 'scripts/gen-formula-compatibility-snapshot.ts'
       - 'scripts/gen-workpaper-benchmark-baseline.ts'
       - 'scripts/gen-workpaper-hyperformula-audit.ts'
       - 'scripts/gen-workpaper-vs-hyperformula-benchmark.ts'
@@ -202,10 +202,10 @@ jobs:
           set -euo pipefail
           pnpm workpaper:bench:check
 
-      - name: Check formula dominance snapshot
+      - name: Check formula compatibility snapshot
         run: |
           set -euo pipefail
-          pnpm formula:dominance:check
+          pnpm formula:compatibility:check
 
       - name: Check WorkPaper competitive benchmark artifact shape
         run: |

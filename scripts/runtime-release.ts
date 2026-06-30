@@ -29,7 +29,7 @@ export const RUNTIME_AFFECTING_PATH_PATTERNS = [
   'scripts/sync-runtime-package-versions.ts',
   'scripts/sync-runtime-release-metadata.ts',
   'scripts/check-package-publish.ts',
-  'scripts/gen-formula-dominance-snapshot.ts',
+  'scripts/gen-formula-compatibility-snapshot.ts',
   'scripts/gen-workpaper-hyperformula-audit.ts',
   'scripts/gen-workpaper-benchmark-baseline.ts',
   'scripts/gen-workpaper-vs-hyperformula-benchmark.ts',

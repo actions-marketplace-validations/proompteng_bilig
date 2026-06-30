@@ -2775,7 +2775,7 @@ From the repository root:
 pnpm install --frozen-lockfile
 pnpm protocol:check
 pnpm formula-inventory:check
-pnpm formula:dominance:check
+pnpm formula:compatibility:check
 pnpm workspace-resolution:check
 pnpm naming:check
 pnpm format:check

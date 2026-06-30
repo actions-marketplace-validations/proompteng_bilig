@@ -93,7 +93,7 @@
     "limitations": [
       "This artifact captures official public documentation and published responsiveness guidance, not a live browser or desktop timing run inside Google Sheets or Microsoft Excel.",
       "The comparison proves direct external UI-responsiveness evidence exists; it does not claim bilig is 10x more responsive than Google Sheets or Microsoft Excel.",
-      "bilig still needs incumbent p95 frame, edit, selection, paste, filter, and scroll timing artifacts on equivalent corpuses before claiming UI-responsiveness dominance."
+      "bilig still needs incumbent p95 frame, edit, selection, paste, filter, and scroll timing artifacts on equivalent corpuses before making broad UI-responsiveness claims."
     ]
   },
   "dimensions": [

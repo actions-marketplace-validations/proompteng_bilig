@@ -8,10 +8,6 @@ Date: `2026-04-10`
 
 This document is the canonical design for the headless spreadsheet layer in `bilig`.
 
-The follow-on engine program for actually beating HyperFormula on runtime work is tracked in:
-
-- `docs/workpaper-engine-leadership-program.md`
-
 The top-level public interface is:
 
 - `WorkPaper` from `@bilig/headless`
@@ -150,7 +146,7 @@ As of this revision, the following are already proved in-repo:
 - HyperFormula public method/category and config-key parity by surface name is checked against the local checkout snapshot
 - external consumers can install the runtime tarballs into clean Node and Vite projects without monorepo context
 - the runtime package workflow verifies publishability, smoke installs, parity tests, and benchmark-baseline shape
-- a checked-in competitive benchmark artifact compares directly comparable workloads against HyperFormula `3.2.0` and labels leadership workloads unsupported where apples-to-apples timing is invalid
+- a checked-in competitive benchmark artifact compares directly comparable workloads against HyperFormula `3.2.0` and labels unsupported-capability workloads where apples-to-apples timing is invalid
 - rebuild semantics, deterministic change ordering, adapter immutability, and documentation example usage all have direct tests
 
 The following are not yet proved and therefore must not be claimed as current fact:
@@ -324,11 +320,11 @@ Workloads must be separated into three categories:
    - batched edits
    - range reads
    - lookup-heavy workloads with and without column indexing where both engines support the scenario
-2. leadership workloads
+2. unsupported-capability workloads
    - dynamic arrays
    - structured references and tables
    - multiple workbook instances per process
-   - these may demonstrate capability leadership, but not apples-to-apples speed comparisons
+   - these may demonstrate feature support, but not apples-to-apples speed comparisons
 3. non-comparable workloads
    - any workload where one engine lacks feature support or uses materially different semantics
    - these must be labeled `unsupported`, not silently omitted
@@ -409,7 +405,7 @@ Deferred-feature exit criteria:
 - keep clean external-consumer smoke tests in release verification
 - prevent undocumented API drift by checking the public method inventory
 
-### Phase 4: Performance leadership
+### Phase 4: Performance Evidence
 
 - add reproducible benchmarks
 - close verified hotspots with WASM-backed kernels where justified

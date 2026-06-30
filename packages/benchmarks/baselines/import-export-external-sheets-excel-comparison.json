@@ -220,7 +220,7 @@
       ],
       "biligEvidence": [
         "The import/export fidelity scorecard checks feature compatibility, and the large-workbook SLO scorecard separately covers 100k and 250k row workbook behavior.",
-        "The claim policy keeps import/export and large-workbook-scale as separate categories so file-format compatibility is not used as a proxy for scale leadership."
+        "The claim policy keeps import/export and large-workbook-scale as separate categories so file-format compatibility is not used as a proxy for scale claims."
       ],
       "googleSheetsEvidence": [
         "Google documents spreadsheet cell and column limits for Sheets-created, Sheets-converted, Excel-imported, and CSV-imported files.",
@@ -232,7 +232,7 @@
       ],
       "comparisonResult": "bilig has checked compatibility artifacts and separate scale artifacts; Google Sheets and Excel publish product limits and format-loss caveats that remain necessary comparison inputs.",
       "residualLimitations": [
-        "bilig needs direct native Sheets and Excel scale import/export timings before claiming import/export performance dominance.",
+        "bilig needs direct native Sheets and Excel scale import/export timings before making broad import/export performance claims.",
         "The comparison does not prove compatibility for every edge case in the incumbent limits tables."
       ]
     }

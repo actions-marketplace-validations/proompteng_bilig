@@ -20,7 +20,7 @@ describe('agent discovery agent.json manifest', () => {
   it('emits repo-formatted JSON for compact primitive arrays', () => {
     const manifest = buildAgentJsonManifest(manifestInput)
 
-    expect(manifest).toContain('"hosts": ["Codex", "Claude Code", "GitHub Copilot", "Cursor", "Continue"]')
+    expect(manifest).not.toContain('agent-proof-transcripts')
     const parsed = JSON.parse(manifest)
     expect(parsed).toMatchObject({
       schema_version: 'agent-json-0.1.0',
@@ -51,6 +51,13 @@ describe('agent discovery agent.json manifest', () => {
           'bilig-agent-xlsx-risk-preflight.v1 JSON with analyze_workbook_risk, Inputs!B3, Summary!B3, 60000 -> 96000, exported WorkPaper JSON, restoredReadbackMatchesAfter, excelParity not_proven, and verified true',
         boundary:
           'Local MCP preflight for a real XLSX before edits; risk diagnostics do not certify Excel compatibility or prove desktop Excel UI behavior.',
+      }),
+    )
+    expect(parsed.capabilities).toContainEqual(
+      expect.objectContaining({
+        name: 'repo-local-agent-instructions',
+        type: 'project-agent-instructions',
+        challenge_command: 'npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json',
       }),
     )
     expect(parsed.mcp).toMatchObject({

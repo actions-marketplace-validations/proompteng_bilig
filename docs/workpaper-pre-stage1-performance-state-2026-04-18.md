@@ -79,7 +79,7 @@ Important interpretation rule:
 
 - family geomean is only meaningful alongside win counts
 - `meanSpeedupGeomean` is a magnitude metric, not a directional leader flag
-- broad scorecard leadership should be read from `WorkPaper` wins vs `HyperFormula` wins, not geomean alone
+- broad scorecard position should be read from `WorkPaper` wins vs `HyperFormula` wins, not geomean alone
 
 ## Family Summary
 

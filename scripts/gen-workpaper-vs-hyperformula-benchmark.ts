@@ -123,7 +123,7 @@ if (isCheckMode) {
     schemaVersion: 1,
     suite: 'workpaper-vs-hyperformula',
     results: [...EXPANDED_COMPARATIVE_WORKLOADS].map((workload) =>
-      isLeadershipWorkload(workload) ? leadershipShape(workload, [], []) : comparableShape(workload, [], []),
+      isUnsupportedCapabilityWorkload(workload) ? unsupportedCapabilityShape(workload, [], []) : comparableShape(workload, [], []),
     ),
   })
 
@@ -357,7 +357,7 @@ function isExpandedComparativeBenchmarkResult(value: unknown): value is Expanded
   return (
     typeof workload === 'string' &&
     isExpandedComparativeBenchmarkWorkload(workload) &&
-    (category === 'directly-comparable' || category === 'leadership')
+    (category === 'directly-comparable' || category === 'unsupported-capability')
   )
 }
 
@@ -394,10 +394,14 @@ function comparableShape(workload: string, fixtureKeys: string[], verificationKe
   }
 }
 
-function leadershipShape(workload: string, fixtureKeys: string[], verificationKeys: string[]): ArtifactShapeInput['results'][number] {
+function unsupportedCapabilityShape(
+  workload: string,
+  fixtureKeys: string[],
+  verificationKeys: string[],
+): ArtifactShapeInput['results'][number] {
   return {
     workload,
-    category: 'leadership',
+    category: 'unsupported-capability',
     comparable: false,
     fixture: Object.fromEntries(fixtureKeys.map((key) => [key, 'placeholder'])),
     note: 'placeholder',
@@ -442,7 +446,7 @@ function numericSummaryShape(): Record<string, unknown> {
   }
 }
 
-function isLeadershipWorkload(workload: string): boolean {
+function isUnsupportedCapabilityWorkload(workload: string): boolean {
   return (
     workload === 'lookup-reverse-search' ||
     workload === 'dynamic-array-filter' ||

@@ -50,7 +50,7 @@ export {
   measureWorkPaperDynamicArraySortSample,
   measureWorkPaperDynamicArrayUniqueSample,
   measureWorkPaperReverseSearchLookupSample,
-} from './benchmark-workpaper-vs-hyperformula-expanded-leadership-workloads.js'
+} from './benchmark-workpaper-vs-hyperformula-expanded-unsupported-capability-workloads.js'
 
 export function measureWorkPaperSuspendedBatchSingleColumnEditSample(editCount: number): BenchmarkSample {
   const workbook = WorkPaper.buildFromSheets({ Bench: buildValueFormulaRows(editCount) })

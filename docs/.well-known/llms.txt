@@ -47,7 +47,6 @@ well-known llms-full.txt: https://proompteng.github.io/bilig/.well-known/llms-fu
 host handoff checklist: https://proompteng.github.io/bilig/agent-adoption-kit.html
 host rule chooser: https://proompteng.github.io/bilig/agent-rule-chooser.html
 tool-host proof matrix: https://proompteng.github.io/bilig/agent-proof-matrix.html
-tool-host proof transcripts: https://proompteng.github.io/bilig/agent-proof-transcripts.html
 MCP spreadsheet formula server for tool hosts: https://proompteng.github.io/bilig/mcp-spreadsheet-formula-server-for-coding-agents.html
 Vercel AI SDK formula readback: https://proompteng.github.io/bilig/vercel-ai-sdk-spreadsheet-tool-formula-readback.html
 ExcelJS formula result boundary: https://proompteng.github.io/bilig/exceljs-formula-result-not-updating-after-node-edits.html
@@ -124,12 +123,6 @@ openssf scorecard: https://scorecard.dev/viewer/?uri=github.com/proompteng/bilig
   Use this to choose among WorkPaper service, MCP, provider-backed MCP,
   saved-file diagnostics, ExcelJS recalculation, MCP Inspector, file-backed MCP, Vercel AI SDK, OpenAI,
   LangGraph, Semantic Kernel, and Mastra proof paths.
-- Tool-host proof transcripts:
-  https://proompteng.github.io/bilig/agent-proof-transcripts.html
-  https://github.com/proompteng/bilig/blob/main/docs/agent-proof-transcripts.md
-  Use this to inspect prompt, tool call, result, workbook state change, formula readback,
-  JSON export, and restart readback verification for Codex, Claude Code, Copilot, Cursor, Roo Code,
-  and Continue.
 - MCP spreadsheet formula server for tool hosts:
   https://proompteng.github.io/bilig/mcp-spreadsheet-formula-server-for-coding-agents.html
   https://github.com/proompteng/bilig/blob/main/docs/mcp-spreadsheet-formula-server-for-coding-agents.md

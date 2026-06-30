@@ -316,7 +316,7 @@ const generatedSourceChecks: readonly CiTask[] = [
   direct('protocol package build for generated-source imports', workspaceBin('tsc'), '-p', 'packages/protocol/tsconfig.json'),
   direct('agent API package build for generated-source imports', workspaceBin('tsc'), '-b', 'packages/agent-api/tsconfig.json'),
   bunScript('formula inventory check', 'scripts/gen-formula-inventory.ts', '--check'),
-  bunScript('formula dominance check', 'scripts/gen-formula-dominance-snapshot.ts', '--check'),
+  bunScript('formula compatibility snapshot check', 'scripts/gen-formula-compatibility-snapshot.ts', '--check'),
   bunScript('calculation semantics scorecard check', 'scripts/gen-calculation-semantics-scorecard.ts', '--check'),
   bunScript('Microsoft Excel live calculation scorecard check', 'scripts/gen-microsoft-excel-live-calculation-scorecard.ts', '--check'),
   bunScript('Google Sheets live calculation scorecard check', 'scripts/gen-google-sheets-live-calculation-scorecard.ts', '--check'),
@@ -330,10 +330,6 @@ const generatedSourceChecks: readonly CiTask[] = [
     '--check',
   ),
   bunScript('Google Sheets live large workbook scorecard check', 'scripts/gen-google-sheets-live-large-workbook-scorecard.ts', '--check'),
-  bunScript('auditability scorecard check', 'scripts/gen-auditability-scorecard.ts', '--check'),
-  bunScript('reliability scorecard check', 'scripts/gen-reliability-scorecard.ts', '--check'),
-  bunScript('collaboration scorecard check', 'scripts/gen-collaboration-scorecard.ts', '--check'),
-  bunScript('automation scorecard check', 'scripts/gen-automation-scorecard.ts', '--check'),
   bunScript('import/export fidelity scorecard check', 'scripts/gen-import-export-fidelity-scorecard.ts', '--check'),
   bunScript('large workbook SLO scorecard check', 'scripts/gen-large-workbook-slo-scorecard.ts', '--check'),
   {
@@ -358,7 +354,6 @@ const generatedSourceChecks: readonly CiTask[] = [
   ...(skipBrowserGates
     ? []
     : [bunScript('UI responsiveness live browser scorecard check', 'scripts/gen-ui-responsiveness-live-browser-scorecard.ts', '--check')]),
-  bunScript('security posture scorecard check', 'scripts/gen-security-posture-scorecard.ts', '--check'),
   tsxScript('WorkPaper TrueCalc scalar benchmark check', 'scripts/gen-workpaper-vs-truecalc-benchmark.ts', '--check'),
   tsxScript('WorkPaper xlsx-calc benchmark check', 'scripts/gen-workpaper-vs-xlsx-calc-benchmark.ts', '--check'),
   tsxScript('WorkPaper IronCalc Rust benchmark check', 'scripts/gen-workpaper-vs-ironcalc-rust-benchmark.ts', '--check'),

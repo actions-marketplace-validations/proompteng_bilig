@@ -7,7 +7,7 @@
 - `0` canonical rows remain `implemented-js`
 - `0` canonical rows remain `blocked`
 - the generated source of truth is
-  `packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json`
+  `packages/formula/src/__tests__/fixtures/formula-compatibility-snapshot.json`
 
 ## Canonical corpus milestone
 
@@ -75,4 +75,4 @@ The worksheet engine keeps non-worksheet Excel surfaces behind the adapter contr
 - [wasm-runtime-contract.md](/Users/gregkonush/github.com/bilig/docs/wasm-runtime-contract.md)
 - [dynamic-array-runtime.md](/Users/gregkonush/github.com/bilig/docs/dynamic-array-runtime.md)
 - [workbook-metadata-model.md](/Users/gregkonush/github.com/bilig/docs/workbook-metadata-model.md)
-- `packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json`
+- `packages/formula/src/__tests__/fixtures/formula-compatibility-snapshot.json`

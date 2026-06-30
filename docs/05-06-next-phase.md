@@ -48,4 +48,4 @@ Use these gates for this direction:
 - `pnpm typecheck`
 - `pnpm --filter @bilig/web build`
 - `bun scripts/release-check.ts`
-- `pnpm exec vitest run apps/web/src/__tests__/worker-runtime-reconnect.test.ts apps/web/src/__tests__/worker-runtime-authoritative-bootstrap.test.ts apps/web/src/__tests__/worker-runtime-mutation-journal.test.ts scripts/__tests__/reliability-scorecard.test.ts`
+- `pnpm exec vitest run apps/web/src/__tests__/worker-runtime-reconnect.test.ts apps/web/src/__tests__/worker-runtime-authoritative-bootstrap.test.ts apps/web/src/__tests__/worker-runtime-mutation-journal.test.ts`

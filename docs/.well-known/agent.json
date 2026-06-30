@@ -160,22 +160,6 @@
       "challenge_command": "npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json"
     },
     {
-      "name": "agent-proof-transcripts",
-      "type": "docs-proof-pack",
-      "docs": "https://proompteng.github.io/bilig/agent-proof-transcripts.html",
-      "hosts": ["Codex", "Claude Code", "GitHub Copilot", "Cursor", "Continue"],
-      "proof_command": "npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json",
-      "verifies": [
-        "prompt",
-        "tool call",
-        "result",
-        "workbook state change",
-        "formula readback",
-        "JSON export",
-        "restart readback verification"
-      ]
-    },
-    {
       "name": "workbook-runtime-intent-api",
       "type": "npm-library",
       "package": "@bilig/workbook",
@@ -547,7 +531,6 @@
     "https://github.com/proompteng/bilig/blob/main/examples/headless-workpaper/mcp-xlsx-risk-preflight.ts",
     "https://proompteng.github.io/bilig/eval-xlsx-recalc.html",
     "https://proompteng.github.io/bilig/agent-adoption-kit.html",
-    "https://proompteng.github.io/bilig/agent-proof-transcripts.html",
     "https://proompteng.github.io/bilig/headless-workpaper-agent-handbook.html",
     "https://github.com/proompteng/bilig/blob/main/.mcp.json",
     "https://github.com/proompteng/bilig/blob/main/.cursor/mcp.json",

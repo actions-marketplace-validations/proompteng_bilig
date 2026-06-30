@@ -75,18 +75,8 @@ export function requireAgentJsonPublicDiscovery(parsedAgentJson: object): void {
   ) {
     throw new Error('docs/.well-known/agent.json must advertise the compact agent-start capability')
   }
-  if (
-    !hasCapability(
-      agentJsonCapabilities,
-      (capability) =>
-        Reflect.get(capability, 'name') === 'agent-proof-transcripts' &&
-        Reflect.get(capability, 'type') === 'docs-proof-pack' &&
-        Reflect.get(capability, 'docs') === 'https://proompteng.github.io/bilig/agent-proof-transcripts.html' &&
-        Reflect.get(capability, 'proof_command') ===
-          'npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json',
-    )
-  ) {
-    throw new Error('docs/.well-known/agent.json must advertise the agent proof transcript pack')
+  if (agentJsonCapabilities.some((capability) => Reflect.get(capability, 'name') === 'agent-proof-transcripts')) {
+    throw new Error('docs/.well-known/agent.json must not advertise stale agent proof transcript pages')
   }
   if (
     !hasCapability(
@@ -431,7 +421,6 @@ const requiredPublicEntrypoints = [
   'https://proompteng.github.io/bilig/.well-known/llms-full.txt',
   'https://proompteng.github.io/bilig/agent-start.txt',
   'https://proompteng.github.io/bilig/.well-known/agent-start.txt',
-  'https://proompteng.github.io/bilig/agent-proof-transcripts.html',
   'https://github.com/proompteng/bilig/blob/main/CLAUDE.md',
   'https://proompteng.github.io/bilig/workbook-compatibility-report.html',
   'https://github.com/proompteng/bilig/blob/main/docs/workbook-compatibility-report.md',

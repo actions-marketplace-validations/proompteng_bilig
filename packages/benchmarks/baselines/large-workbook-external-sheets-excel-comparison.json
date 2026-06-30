@@ -115,7 +115,7 @@
         "Microsoft publishes Excel worksheet dimensions and memory/resource-bounded workbook limits.",
         "Microsoft publishes calculation, PivotTable, selection, and Data Model limits relevant to large workbook behavior."
       ],
-      "comparisonResult": "bilig now records official incumbent scale limits beside its executable 100k and 250k SLO evidence, while keeping the max-scale dominance claim open.",
+      "comparisonResult": "bilig now records official incumbent scale limits beside its executable 100k and 250k SLO evidence, while keeping broad max-scale claims open.",
       "residualLimitations": [
         "bilig has not yet published a committed product maximum that exceeds the incumbent limits by 10x.",
         "The published incumbent limits are not timing measurements."

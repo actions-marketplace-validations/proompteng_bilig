@@ -86,7 +86,7 @@ The reason is that too many hot paths are still owned by the wrong substrate:
 - restore/history/public emission still pay replay and materialization costs too early
 
 The current line can produce isolated green benchmarks.
-It cannot plausibly produce broad multi-x leadership while these remain the primary owners.
+It cannot plausibly produce broad multi-x performance claims while these remain the primary owners.
 
 ## Current Repo Reality
 

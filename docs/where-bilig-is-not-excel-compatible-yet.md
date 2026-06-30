@@ -26,7 +26,7 @@ artifacts:
 
 - formula inventory breadth is `100%` for the current office-listed and tracked
   formula inventory in
-  [`packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json`](../packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json)
+  [`packages/formula/src/__tests__/fixtures/formula-compatibility-snapshot.json`](../packages/formula/src/__tests__/fixtures/formula-compatibility-snapshot.json)
 - formula semantics coverage has `431` canonical fixtures and `12` workbook
   semantics fixtures, with no missing committed fixture ids in
   [`packages/benchmarks/baselines/calculation-semantics-scorecard.json`](../packages/benchmarks/baselines/calculation-semantics-scorecard.json)
@@ -117,7 +117,7 @@ Missing cached results and volatile or environment-dependent formulas such as
 For a concrete report walkthrough, see
 [`docs/xlsx-corpus-verifier-walkthrough.md`](xlsx-corpus-verifier-walkthrough.md).
 
-### UI dominance claims
+### UI Claim Boundaries
 
 The local browser grid and WorkPaper headless engine are different surfaces.
 

@@ -32,7 +32,7 @@ The repo tracks one checked-in competitive benchmark artifact at
 `packages/benchmarks/baselines/workpaper-vs-hyperformula.json`.
 
 This is the competitive matrix. It includes the original control workloads, the broader expanded
-workload set against HyperFormula `3.2.0`, and leadership workloads that must be labeled
+workload set against HyperFormula `3.2.0`, and unsupported-capability workloads that must be labeled
 unsupported instead of silently omitted.
 
 Refresh or validate it with:

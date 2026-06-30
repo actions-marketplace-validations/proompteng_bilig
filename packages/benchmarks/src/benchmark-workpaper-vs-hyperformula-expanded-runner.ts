@@ -33,9 +33,9 @@ export interface ExpandedComparativeComparableResult {
   }
 }
 
-export interface ExpandedComparativeLeadershipResult {
+export interface ExpandedComparativeUnsupportedCapabilityResult {
   workload: ExpandedComparativeBenchmarkWorkload
-  category: 'leadership'
+  category: 'unsupported-capability'
   comparable: false
   fixture: Record<string, unknown>
   note: string
@@ -49,7 +49,7 @@ type EngineCounterSummary = Record<keyof EngineCounters, number>
 
 export type EngineCounterNumericSummary = Partial<Record<keyof EngineCounters, NumericSummary>>
 
-export type ExpandedComparativeBenchmarkResult = ExpandedComparativeComparableResult | ExpandedComparativeLeadershipResult
+export type ExpandedComparativeBenchmarkResult = ExpandedComparativeComparableResult | ExpandedComparativeUnsupportedCapabilityResult
 
 export function runComparableScenario(
   workload: ExpandedComparativeBenchmarkWorkload,
@@ -100,19 +100,19 @@ export function runComparableScenario(
   }
 }
 
-export function runLeadershipScenario(
+export function runUnsupportedCapabilityScenario(
   workload: ExpandedComparativeBenchmarkWorkload,
   fixture: Record<string, unknown>,
   options: Required<ComparativeBenchmarkSuiteOptions>,
   runWorkPaperSample: () => BenchmarkSample,
   hyperformula: ComparativeUnsupportedEngineResult,
-): ExpandedComparativeLeadershipResult {
+): ExpandedComparativeUnsupportedCapabilityResult {
   return {
     workload,
-    category: 'leadership',
+    category: 'unsupported-capability',
     comparable: false,
     fixture,
-    note: 'This workload demonstrates capability leadership and is not an apples-to-apples speed comparison.',
+    note: 'This workload is not supported by HyperFormula in this benchmark and is not an apples-to-apples speed comparison.',
     engines: {
       workpaper: benchmarkSupportedEngine(runWorkPaperSample, options),
       hyperformula,

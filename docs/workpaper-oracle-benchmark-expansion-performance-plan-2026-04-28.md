@@ -37,7 +37,7 @@ visible p95 tail-risk row, but it is not a mean scorecard loss.
 - Do not reduce existing workload sizes, warmups, samples, verification, or
   scoring to hide losses.
 - Do not remove comparable workloads or reclassify comparable workloads as
-  leadership-only unless HyperFormula cannot compute an equivalent result.
+  unsupported-capability unless HyperFormula cannot compute an equivalent result.
 - Every comparable workload must keep exact WorkPaper vs HyperFormula
   verification equality before timing is accepted.
 - Performance wins must come from production engine/headless paths, not
@@ -57,10 +57,10 @@ The expanded suite now covers these additional workloads:
   `conditional-aggregation-mixed-criteria`
 - Approximate lookup: `lookup-approximate-descending`,
   `structural-append-formula-rows-small`
-- Unsupported capability leadership: `lookup-reverse-search`,
+- Unsupported capability: `lookup-reverse-search`,
   `dynamic-array-sort`, `dynamic-array-unique`
 
-`lookup-reverse-search` is leadership-only because HyperFormula 3.2.0 returned
+`lookup-reverse-search` is unsupported-capability because HyperFormula 3.2.0 returned
 `#NAME?` for the `XMATCH(...,0,-1)` fixture during local equivalence validation.
 The dynamic-array additions follow the existing `dynamic-array-filter` rule:
 they are capability evidence, not scorecard inputs.
@@ -122,7 +122,7 @@ The public lane is complete in the current artifact: `38` comparable workloads,
 Completed in this tranche:
 
 - Expanded the competitive benchmark to `51` workloads with public/holdout
-  lanes, directional ratios, noise fields, family scorecards, and leadership
+  lanes, directional ratios, noise fields, family scorecards, and unsupported capability
   classification for unsupported HyperFormula capabilities only.
 - Added mixed computed-criteria operands for direct conditional aggregation,
   covering criteria such as `">="&E1` without changing the workload.
@@ -260,7 +260,7 @@ pnpm workpaper:bench:competitive:check
 - Increasing only warmups or samples until a noisy sub-ms row flips green.
 - Making `lookup-reverse-search` comparable without proving HyperFormula returns
   an equivalent `XMATCH` result.
-- Treating leadership-only dynamic arrays as scorecard wins.
+- Treating unsupported-capability dynamic arrays as scorecard wins.
 - Dropping the holdout lane from scorecard reporting.
 - Optimizing benchmark fixtures by detecting workload names or exact formulas.
 - Removing verification keys from workloads that currently expose semantic

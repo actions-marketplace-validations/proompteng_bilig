@@ -8,7 +8,6 @@ Related documents:
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-hyperformula-closeout-plan-2026-04-12.md`
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-ultra-performance-engine-architecture-2026-04-12.md`
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-performance-acceleration-plan.md`
-- `/Users/gregkonush/github.com/bilig2/docs/workpaper-engine-leadership-program.md`
 
 ## Purpose
 

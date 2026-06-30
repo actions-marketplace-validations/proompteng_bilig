@@ -12,29 +12,29 @@ import {
 import { formulaInventory, formulaInventorySummary } from '../packages/formula/src/generated/formula-inventory.ts'
 import { formatJsonForRepo } from './scorecard-format.ts'
 
-interface FormulaDominanceSnapshot {
+interface FormulaCompatibilitySnapshot {
   schemaVersion: 1
   formulaBreadth: {
-    officeListed: FormulaDominanceRatio
-    tracked: FormulaDominanceRatio
+    officeListed: FormulaCompatibilityRatio
+    tracked: FormulaCompatibilityRatio
     missingOfficeFunctions: string[]
   }
   canonical: {
-    nonProductionRows: FormulaDominanceRow[]
+    nonProductionRows: FormulaCompatibilityRow[]
     statusCounts: Record<CompatibilityStatus, number>
-    summary: FormulaDominanceRatio
+    summary: FormulaCompatibilityRatio
   }
-  families: FormulaDominanceFamily[]
-  strategicFamilies: FormulaDominanceFamily[]
+  families: FormulaCompatibilityFamily[]
+  strategicFamilies: FormulaCompatibilityFamily[]
 }
 
-interface FormulaDominanceRatio {
+interface FormulaCompatibilityRatio {
   percent: number
   production: number
   total: number
 }
 
-interface FormulaDominanceRow {
+interface FormulaCompatibilityRow {
   family: CompatibilityFamily
   formula: string
   id: string
@@ -43,15 +43,15 @@ interface FormulaDominanceRow {
   wasmStatus: FormulaCompatibilityEntry['wasmStatus']
 }
 
-interface FormulaDominanceFamily {
+interface FormulaCompatibilityFamily {
   family: CompatibilityFamily
-  nonProductionRows: FormulaDominanceRow[]
+  nonProductionRows: FormulaCompatibilityRow[]
   statusCounts: Record<CompatibilityStatus, number>
-  summary: FormulaDominanceRatio
+  summary: FormulaCompatibilityRatio
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const outputPath = join(rootDir, 'packages', 'formula', 'src', '__tests__', 'fixtures', 'formula-dominance-snapshot.json')
+const outputPath = join(rootDir, 'packages', 'formula', 'src', '__tests__', 'fixtures', 'formula-compatibility-snapshot.json')
 const isCheckMode = process.argv.includes('--check')
 
 const snapshot = buildSnapshot()
@@ -59,12 +59,14 @@ const serializedSnapshot = formatJsonForRepo(`${JSON.stringify(snapshot, null, 2
 
 if (isCheckMode) {
   if (!existsSync(outputPath)) {
-    throw new Error(`Missing generated formula dominance snapshot at ${outputPath}. Run: bun scripts/gen-formula-dominance-snapshot.ts`)
+    throw new Error(
+      `Missing generated formula compatibility snapshot at ${outputPath}. Run: bun scripts/gen-formula-compatibility-snapshot.ts`,
+    )
   }
 
   const currentSnapshot = readFileSync(outputPath, 'utf8')
   if (currentSnapshot !== serializedSnapshot) {
-    throw new Error(`Generated formula dominance snapshot is out of date. Run: bun scripts/gen-formula-dominance-snapshot.ts`)
+    throw new Error(`Generated formula compatibility snapshot is out of date. Run: bun scripts/gen-formula-compatibility-snapshot.ts`)
   }
 } else {
   mkdirSync(dirname(outputPath), { recursive: true })
@@ -87,11 +89,11 @@ console.log(
   ),
 )
 
-function buildSnapshot(): FormulaDominanceSnapshot {
+function buildSnapshot(): FormulaCompatibilitySnapshot {
   const officeListed = formulaInventory.filter((entry) => entry.inOfficeList)
   const canonicalRows = formulaCompatibilityRegistry.filter((entry) => entry.scope === 'canonical')
   const canonicalProduction = canonicalRows.filter((entry) => entry.status === 'implemented-wasm-production')
-  const canonicalNonProduction = canonicalRows.filter((entry) => entry.status !== 'implemented-wasm-production').map(toDominanceRow)
+  const canonicalNonProduction = canonicalRows.filter((entry) => entry.status !== 'implemented-wasm-production').map(toCompatibilityRow)
 
   return {
     schemaVersion: 1,
@@ -116,7 +118,7 @@ function buildSnapshot(): FormulaDominanceSnapshot {
   }
 }
 
-function buildFamilySummary(family: CompatibilityFamily, canonicalRows: readonly FormulaCompatibilityEntry[]): FormulaDominanceFamily {
+function buildFamilySummary(family: CompatibilityFamily, canonicalRows: readonly FormulaCompatibilityEntry[]): FormulaCompatibilityFamily {
   const familyRows = canonicalRows.filter((entry) => entry.family === family)
   const familyProduction = familyRows.filter((entry) => entry.status === 'implemented-wasm-production')
 
@@ -124,7 +126,7 @@ function buildFamilySummary(family: CompatibilityFamily, canonicalRows: readonly
     family,
     summary: ratio(familyProduction.length, familyRows.length),
     statusCounts: countStatuses(familyRows),
-    nonProductionRows: familyRows.filter((entry) => entry.status !== 'implemented-wasm-production').map(toDominanceRow),
+    nonProductionRows: familyRows.filter((entry) => entry.status !== 'implemented-wasm-production').map(toCompatibilityRow),
   }
 }
 
@@ -145,7 +147,7 @@ function countStatuses(entries: readonly FormulaCompatibilityEntry[]): Record<Co
   return counts
 }
 
-function ratio(production: number, total: number): FormulaDominanceRatio {
+function ratio(production: number, total: number): FormulaCompatibilityRatio {
   return {
     production,
     total,
@@ -153,7 +155,7 @@ function ratio(production: number, total: number): FormulaDominanceRatio {
   }
 }
 
-function toDominanceRow(entry: FormulaCompatibilityEntry): FormulaDominanceRow {
+function toCompatibilityRow(entry: FormulaCompatibilityEntry): FormulaCompatibilityRow {
   return {
     id: entry.id,
     family: entry.family,

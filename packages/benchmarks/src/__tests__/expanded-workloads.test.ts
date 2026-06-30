@@ -255,7 +255,7 @@ function familyEligibility(family: ExpandedCompetitiveFamily): { scorecardEligib
       return {
         scorecardEligible: family !== 'dynamic-array',
         exclusionReason:
-          family === 'dynamic-array' ? 'Leadership-only support lane; not an apples-to-apples performance scorecard input.' : null,
+          family === 'dynamic-array' ? 'Unsupported-capability support lane; not an apples-to-apples performance scorecard input.' : null,
       }
   }
 }
@@ -427,7 +427,7 @@ describe('expanded comparative benchmark workloads', () => {
   })
 
   it('keeps the scorecard-eligible comparable benchmark inventory at 100 workloads', () => {
-    const leadershipOnlyWorkloads = new Set<ExpandedComparativeBenchmarkWorkload>([
+    const unsupportedCapabilityWorkloads = new Set<ExpandedComparativeBenchmarkWorkload>([
       'lookup-reverse-search',
       'dynamic-array-filter',
       'dynamic-array-sort',
@@ -435,7 +435,7 @@ describe('expanded comparative benchmark workloads', () => {
     ])
     const scorecardEligibleWorkloads = EXPANDED_COMPARATIVE_FAMILY_ORDER.flatMap((family) =>
       familyEligibility(family).scorecardEligible
-        ? EXPANDED_COMPARATIVE_FAMILY_GROUPS[family].filter((workload) => !leadershipOnlyWorkloads.has(workload))
+        ? EXPANDED_COMPARATIVE_FAMILY_GROUPS[family].filter((workload) => !unsupportedCapabilityWorkloads.has(workload))
         : [],
     )
 
@@ -492,7 +492,7 @@ describe('expanded comparative benchmark workloads', () => {
         ...familyEligibility(family),
         resultCount: 0,
         comparableCount: 0,
-        leadershipCount: 0,
+        unsupportedCapabilityCount: 0,
         workpaperWins: 0,
         hyperformulaWins: 0,
         ...emptyConfidenceCounts,
@@ -521,7 +521,7 @@ describe('expanded comparative benchmark workloads', () => {
         ...familyEligibility(family),
         resultCount: 0,
         comparableCount: 0,
-        leadershipCount: 0,
+        unsupportedCapabilityCount: 0,
         workpaperWins: 0,
         hyperformulaWins: 0,
         ...emptyConfidenceCounts,
@@ -716,7 +716,7 @@ describe('expanded comparative benchmark workloads', () => {
     }
   })
 
-  it('emits engine counters for new WorkPaper leadership workload helpers', () => {
+  it('emits engine counters for new WorkPaper unsupported-capability workload helpers', () => {
     const samples = [measureWorkPaperDynamicArraySortSample(32), measureWorkPaperDynamicArrayUniqueSample(32)]
 
     for (const sample of samples) {

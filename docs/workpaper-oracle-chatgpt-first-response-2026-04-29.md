@@ -27,9 +27,9 @@ packages/core/src/perf/engine-counters.ts is the engine-counter surface.
 
 The correctness gate is real: comparable runs serialize WorkPaper and HyperFormula verification JSON and reject the result if they differ. The sampled verification also rejects intra-engine verification drift across samples. Default competitive sampling is 2 warmups and 5 samples.
 
-Important mismatch: the checked-in baseline artifact does not match the local rerun state you gave. packages/benchmarks/baselines/workpaper-vs-hyperformula.json is generated on 2026-04-26T19:45:31.057Z, has 40 results, 39 comparable, 1 leadership-only, but only 23 WorkPaper wins and 16 HyperFormula wins. It also does not include the current family/scorecard report shape. Treat that artifact as stale relative to your 2026-04-28 reruns, not as proof of the current engine state.
+Important mismatch: the checked-in baseline artifact does not match the local rerun state you gave. packages/benchmarks/baselines/workpaper-vs-hyperformula.json is generated on 2026-04-26T19:45:31.057Z, has 40 results, 39 comparable, 1 unsupported-capability, but only 23 WorkPaper wins and 16 HyperFormula wins. It also does not include the current family/scorecard report shape. Treat that artifact as stale relative to your 2026-04-28 reruns, not as proof of the current engine state.
 
-Current comparable workload count in source is 39, with one genuine leadership workload: dynamic-array-filter.
+Current comparable workload count in source is 39, with one genuine unsupported-capability workload: dynamic-array-filter.
 
 1. Benchmark expansion plan
 
@@ -65,7 +65,7 @@ Fixture: buildNamedExpressionBenchSheet.
 
 Purpose: tests build/evaluation through named expressions rather than only direct cell/range references.
 
-Comparable: yes only after the benchmark helper creates equivalent named expressions in both WorkPaper and HyperFormula. Do not mark leadership-only merely because the helper is missing.
+Comparable: yes only after the benchmark helper creates equivalent named expressions in both WorkPaper and HyperFormula. Do not mark unsupported-capability merely because the helper is missing.
 
 Verification: named expression values, formula outputs using names, formula text if both engines expose equivalent formula text.
 
@@ -221,7 +221,7 @@ Operation: rename a referenced sheet.
 
 Purpose: tests dependency graph, formula rewrite, and cross-sheet invalidation.
 
-Comparable: yes if both engines support sheet rename in the benchmark helper. HyperFormula does, so this should not be leadership-only.
+Comparable: yes if both engines support sheet rename in the benchmark helper. HyperFormula does, so this should not be unsupported-capability.
 
 Verification: dependent formula values, rewritten formula text where both engines expose it, and sheet names.
 
@@ -363,15 +363,15 @@ dynamic-array-sort
 
 Fixture: buildDynamicArraySortSheet.
 
-Comparable: leadership-only only while HyperFormula cannot execute equivalent dynamic-array semantics in this benchmark harness.
+Comparable: unsupported-capability only while HyperFormula cannot execute equivalent dynamic-array semantics in this benchmark harness.
 
 dynamic-array-unique
 
 Fixture: buildDynamicArrayUniqueSheet.
 
-Comparable: leadership-only only while HyperFormula cannot execute equivalent dynamic-array semantics.
+Comparable: unsupported-capability only while HyperFormula cannot execute equivalent dynamic-array semantics.
 
-Do not include leadership-only dynamic-array rows in the WorkPaper-vs-HyperFormula public scorecard. They can be reported as capability evidence in a separate section.
+Do not include unsupported-capability dynamic-array rows in the WorkPaper-vs-HyperFormula public scorecard. They can be reported as capability evidence in a separate section.
 
 2. Reporting and scoring integrity plan
 
@@ -419,7 +419,7 @@ hyperformula-win
 
 tie-noisy
 
-unsupported-leadership
+unsupported-capability
 
 Recommended public classification rule:
 
@@ -473,7 +473,7 @@ public
 
 Existing workloads plus the new checked-in comparable workloads. This is the main external scorecard.
 
-Exclude only genuinely non-comparable leadership workloads, such as dynamic arrays while HyperFormula cannot run equivalent semantics in the harness.
+Exclude only genuinely non-comparable unsupported-capability workloads, such as dynamic arrays while HyperFormula cannot run equivalent semantics in the harness.
 
 holdout
 
@@ -513,7 +513,7 @@ Add tests that fail if:
 
 an existing workload disappears;
 
-an existing workload changes its comparable/leadership status without explicit fixture evidence;
+an existing workload changes its comparable/unsupported-capability status without explicit fixture evidence;
 
 a comparable workload lacks verification;
 
@@ -848,7 +848,7 @@ Add guard tests before adding new workloads:
 
 existing workload IDs are unchanged;
 
-existing workload leadershipOnly status is unchanged;
+existing workload unsupportedCapability status is unchanged;
 
 existing sample/warmup defaults remain 2/5;
 
@@ -1000,7 +1000,7 @@ packages/headless/src/work-paper-runtime.ts
 
 Goal: sheet rename and structural row/column edits retarget only affected formulas/descriptors.
 
-Phase 8: Dynamic-array leadership polish
+Phase 8: Dynamic-array unsupported-capability polish
 
 Edit:
 
@@ -1126,7 +1126,7 @@ no comparable family has familyWorstCaseWorkPaperRatio >= 1.0;
 
 all noisy/tie rows are labeled as such, not counted as WorkPaper wins;
 
-leadership-only dynamic-array rows are reported separately.
+unsupported-capability dynamic-array rows are reported separately.
 
 6. Red flags that would count as cheating or accidental cheating
 
@@ -1134,7 +1134,7 @@ Benchmark-specific branches in engine code, such as checking workload IDs, exact
 
 Changing existing workload sizes, edit locations, sampling defaults, or verification payloads to remove losses.
 
-Moving a HyperFormula-supported workload to leadership-only because WorkPaper loses it.
+Moving a HyperFormula-supported workload to unsupported-capability because WorkPaper loses it.
 
 Comparing fewer output cells after adding a harder workload.
 
@@ -1156,7 +1156,7 @@ Assuming approximate lookup vectors are sorted after arbitrary writes without va
 
 Failing to invalidate criteria/lookup/aggregate caches after structural edits, sheet rename, named-expression edits, or formula edits.
 
-Treating dynamic-array leadership rows as WorkPaper-vs-HyperFormula wins while HyperFormula cannot run equivalent semantics.
+Treating dynamic-array unsupported-capability rows as WorkPaper-vs-HyperFormula wins while HyperFormula cannot run equivalent semantics.
 
 Regenerating the baseline on a favorable machine and presenting it as universal without host metadata, sample count, and confidence intervals.
 

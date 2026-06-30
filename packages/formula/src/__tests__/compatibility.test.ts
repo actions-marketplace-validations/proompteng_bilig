@@ -20,7 +20,7 @@ import {
   excelFixtureIdPattern,
 } from '../../../excel-fixtures/src/index.js'
 
-interface FormulaDominanceSnapshotFixture {
+interface FormulaCompatibilitySnapshotFixture {
   canonical: {
     nonProductionRows: Array<{ id: string }>
     summary: { percent: number; production: number; total: number }
@@ -32,8 +32,8 @@ interface FormulaDominanceSnapshotFixture {
 }
 
 describe('formula compatibility registry', () => {
-  it('keeps the generated formula dominance snapshot aligned with inventory and canonical status', () => {
-    const snapshot = readFormulaDominanceSnapshot()
+  it('keeps the generated formula compatibility snapshot aligned with inventory and canonical status', () => {
+    const snapshot = readFormulaCompatibilitySnapshot()
     const canonicalRegistryEntries = formulaCompatibilityRegistry.filter((entry) => entry.scope === 'canonical')
     const canonicalProductionEntries = canonicalRegistryEntries.filter((entry) => entry.status === 'implemented-wasm-production')
     const canonicalOpenRows = canonicalRegistryEntries
@@ -145,17 +145,17 @@ describe('formula compatibility registry', () => {
   })
 })
 
-function readFormulaDominanceSnapshot(): FormulaDominanceSnapshotFixture {
-  const parsed = JSON.parse(readFileSync(new URL('./fixtures/formula-dominance-snapshot.json', import.meta.url), 'utf8')) as unknown
+function readFormulaCompatibilitySnapshot(): FormulaCompatibilitySnapshotFixture {
+  const parsed = JSON.parse(readFileSync(new URL('./fixtures/formula-compatibility-snapshot.json', import.meta.url), 'utf8')) as unknown
 
-  if (!isFormulaDominanceSnapshotFixture(parsed)) {
-    throw new Error('Invalid formula dominance snapshot fixture shape')
+  if (!isFormulaCompatibilitySnapshotFixture(parsed)) {
+    throw new Error('Invalid formula compatibility snapshot fixture shape')
   }
 
   return parsed
 }
 
-function isFormulaDominanceSnapshotFixture(value: unknown): value is FormulaDominanceSnapshotFixture {
+function isFormulaCompatibilitySnapshotFixture(value: unknown): value is FormulaCompatibilitySnapshotFixture {
   if (!isRecord(value)) {
     return false
   }

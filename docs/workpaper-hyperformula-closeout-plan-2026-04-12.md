@@ -18,12 +18,11 @@ all directly comparable competitive benchmarks in this repo.
 It is intentionally narrower than:
 
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-performance-acceleration-plan.md`
-- `/Users/gregkonush/github.com/bilig2/docs/workpaper-engine-leadership-program.md`
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-ultra-performance-engine-architecture-2026-04-12.md`
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-ultra-performance-engine-delivery-2026-04-12.md`
 - `/Users/gregkonush/github.com/bilig2/docs/workpaper-hyperformula-prior-art-audit-2026-04-12.md`
 
-Those documents describe the broader performance and leadership program. This document describes
+Those documents describe the broader performance program. This document describes
 the last-mile engineering plan after the `ef63195` tranche landed.
 
 ## Current State

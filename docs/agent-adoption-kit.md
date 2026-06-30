@@ -122,10 +122,8 @@ For web fetch, give the agent the compact map first:
 https://proompteng.github.io/bilig/llms.txt
 ```
 
-When a reviewer wants to see a successful run before adopting the path, use the
-[agent proof transcripts](agent-proof-transcripts.md). They show prompt, tool
-call, result, workbook state change, formula readback, JSON export, and restart
-verification for common coding-agent hosts.
+When a reviewer wants to see a successful run before adopting the path, require
+fresh evaluator JSON from `bilig-evaluate --door agent-mcp --json`.
 
 ## Agent Manifest Gate
 

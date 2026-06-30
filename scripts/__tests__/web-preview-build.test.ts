@@ -27,9 +27,21 @@ describe('web preview build gate', () => {
 
   it('uses the runner config loader for production web bundles', () => {
     const scripts = readWebPackageScripts()
+    const bundleBuildSource = readFileSync(resolve(repoRoot, 'scripts/run-web-bundle-build.ts'), 'utf8')
 
     expect(scripts['build']).toContain('vite/bin/vite.js build --configLoader runner')
-    expect(scripts['build:bundle']).toContain('vite/bin/vite.js build --configLoader runner')
+    expect(scripts['build:bundle']).toContain('scripts/run-web-bundle-build.ts')
+    expect(bundleBuildSource).toContain("'node_modules/vite/bin/vite.js'")
+    expect(bundleBuildSource).toContain("'build', '--configLoader', 'runner'")
+  })
+
+  it('bounds and retries production bundle builds when the native bundler hangs', () => {
+    const source = readFileSync(resolve(repoRoot, 'scripts/run-web-bundle-build.ts'), 'utf8')
+
+    expect(source).toContain('BILIG_WEB_BUNDLE_BUILD_TIMEOUT_MS')
+    expect(source).toContain('BILIG_WEB_BUNDLE_BUILD_ATTEMPTS')
+    expect(source).toContain("terminateProcessTree(child, 'SIGTERM')")
+    expect(source).toContain("terminateProcessTree(child, 'SIGKILL')")
   })
 
   it('ensures the wasm kernel artifact before the preview web-server build', () => {

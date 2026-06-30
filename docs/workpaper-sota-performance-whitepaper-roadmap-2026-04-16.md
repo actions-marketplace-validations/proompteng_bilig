@@ -132,4 +132,4 @@ The realistic SOTA stack for this repo is:
 - Adapton-style demand control only where observers decide what must stay hot
 - Differential Dataflow-style versioned delta maintenance only for sync projections
 
-That combination is the highest-value path to leadership from the current codebase.
+That combination is the highest-value path to durable performance from the current codebase.

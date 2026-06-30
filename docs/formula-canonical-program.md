@@ -25,7 +25,7 @@ There are no remaining open canonical rows.
 
 The checked-in registry is the authoritative source of corpus size and composition.
 The generated snapshot at
-`packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json` is the easiest current readout.
+`packages/formula/src/__tests__/fixtures/formula-compatibility-snapshot.json` is the easiest current readout.
 
 ## Remaining semantic focus
 

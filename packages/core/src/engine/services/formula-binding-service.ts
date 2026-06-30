@@ -33,11 +33,7 @@ import {
   removeDirectAggregateColumnReverseEdges,
   removeDirectCriteriaAggregateColumnReverseEdge,
 } from './formula-binding-dependency-helpers.js'
-import {
-  buildDirectAggregateDescriptor,
-  rewriteDirectAggregateDescriptorForStructuralTransform,
-  type ParsedCompiledFormula,
-} from './formula-binding-direct-descriptors.js'
+import { buildDirectAggregateDescriptor, type ParsedCompiledFormula } from './formula-binding-direct-descriptors.js'
 import {
   appendFormulaBindingReverseEdge,
   appendKnownUniqueFormulaBindingReverseEdge,
@@ -75,6 +71,10 @@ import { createFormulaBindingInstanceTableRebuildController } from './formula-bi
 import { tryRewriteSimpleDirectScalarFormulaSourcePreservingBinding } from './formula-binding-direct-scalar-rewrite.js'
 import { updateFormulaBindingVolatileIndex } from './formula-binding-volatile-index.js'
 import { refreshFormulaBindingTrackedMetadata } from './formula-binding-tracked-metadata.js'
+import {
+  retargetDirectAggregateFormulaForStructuralTransform,
+  retargetDirectAggregateFormulasForStructuralTransform,
+} from './formula-binding-direct-aggregate-retarget.js'
 import type {
   BindPreparedFormulaOptions,
   CreateEngineFormulaBindingServiceArgs,
@@ -486,31 +486,15 @@ export function createEngineFormulaBindingService(args: CreateEngineFormulaBindi
     targetSheetName: string,
     transform: StructuralAxisTransform,
     preservesValue: boolean,
-  ): boolean => {
-    const existing = args.state.formulas.get(cellIndex)
-    if (!existing?.directAggregate) {
-      return false
-    }
-    const previousDirectAggregate = existing.directAggregate
-    const nextDirectAggregate = rewriteDirectAggregateDescriptorForStructuralTransform({
-      descriptor: previousDirectAggregate,
-      targetSheetName,
-      transform,
-      regionGraph: args.regionGraph,
-    })
-    if (!nextDirectAggregate) {
-      return false
-    }
-    existing.directAggregate = nextDirectAggregate
-    existing.structuralSourceTransform = {
+  ): boolean =>
+    retargetDirectAggregateFormulaForStructuralTransform({
+      serviceArgs: args,
+      cellIndex,
       ownerSheetName,
       targetSheetName,
       transform,
       preservesValue,
-    }
-    args.regionGraph.replaceSingleFormulaSubscription(cellIndex, previousDirectAggregate.regionId, nextDirectAggregate.regionId)
-    return true
-  }
+    })
 
   const retargetDirectAggregateFormulasForStructuralTransformNow = (
     inputs: readonly {
@@ -520,45 +504,13 @@ export function createEngineFormulaBindingService(args: CreateEngineFormulaBindi
     }[],
     targetSheetName: string,
     transform: StructuralAxisTransform,
-  ): readonly number[] => {
-    if (inputs.length === 0) {
-      return []
-    }
-    const retargetedCellIndices: number[] = []
-    const replacements: Array<{ formulaCellIndex: number; previousRegionId: number; nextRegionId: number }> = []
-    for (let index = 0; index < inputs.length; index += 1) {
-      const { cellIndex, ownerSheetName, preservesValue } = inputs[index]!
-      const existing = args.state.formulas.get(cellIndex)
-      if (!existing?.directAggregate) {
-        continue
-      }
-      const previousDirectAggregate = existing.directAggregate
-      const nextDirectAggregate = rewriteDirectAggregateDescriptorForStructuralTransform({
-        descriptor: previousDirectAggregate,
-        targetSheetName,
-        transform,
-        regionGraph: args.regionGraph,
-      })
-      if (!nextDirectAggregate) {
-        continue
-      }
-      existing.directAggregate = nextDirectAggregate
-      existing.structuralSourceTransform = {
-        ownerSheetName,
-        targetSheetName,
-        transform,
-        preservesValue,
-      }
-      retargetedCellIndices.push(cellIndex)
-      replacements.push({
-        formulaCellIndex: cellIndex,
-        previousRegionId: previousDirectAggregate.regionId,
-        nextRegionId: nextDirectAggregate.regionId,
-      })
-    }
-    args.regionGraph.replaceSingleFormulaSubscriptions(replacements)
-    return retargetedCellIndices
-  }
+  ): readonly number[] =>
+    retargetDirectAggregateFormulasForStructuralTransform({
+      serviceArgs: args,
+      inputs,
+      targetSheetName,
+      transform,
+    })
 
   const isCellIndexMappedNow = (cellIndex: number): boolean => {
     const sheetId = args.state.workbook.cellStore.sheetIds[cellIndex]
