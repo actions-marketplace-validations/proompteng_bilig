@@ -139,7 +139,7 @@
       ],
       "biligEvidence": [
         "The headed browser frame-pacing contracts check dense 100k diagonal browse and wide 250k horizontal browse frame p95 budgets.",
-        "The dominance scorecard separately requires browser UI responsiveness artifacts instead of treating engine speed as UI proof."
+        "The claim policy separately requires browser UI responsiveness artifacts instead of treating engine speed as UI proof."
       ],
       "googleSheetsEvidence": [
         "Google documents conditional formatting and open-range modeling choices that can affect large-sheet responsiveness.",
@@ -197,7 +197,7 @@
         "microsoft-excel-web-differences"
       ],
       "biligEvidence": [
-        "The generated dominance scorecard keeps UI responsiveness partial until direct Google Sheets and Microsoft Excel timing evidence exists.",
+        "The generated claim policy keeps UI responsiveness partial until direct Google Sheets and Microsoft Excel timing evidence exists.",
         "The SLO scorecard records official-docs comparison evidence but does not allow it to satisfy the live incumbent timing requirement."
       ],
       "googleSheetsEvidence": [

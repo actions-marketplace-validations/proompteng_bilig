@@ -304,7 +304,7 @@ describe('same-corpus mutation target proof summary', () => {
     )
   })
 
-  it('formats actionable product-level target proof gaps for the dominance audit', () => {
+  it('formats actionable product-level target proof gaps for public claim review', () => {
     const summaries = sameCorpusMutationTargetProofProductSummaries(
       [
         mutationTargetCase({

@@ -363,7 +363,6 @@ const generatedSourceChecks: readonly CiTask[] = [
   tsxScript('WorkPaper xlsx-calc benchmark check', 'scripts/gen-workpaper-vs-xlsx-calc-benchmark.ts', '--check'),
   tsxScript('WorkPaper IronCalc Rust benchmark check', 'scripts/gen-workpaper-vs-ironcalc-rust-benchmark.ts', '--check'),
   tsxScript('WorkPaper Univer benchmark check', 'scripts/gen-workpaper-vs-univer-benchmark.ts', '--check'),
-  bunScript('headless performance leadership scorecard check', 'scripts/gen-headless-performance-leadership-scorecard.ts', '--check'),
   bunScript('public claims check', 'scripts/check-public-claims.ts'),
   bunScript('workspace resolution check', 'scripts/gen-workspace-resolution.ts', '--check'),
   bunScript('canonical naming check', 'scripts/check-canonical-naming.ts'),

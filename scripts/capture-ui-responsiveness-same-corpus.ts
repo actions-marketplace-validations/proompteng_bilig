@@ -288,7 +288,7 @@ export function assertSameCorpusCaptureCurrentContractEvidenceReady(capture: Sam
   }
   throw new Error(
     [
-      'Same-corpus UI capture artifact is not valid evidence for the dominance scorecard.',
+      'Same-corpus UI capture artifact is not valid evidence for public performance claims.',
       'The artifact was written for diagnosis, but the capture command exits non-zero until browser-visible proof satisfies the current contract.',
       'Use --allow-incomplete-evidence only for exploratory captures that must not be fed into a public 10x claim.',
       ...currentContractBlockingReasons.map((reason) => `- ${reason}`),
@@ -317,7 +317,7 @@ export function assertProductionBiligEvidenceSource(args: CaptureArgs): void {
   throw new Error(
     [
       'Same-corpus UI capture needs production Bilig runtime proof.',
-      'The default Bilig URL is a localhost dev server and cannot satisfy the dominance scorecard.',
+      'The default Bilig URL is a localhost dev server and cannot satisfy public performance claims.',
       'Use --serve-bilig-production to build and serve the production web bundle for this capture, or pass --bilig-url <production-bilig-url>.',
       'Use --allow-incomplete-evidence only for diagnostic captures that must not be fed into a public 10x claim.',
     ].join('\n'),
@@ -494,7 +494,7 @@ export function emitSameCorpusXlsx(args: EmitXlsxArgs): void {
         microsoftExcelWebAuthStateCommand:
           'pnpm ui:same-corpus:capture -- --save-storage-state <state.json> --auth-product microsoft-excel-web --microsoft-excel-web-url <url> [--corpus wide-mixed-250k]',
         biligProductionRuntimeRequirement:
-          'Use --serve-bilig-production or --bilig-url <production-bilig-url> for dominance evidence. The default localhost dev URL is only valid with --allow-incomplete-evidence.',
+          'Use --serve-bilig-production or --bilig-url <production-bilig-url> for public claim evidence. The default localhost dev URL is only valid with --allow-incomplete-evidence.',
         preflightCommand:
           'pnpm ui:same-corpus:capture -- --preflight --google-sheets-url <url> --microsoft-excel-web-url <url> [--google-sheets-storage-state <state.json>] [--microsoft-excel-web-storage-state <state.json>]',
         captureCommand:

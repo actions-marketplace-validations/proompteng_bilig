@@ -105,7 +105,7 @@
       "sourceIds": ["google-drive-file-sizes", "google-sheets-excel-best-practices", "microsoft-excel-specifications-limits"],
       "biligEvidence": [
         "The large-workbook SLO scorecard runs committed 100k and 250k materialized-cell load and warm-start contracts.",
-        "The dominance scorecard keeps large-workbook scale partial until max-limit and live incumbent timing artifacts exist."
+        "The claim policy keeps large-workbook scale partial until max-limit and live incumbent timing artifacts exist."
       ],
       "googleSheetsEvidence": [
         "Google publishes hard Sheets cell and column limits for created, converted, Excel-imported, and CSV-imported spreadsheets.",
@@ -191,7 +191,7 @@
         "microsoft-excel-performance-tips"
       ],
       "biligEvidence": [
-        "The dominance scorecard still blocks a blanket 10x claim unless direct Google Sheets and Microsoft Excel evidence exists for every objective category.",
+        "The claim policy still blocks a blanket 10x claim unless direct Google Sheets and Microsoft Excel evidence exists for every objective category.",
         "The large-workbook SLO scorecard records official-docs comparison evidence but keeps direct incumbent live timing as an explicit remaining gap."
       ],
       "googleSheetsEvidence": [

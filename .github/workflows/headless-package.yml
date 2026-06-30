@@ -863,7 +863,6 @@ jobs:
             --notes-file build/runtime-release-notes.md
 
           pnpm workpaper:bench:ironcalc-rust:check
-          pnpm headless:performance:check
           bun scripts/sync-public-evidence.ts
           pnpm docs:benchmark-card:generate
           bun scripts/sync-agent-discovery-docs.ts
@@ -879,7 +878,6 @@ jobs:
             docs/headless-package-footprint.json
             docs/public-evidence.json
             packages/benchmarks/baselines/workpaper-vs-ironcalc-rust.json
-            packages/benchmarks/baselines/headless-performance-leadership-scorecard.json
             examples/huggingface-workpaper-space/package.json
             examples/huggingface-workpaper-space/README.md
             examples/huggingface-workpaper-space/workpaper_proof.mjs

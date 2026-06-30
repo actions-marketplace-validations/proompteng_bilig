@@ -452,24 +452,24 @@ console.log({ answer, restored: restored.getCellDisplayValue(outputCell) })
               <p class="kicker">Benchmark</p>
               <h2 id="benchmark-title">The benchmark artifact is public.</h2>
               <p>
-                The checked scorecard has bilig ahead across HyperFormula, TrueCalc, Univer, xlsx-calc, IronCalc Rust.
-                <span>Coverage tiers and unsupported rows stay visible.</span>
+                The checked artifact compares WorkPaper against HyperFormula on deterministic workbook workloads.
+                <span>Coverage boundaries stay visible.</span>
               </p>
             </div>
 
             <div class="proof-board" aria-label="Benchmark evidence">
               <div class="proof-board-head">
-                <span>headless-performance-leadership-scorecard.json</span>
-                <strong>5 engines</strong>
+                <span>workpaper-vs-hyperformula.json</span>
+                <strong>HyperFormula</strong>
               </div>
 
               <div class="proof-result">
                 <div class="proof-metric">
-                  <span class="proof-label">mean+p95 scorecard</span>
+                  <span class="proof-label">mean+p95 rows</span>
                   <strong>100/100</strong>
                 </div>
                 <p>
-                  100/100 comparable workloads win on both mean and p95 in the checked leadership scorecard.
+                  100/100 comparable workloads win on both mean and p95 in the checked HyperFormula artifact.
                   <span>100 of 100 comparable mean-latency rows are faster in the checked HyperFormula file.</span>
                   sheet-rename-dependencies is the current worst p95 row:
                   <code>0.792x</code>. Browser UI rendering is not part of this benchmark.
@@ -479,17 +479,17 @@ console.log({ answer, restored: restored.getCellDisplayValue(outputCell) })
               <dl class="proof-facts">
                 <div class="proof-fact proof-command">
                   <dt>Command</dt>
-                  <dd><code>pnpm headless:performance:check</code></dd>
+                  <dd><code>pnpm workpaper:bench:competitive:check</code></dd>
                 </div>
                 <div class="proof-fact proof-row-code">
                   <dt>Artifact</dt>
                   <dd>
-                    <code>packages/benchmarks/baselines/<wbr />headless-performance-leadership-scorecard.json</code>
+                    <code>packages/benchmarks/baselines/<wbr />workpaper-vs-hyperformula.json</code>
                   </dd>
                 </div>
                 <div class="proof-fact">
-                  <dt>Providers</dt>
-                  <dd>HyperFormula, TrueCalc, Univer, xlsx-calc, IronCalc Rust.</dd>
+                  <dt>Comparator</dt>
+                  <dd>HyperFormula.</dd>
                 </div>
                 <div class="proof-fact">
                   <dt>Worst p95</dt>

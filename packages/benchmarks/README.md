@@ -52,22 +52,19 @@ pnpm workpaper:bench:competitive:generate -- --jobs 8
 Each workload still runs its warmup and measured samples sequentially; `--jobs` only parallelizes
 different workloads and the checked artifact remains ordered canonically.
 
-## Other headless competitor lanes
+## Other headless competitor artifacts
 
-The headless leadership scorecard also consumes scoped competitor artifacts for public headless
-spreadsheet engines:
+The repo also tracks scoped competitor artifacts for local performance investigation:
 
 ```bash
 pnpm workpaper:bench:truecalc:generate
 pnpm workpaper:bench:univer:generate
 pnpm workpaper:bench:xlsx-calc:generate
-pnpm headless:performance:generate
 ```
 
 `workpaper-vs-univer.json` uses Univer's documented `@univerjs/preset-sheets-node-core` Node preset
-and times public Facade API edits through formula recalculation completion. The leadership
-scorecard stays `active-not-achieved` until every direct workbook-wide competitor lane covers the
-broader comparable workload set.
+and times public Facade API edits through formula recalculation completion. These artifacts are
+explicit benchmark evidence, not a rolled-up public proof status.
 
 ## Named giant-workbook corpus
 

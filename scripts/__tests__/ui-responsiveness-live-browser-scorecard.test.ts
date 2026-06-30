@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 import { buildWorkbookBenchmarkCorpus } from '../../packages/benchmarks/src/workbook-corpus.js'
-import { hasUiResponsivenessSameCorpusTenXGap } from '../bilig-dominance-completion-audit.ts'
 import {
   buildSameCorpusCaptureRunManifest,
   buildSameCorpusProof,
@@ -62,6 +61,22 @@ const googleSheetsSourceWorkbookSha256 = '1'.repeat(64)
 const microsoftExcelWebSourceWorkbookSha256 = '2'.repeat(64)
 const fixtureScreenshotBytes = 'png'
 const fixtureScreenshotSha256 = createHash('sha256').update(fixtureScreenshotBytes).digest('hex')
+
+function hasUiResponsivenessSameCorpusTenXGap(scorecard: UiResponsivenessLiveBrowserScorecard): boolean {
+  try {
+    validateUiResponsivenessLiveBrowserScorecard(scorecard)
+  } catch {
+    return true
+  }
+
+  const proof = scorecard.sameCorpusProof
+  return (
+    !proof.captured ||
+    proof.tenXMeanAndP95CaseCount < proof.requiredCaseCount ||
+    !proof.runManifest?.currentContractEvidenceComplete ||
+    !proof.runManifest?.googleSheetsTenXRequirementSatisfied
+  )
+}
 
 describe('UI responsiveness live browser scorecard', () => {
   it('validates the checked-in browser timing artifact', () => {
@@ -1125,7 +1140,7 @@ function sameCorpusProofArchiveTrackedPaths(rootDir: string, capturePath: string
     relative(rootDir, manifestPath),
     relative(rootDir, zipPath),
     ...manifest.artifacts.map(sameCorpusProofArchiveArtifactPath),
-  ].toSorted()
+  ].toSorted((left, right) => left.localeCompare(right))
 }
 
 function sameCorpusProofArchiveArtifactPath(artifact: SameCorpusProofArchiveArtifact): string {

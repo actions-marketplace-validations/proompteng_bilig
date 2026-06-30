@@ -25,40 +25,18 @@ interface LaneScorecard {
 }
 
 interface BenchmarkSummary {
-  readonly comparisonEngineCount: number
-  readonly comparisons: readonly PublicComparisonEvidence[]
-  readonly goalStatus: string
+  readonly generatedAt: string
+  readonly hyperformulaVersion: string
   readonly meanAndP95WinCount: number
   readonly overall: LaneScorecard
-  readonly p95HoldoutCount: number
-  readonly p95Holdouts: readonly string[]
-  readonly primaryArtifactGeneratedAt: string
-  readonly totalComparableWorkloadCount: number
-  readonly workbookWideComparisonEngineCount: number
-}
-
-interface PublicComparisonEvidence {
-  readonly engineName: string
-  readonly coverageTier: string
-  readonly comparableWorkloadCount: number
-  readonly meanAndP95WinCount: number
-  readonly unsupportedWorkloadCount: number
 }
 
 interface PublicEvidence {
   readonly workpaperVsHyperFormula: {
     readonly generatedAt: string
-    readonly overall: LaneScorecard
-  }
-  readonly headlessPerformanceLeadership: {
-    readonly goalStatus: string
-    readonly comparisonEngineCount: number
-    readonly workbookWideComparisonEngineCount: number
-    readonly comparableWorkloadCount: number
+    readonly hyperformulaVersion: string
     readonly meanAndP95WinCount: number
-    readonly p95HoldoutCount: number
-    readonly p95Holdouts: readonly string[]
-    readonly comparisons: readonly PublicComparisonEvidence[]
+    readonly overall: LaneScorecard
   }
 }
 
@@ -105,82 +83,24 @@ function readLaneScorecard(value: unknown, context: string): LaneScorecard {
 
 async function readBenchmarkSummary(): Promise<BenchmarkSummary> {
   const evidence = readPublicEvidence(JSON.parse(await readFile(evidencePath, 'utf8')) as unknown)
-  const leadership = evidence.headlessPerformanceLeadership
-
   return {
-    comparisonEngineCount: leadership.comparisonEngineCount,
-    comparisons: leadership.comparisons,
-    goalStatus: leadership.goalStatus,
-    meanAndP95WinCount: leadership.meanAndP95WinCount,
+    generatedAt: evidence.workpaperVsHyperFormula.generatedAt,
+    hyperformulaVersion: evidence.workpaperVsHyperFormula.hyperformulaVersion,
+    meanAndP95WinCount: evidence.workpaperVsHyperFormula.meanAndP95WinCount,
     overall: evidence.workpaperVsHyperFormula.overall,
-    p95HoldoutCount: leadership.p95HoldoutCount,
-    p95Holdouts: leadership.p95Holdouts,
-    primaryArtifactGeneratedAt: evidence.workpaperVsHyperFormula.generatedAt,
-    totalComparableWorkloadCount: leadership.comparableWorkloadCount,
-    workbookWideComparisonEngineCount: leadership.workbookWideComparisonEngineCount,
   }
 }
 
 function readPublicEvidence(value: unknown): PublicEvidence {
   const evidence = asRecord(value, 'docs/public-evidence.json')
   const workpaperVsHyperFormula = asRecord(evidence.workpaperVsHyperFormula, 'docs/public-evidence.json.workpaperVsHyperFormula')
-  const leadership = asRecord(evidence.headlessPerformanceLeadership, 'docs/public-evidence.json.headlessPerformanceLeadership')
-  const comparisons = leadership.comparisons
-  const p95Holdouts = leadership.p95Holdouts
-  if (!Array.isArray(comparisons)) {
-    throw new Error('docs/public-evidence.json.headlessPerformanceLeadership.comparisons must be an array')
-  }
-  if (!Array.isArray(p95Holdouts) || p95Holdouts.some((entry) => typeof entry !== 'string')) {
-    throw new Error('docs/public-evidence.json.headlessPerformanceLeadership.p95Holdouts must be an array of strings')
-  }
 
   return {
     workpaperVsHyperFormula: {
       generatedAt: readString(workpaperVsHyperFormula, 'generatedAt', 'docs/public-evidence.json.workpaperVsHyperFormula'),
+      hyperformulaVersion: readString(workpaperVsHyperFormula, 'hyperformulaVersion', 'docs/public-evidence.json.workpaperVsHyperFormula'),
+      meanAndP95WinCount: readNumber(workpaperVsHyperFormula, 'meanAndP95WinCount', 'docs/public-evidence.json.workpaperVsHyperFormula'),
       overall: readLaneScorecard(workpaperVsHyperFormula.overall, 'docs/public-evidence.json.workpaperVsHyperFormula.overall'),
-    },
-    headlessPerformanceLeadership: {
-      goalStatus: readString(leadership, 'goalStatus', 'docs/public-evidence.json.headlessPerformanceLeadership'),
-      comparisonEngineCount: readNumber(leadership, 'comparisonEngineCount', 'docs/public-evidence.json.headlessPerformanceLeadership'),
-      workbookWideComparisonEngineCount: readNumber(
-        leadership,
-        'workbookWideComparisonEngineCount',
-        'docs/public-evidence.json.headlessPerformanceLeadership',
-      ),
-      comparableWorkloadCount: readNumber(leadership, 'comparableWorkloadCount', 'docs/public-evidence.json.headlessPerformanceLeadership'),
-      meanAndP95WinCount: readNumber(leadership, 'meanAndP95WinCount', 'docs/public-evidence.json.headlessPerformanceLeadership'),
-      p95HoldoutCount: readNumber(leadership, 'p95HoldoutCount', 'docs/public-evidence.json.headlessPerformanceLeadership'),
-      p95Holdouts: [...p95Holdouts],
-      comparisons: comparisons.map((entry, index) => {
-        const record = asRecord(entry, `docs/public-evidence.json.headlessPerformanceLeadership.comparisons[${index.toString()}]`)
-        return {
-          engineName: readString(
-            record,
-            'engineName',
-            `docs/public-evidence.json.headlessPerformanceLeadership.comparisons[${index.toString()}]`,
-          ),
-          coverageTier: readString(
-            record,
-            'coverageTier',
-            `docs/public-evidence.json.headlessPerformanceLeadership.comparisons[${index.toString()}]`,
-          ),
-          comparableWorkloadCount: readNumber(
-            record,
-            'comparableWorkloadCount',
-            `docs/public-evidence.json.headlessPerformanceLeadership.comparisons[${index.toString()}]`,
-          ),
-          meanAndP95WinCount: readNumber(
-            record,
-            'meanAndP95WinCount',
-            `docs/public-evidence.json.headlessPerformanceLeadership.comparisons[${index.toString()}]`,
-          ),
-          unsupportedWorkloadCount: readNumber(
-            record,
-            'unsupportedWorkloadCount',
-            `docs/public-evidence.json.headlessPerformanceLeadership.comparisons[${index.toString()}]`,
-          ),
-        }
-      }),
     },
   }
 }
@@ -193,29 +113,15 @@ function formatPercentLower(ratio: number): string {
   return `${Math.round((1 - ratio) * 100).toString()}% lower`
 }
 
-function renderComparison(comparison: PublicComparisonEvidence, y: number): string {
-  const coverageLabel =
-    comparison.unsupportedWorkloadCount === 0
-      ? comparison.coverageTier
-      : `${comparison.coverageTier}; ${comparison.unsupportedWorkloadCount.toString()} unsupported`
-  return String.raw`<g transform="translate(88 ${y})">
-  <rect x="0" y="-16" width="9" height="9" rx="3" fill="#147a4b"/>
-  <text x="18" y="-8" fill="#526273" font-family="Inter, Arial, Helvetica, sans-serif" font-size="21" font-weight="760">${escapeXml(comparison.engineName)}</text>
-  <text x="438" y="0" text-anchor="end" fill="#111820" font-family="Inter, Arial, Helvetica, sans-serif" font-size="22" font-weight="820">${comparison.meanAndP95WinCount.toString()}/${comparison.comparableWorkloadCount.toString()}</text>
-  <text x="18" y="18" fill="#6b7885" font-family="Inter, Arial, Helvetica, sans-serif" font-size="14" font-weight="650">${escapeXml(coverageLabel)}</text>
-  <path d="M0 30 H460" stroke="#d6e1e8" stroke-width="1"/>
-</g>`
-}
-
 function buildSvg(summary: BenchmarkSummary): string {
-  const generatedDate = summary.primaryArtifactGeneratedAt.slice(0, 10)
+  const generatedDate = summary.generatedAt.slice(0, 10)
   const meanLower = formatPercentLower(summary.overall.directionalMeanRatioGeomean)
   const p95Lower = formatPercentLower(summary.overall.directionalP95RatioGeomean)
   const meanRatio = formatRatio(summary.overall.directionalMeanRatioGeomean)
   const p95Ratio = formatRatio(summary.overall.directionalP95RatioGeomean)
   const caveatRatio = formatRatio(summary.overall.worstWorkpaperToHyperFormulaP95Ratio)
-  const headlineWins = `${summary.meanAndP95WinCount.toString()}/${summary.totalComparableWorkloadCount.toString()}`
-  const comparisonRows = summary.comparisons.map((comparison, index) => renderComparison(comparison, 424 + index * 45)).join('\n')
+  const headlineWins = `${summary.meanAndP95WinCount.toString()}/${summary.overall.comparableCount.toString()}`
+  const meanWins = `${summary.overall.workpaperWins.toString()} of ${summary.overall.comparableCount.toString()}`
 
   return String.raw`<svg xmlns="http://www.w3.org/2000/svg" width="${cardWidth}" height="${cardHeight}" viewBox="0 0 ${cardWidth} ${cardHeight}">
   <defs>
@@ -256,15 +162,17 @@ function buildSvg(summary: BenchmarkSummary): string {
     <text x="74" y="38" fill="#111820" font-family="Inter, Arial, Helvetica, sans-serif" font-size="34" font-weight="820">bilig</text>
   </g>
 
-  <text x="64" y="182" fill="#147a4b" font-family="Inter, Arial, Helvetica, sans-serif" font-size="28" font-weight="820">Headless performance leadership</text>
+  <text x="64" y="182" fill="#147a4b" font-family="Inter, Arial, Helvetica, sans-serif" font-size="28" font-weight="820">WorkPaper benchmark evidence</text>
   <text x="64" y="252" fill="#111820" font-family="Inter, Arial, Helvetica, sans-serif" font-size="86" font-weight="830" letter-spacing="0">${headlineWins}</text>
   <text x="66" y="310" fill="#111820" font-family="Inter, Arial, Helvetica, sans-serif" font-size="48" font-weight="800" letter-spacing="0">mean+p95 wins</text>
-  <text x="66" y="354" fill="#526273" font-family="Inter, Arial, Helvetica, sans-serif" font-size="26" font-weight="650">Across ${summary.comparisonEngineCount.toString()} comparison engines</text>
+  <text x="66" y="354" fill="#526273" font-family="Inter, Arial, Helvetica, sans-serif" font-size="26" font-weight="650">Against HyperFormula ${escapeXml(summary.hyperformulaVersion)}</text>
 
   <g filter="url(#shadow)">
-    <rect x="64" y="382" width="560" height="278" rx="22" fill="url(#panel)" stroke="#cbd8e2"/>
+    <rect x="64" y="392" width="560" height="216" rx="22" fill="url(#panel)" stroke="#cbd8e2"/>
   </g>
-  ${comparisonRows}
+  <text x="96" y="454" fill="#526273" font-family="Inter, Arial, Helvetica, sans-serif" font-size="22" font-weight="760">Comparable mean-latency rows</text>
+  <text x="96" y="520" fill="#111820" font-family="Inter, Arial, Helvetica, sans-serif" font-size="58" font-weight="840">${meanWins}</text>
+  <text x="96" y="568" fill="#526273" font-family="Inter, Arial, Helvetica, sans-serif" font-size="22" font-weight="650">from packages/benchmarks/baselines/workpaper-vs-hyperformula.json</text>
 
   <g filter="url(#shadow)">
     <rect x="666" y="92" width="550" height="546" rx="26" fill="url(#dark)"/>
@@ -280,7 +188,7 @@ function buildSvg(summary: BenchmarkSummary): string {
   <g transform="translate(710 340)">
     <rect x="0" y="0" width="462" height="116" rx="18" fill="#ffffff" fill-opacity="0.08" stroke="#36506a"/>
     <text x="28" y="43" fill="#ffffff" font-family="Inter, Arial, Helvetica, sans-serif" font-size="34" font-weight="840">p95 ${p95Ratio}</text>
-    <text x="28" y="82" fill="#7ed894" font-family="Inter, Arial, Helvetica, sans-serif" font-size="24" font-weight="780">${p95Lower} geomean lead</text>
+    <text x="28" y="82" fill="#7ed894" font-family="Inter, Arial, Helvetica, sans-serif" font-size="24" font-weight="780">${p95Lower} geomean ratio</text>
   </g>
 
   <g transform="translate(710 490)">
@@ -289,7 +197,7 @@ function buildSvg(summary: BenchmarkSummary): string {
     <text x="28" y="66" fill="#ffffff" font-family="Inter, Arial, Helvetica, sans-serif" font-size="21" font-weight="650">${escapeXml(summary.overall.worstP95RatioWorkload)} p95: ${caveatRatio}</text>
   </g>
 
-  <text x="64" y="686" fill="#526273" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="20">pnpm headless:performance:check</text>
+  <text x="64" y="686" fill="#526273" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="20">pnpm workpaper:bench:competitive:check</text>
   <text x="1216" y="686" text-anchor="end" fill="#526273" font-family="Inter, Arial, Helvetica, sans-serif" font-size="18" font-weight="650">artifact ${generatedDate}</text>
 </svg>`
 }
@@ -342,20 +250,23 @@ function validatePngDimensions(image: Buffer, expectedWidth: number, expectedHei
   }
 }
 
-const svg = buildSvg(await readBenchmarkSummary())
+async function render(): Promise<void> {
+  const svg = buildSvg(await readBenchmarkSummary())
+  const png = await renderPng(svg)
+  validatePngDimensions(png, cardWidth, cardHeight, outputPath)
 
-if (checkMode) {
-  const existingSvg = await readFile(svgOutputPath, 'utf8')
-  if (existingSvg !== svg) {
-    throw new Error(`${svgOutputPath} is stale. Run pnpm docs:benchmark-card:generate.`)
+  if (checkMode) {
+    const [currentSvg, currentPng] = await Promise.all([readFile(svgOutputPath, 'utf8'), readFile(outputPath)])
+    if (currentSvg !== svg || !currentPng.equals(png)) {
+      throw new Error('docs benchmark card assets are out of date. Run: pnpm docs:benchmark-card:generate')
+    }
+    console.log(JSON.stringify({ ok: true, outputPath, svgOutputPath, width: cardWidth, height: cardHeight }, null, 2))
+    return
   }
-  validatePngDimensions(await readFile(outputPath), cardWidth, cardHeight, outputPath)
-  console.log(`benchmark card source is current: ${svgOutputPath}`)
-  console.log(`benchmark card PNG dimensions are current: ${outputPath}`)
-} else {
+
   await mkdir(dirname(outputPath), { recursive: true })
-  await writeFile(svgOutputPath, svg)
-  await writeFile(outputPath, await renderPng(svg))
-  console.log(`wrote ${svgOutputPath}`)
-  console.log(`wrote ${outputPath}`)
+  await Promise.all([writeFile(svgOutputPath, svg), writeFile(outputPath, png)])
+  console.log(JSON.stringify({ mode: 'write', outputPath, svgOutputPath, width: cardWidth, height: cardHeight }, null, 2))
 }
+
+await render()

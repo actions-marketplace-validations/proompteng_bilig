@@ -107,8 +107,7 @@ Repository checks:
 
 ```sh
 pnpm workpaper:bench:competitive:check
-pnpm headless:performance:check
-pnpm dominance:check
+pnpm public:evidence:check
 ```
 
 Application checks:

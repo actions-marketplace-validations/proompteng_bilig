@@ -94,9 +94,9 @@ Current closest WorkPaper wins:
 | `aggregate-overlapping-sliding-window` | `0.8335704735358855` | `0.8348433734901536` | `0.7703596194107942` | yes                | aggregate reuse tail hardening                                     |
 | `build-many-sheets`                    | `0.8007693406232433` | `0.8106821067908949` | `0.7722547970783897` | no                 | multi-sheet construction overhead                                  |
 
-Public performance language is guarded by `pnpm claims:check` and the checked-in
-headless performance leadership scorecard. Blanket `10x` claims stay out of
-public docs unless the deterministic claim policy allows them.
+Public performance language is guarded by `pnpm claims:check` and checked
+deterministic benchmark artifacts. Blanket `10x` claims stay out of public docs
+unless the deterministic claim policy allows them.
 
 Rows that earlier versions of this document treated as active red lanes but
 that are now green or no longer the decision driver:
