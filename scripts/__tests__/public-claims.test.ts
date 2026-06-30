@@ -3,8 +3,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { buildPublicClaimCheckReport, collectPublicClaimFiles, findBroadGoogleSheetsTenXClaims } from '../check-public-claims.ts'
-import { rootDir } from '../bilig-dominance-scorecard-input.ts'
+import { buildPublicClaimCheckReport, collectPublicClaimFiles, findBroadGoogleSheetsTenXClaims, rootDir } from '../check-public-claims.ts'
 
 const tempRoots: string[] = []
 
@@ -30,16 +29,13 @@ describe('public claim check', () => {
     expect(findBroadGoogleSheetsTenXClaims('No blanket 10x claim is allowed yet.', 'README.md')).toEqual([])
   })
 
-  it('blocks public broad claims while blanket 10x claims are disallowed', () => {
+  it('blocks public broad claims', () => {
     const repoRoot = makeTempRepo({
       'README.md': 'Bilig is 10x better than Google Sheets.',
       'docs/index.html': '<h1>Scoped benchmark evidence</h1>',
     })
 
-    const report = buildPublicClaimCheckReport({
-      repoRoot,
-      scorecard: { claimPolicy: { blanketTenXClaimAllowed: false } },
-    })
+    const report = buildPublicClaimCheckReport({ repoRoot })
 
     expect(report.violations).toHaveLength(1)
     expect(report.violations[0]).toMatchObject({
@@ -48,30 +44,13 @@ describe('public claim check', () => {
     })
   })
 
-  it('allows broad claims once the full dominance scorecard gate allows them', () => {
+  it('blocks broad claims without trusting caller-provided scorecard state', () => {
     const repoRoot = makeTempRepo({
       'README.md': 'Bilig is 10x faster than Google Sheets.',
     })
 
-    const report = buildPublicClaimCheckReport({
-      repoRoot,
-      scorecard: passingClaimScorecard(),
-    })
+    const report = buildPublicClaimCheckReport({ repoRoot })
 
-    expect(report.violations).toEqual([])
-  })
-
-  it('blocks broad claims when only the blanket claim boolean is forged', () => {
-    const repoRoot = makeTempRepo({
-      'README.md': 'Bilig is 10x faster than Google Sheets.',
-    })
-
-    const report = buildPublicClaimCheckReport({
-      repoRoot,
-      scorecard: { claimPolicy: { blanketTenXClaimAllowed: true } },
-    })
-
-    expect(report.blanketTenXClaimAllowed).toBe(false)
     expect(report.violations).toHaveLength(1)
   })
 
@@ -101,30 +80,4 @@ function makeTempRepo(files: Record<string, string>): string {
     writeFileSync(path, source)
   }
   return repoRoot
-}
-
-function passingClaimScorecard(): unknown {
-  return {
-    goalStatus: 'achieved',
-    claimPolicy: {
-      blanketTenXClaimAllowed: true,
-      unmetRequirements: [],
-    },
-    completionAudit: {
-      allCriteriaPassed: true,
-      unmetRequirements: [],
-      criteria: [],
-    },
-    overallGoogleSheets10xStatus: {
-      passed: true,
-      status: 'passed',
-      unmetRequirements: [],
-      categories: [
-        { id: 'recalculation-speed', passed: true, gaps: [] },
-        { id: 'structural-edit-performance', passed: true, gaps: [] },
-        { id: 'large-workbook-scale', passed: true, gaps: [] },
-        { id: 'ui-responsiveness', passed: true, gaps: [] },
-      ],
-    },
-  }
 }

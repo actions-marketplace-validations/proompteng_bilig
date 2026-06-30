@@ -56,9 +56,9 @@ const {
   syntheticCachedExternalFormulaMaxRssBytes,
 } = memoryGateRssBudgets
 const hardMaxRssBytes = 192 * mib
-const defaultCacheDir = join(rootDir, '.cache', 'public-workbook-corpus')
+const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
-const defaultSyntheticCacheDir = join(rootDir, '.cache', 'public-workbook-corpus-memory-gate')
+const defaultSyntheticCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus-memory-gate')
 const verifyTimeoutMs = 180_000
 const verifyMaxCellCount = 1_500_000
 const rssCheckIntervalMs = 10

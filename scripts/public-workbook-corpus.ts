@@ -130,7 +130,7 @@ export type {
 } from './public-workbook-corpus-types.ts'
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const defaultCacheDir = join(rootDir, '.cache', 'public-workbook-corpus')
+const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
 const defaultScorecardPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'public-workbook-corpus-scorecard.json')
 const defaultCorpusRunStopMarkerPath = join(rootDir, '.agent-coordination', '20260507T074946Z-codex-stop-interactive-corpus-runs.md')
@@ -444,7 +444,7 @@ async function main(): Promise<void> {
   if (command === 'fetch') {
     if (readFlagArg('--dry-run') || readFlagArg('--list')) {
       const fetchBatchSize = process.argv.includes('--fetch-batch-size') ? readNumberArg('--fetch-batch-size', defaultFetchBatchSize) : null
-      const fetchScriptName = readStringArg('--fetch-script-name', 'public-workbook-corpus:fetch')
+      const fetchScriptName = readStringArg('--fetch-script-name', 'research:public-corpus:fetch')
       const plan = planPublicWorkbookCorpusFetch({
         manifest: readManifest(manifestPath),
         limit: readNumberArg('--limit', 10_000),
@@ -490,7 +490,7 @@ async function main(): Promise<void> {
             recommendedDiscoveryLimit: plan.recommendedDiscoveryLimit,
             recommendedDiscoveryPlanCommand: plan.targetReachableFromKnownCandidates
               ? null
-              : `pnpm public-workbook-corpus:discover:plan -- --limit ${String(plan.recommendedDiscoveryLimit)}`,
+              : `pnpm research:public-corpus:discover:plan -- --limit ${String(plan.recommendedDiscoveryLimit)}`,
             recommendedDiscoveryCommand:
               !needsDiscovery || stopMarkerActive
                 ? null

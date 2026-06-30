@@ -26,7 +26,7 @@ artifacts:
 
 - formula inventory breadth is `100%` for the current office-listed and tracked
   formula inventory in
-  [`packages/benchmarks/baselines/bilig-dominance-scorecard.json`](../packages/benchmarks/baselines/bilig-dominance-scorecard.json)
+  [`packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json`](../packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json)
 - formula semantics coverage has `431` canonical fixtures and `12` workbook
   semantics fixtures, with no missing committed fixture ids in
   [`packages/benchmarks/baselines/calculation-semantics-scorecard.json`](../packages/benchmarks/baselines/calculation-semantics-scorecard.json)
@@ -116,10 +116,6 @@ Missing cached results and volatile or environment-dependent formulas such as
 
 For a concrete report walkthrough, see
 [`docs/xlsx-corpus-verifier-walkthrough.md`](xlsx-corpus-verifier-walkthrough.md).
-For the checked public baseline, see the generated
-[public workbook corpus report](public-workbook-corpus-report.md), which names
-the source-count, workbook-count, formula-cell, oracle-match, and
-resource-limited rows without claiming broader corpus completion.
 
 ### UI dominance claims
 

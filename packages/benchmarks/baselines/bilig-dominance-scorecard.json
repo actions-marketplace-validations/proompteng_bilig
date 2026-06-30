@@ -977,13 +977,12 @@
       "currentEvidence": [
         "generated parity, formula inventory, formula dominance, workspace resolution, benchmark, publish, and smoke gates exist",
         "generated-source CI checks are serialized to avoid pnpm workspace-state races in the evidence gate",
-        "this generated scorecard prevents blanket 10x claims from outrunning evidence",
-        "dominance package scripts present: true",
-        "run-ci executes dominance checks: true",
-        "Google Sheets 10x release-claim gate present: true",
-        "blanket claim policy coupled to completion audit: true",
-        "prompt-to-artifact audit coupled to live status: true",
-        "completion audit criteria passed: false"
+        "public claims check blocks broad 10x wording without depending on completion scorecards",
+        "default dominance package scripts absent: true",
+        "run-ci dominance checks absent: true",
+        "Google Sheets 10x release-claim gate script absent: true",
+        "public claims check present: true",
+        "prompt-to-artifact audit coupled to live status: true"
       ],
       "evidenceArtifacts": [
         "package.json",
@@ -993,7 +992,7 @@
         "packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json",
         "packages/headless/src/__tests__/fixtures/hyperformula-surface.json"
       ],
-      "checkCommands": ["pnpm dominance:check", "pnpm google-sheets-10x:claim:check", "pnpm run ci"],
+      "checkCommands": ["pnpm claims:check", "pnpm run ci"],
       "blockers": []
     }
   ]

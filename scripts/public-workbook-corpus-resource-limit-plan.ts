@@ -17,7 +17,7 @@ import {
 import {
   buildUnsupportedClassificationCounts,
   type PublicWorkbookCorpusUnsupportedClassificationCount,
-} from './public-workbook-corpus-completion-audit-helpers.ts'
+} from './public-workbook-corpus-research-helpers.ts'
 import type { PublicWorkbookArtifact, PublicWorkbookCorpusCase, PublicWorkbookManifest } from './public-workbook-corpus-types.ts'
 
 export interface PublicWorkbookCorpusResourceLimitPlan {
@@ -56,7 +56,7 @@ export interface PublicWorkbookCorpusResourceLimitPlanEntry {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const defaultCacheDir = join(rootDir, '.cache', 'public-workbook-corpus')
+const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
 const defaultScorecardPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'public-workbook-corpus-scorecard.json')
 const defaultVerifyCheckpointPath = join(defaultCacheDir, 'verification-checkpoint.json')
@@ -302,7 +302,7 @@ function formatVerifyArtifactCommand(
 ): string {
   const command = [
     'pnpm',
-    'public-workbook-corpus:verify-artifact',
+    'research:public-corpus:verify-artifact',
     '--',
     '--manifest',
     commandPath(args.manifestPath, args.displayRootDir),
@@ -368,7 +368,7 @@ function validatePlanEntry(
   if (!entry.rssEvidence.every((evidence) => evidence.startsWith('Public corpus verification RSS limit exceeded:'))) {
     findings.push(`${bucket} sample has malformed RSS evidence: ${entry.id}`)
   }
-  if (!entry.probeCommand.includes('public-workbook-corpus:verify-artifact')) {
+  if (!entry.probeCommand.includes('research:public-corpus:verify-artifact')) {
     findings.push(`${bucket} probe command is missing verify-artifact: ${entry.id}`)
   }
   if (!entry.probeCommand.includes(`--artifact-id ${entry.id}`)) {

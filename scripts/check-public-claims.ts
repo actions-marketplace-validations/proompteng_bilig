@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { basename, join, relative } from 'node:path'
+import { basename, join, relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { outputPath, rootDir } from './bilig-dominance-scorecard-input.ts'
-import { scorecardPermitsGoogleSheetsTenXClaim } from './google-sheets-10x-claim-gate.ts'
+export const rootDir = resolve(new URL('..', import.meta.url).pathname)
 
 export interface PublicClaimViolation {
   readonly path: string
@@ -16,17 +15,8 @@ export interface PublicClaimViolation {
 }
 
 export interface PublicClaimCheckReport {
-  readonly blanketTenXClaimAllowed: boolean
   readonly scannedFiles: readonly string[]
   readonly violations: readonly PublicClaimViolation[]
-}
-
-interface ScorecardClaimPolicy {
-  readonly blanketTenXClaimAllowed: boolean
-}
-
-interface ScorecardLike {
-  readonly claimPolicy: ScorecardClaimPolicy
 }
 
 const INTERNAL_DOC_NAME_PATTERNS: readonly RegExp[] = [
@@ -80,19 +70,15 @@ export function findBroadGoogleSheetsTenXClaims(source: string, repoPath: string
 export function buildPublicClaimCheckReport(
   input: {
     readonly repoRoot?: string | undefined
-    readonly scorecard?: ScorecardLike | undefined
     readonly files?: readonly string[] | undefined
   } = {},
 ): PublicClaimCheckReport {
   const repoRoot = input.repoRoot ?? rootDir
-  const scorecard = input.scorecard ?? loadScorecard(outputPath)
   const scannedFiles = input.files ?? collectPublicClaimFiles(repoRoot)
-  const blanketTenXClaimAllowed = scorecardPermitsGoogleSheetsTenXClaim(scorecard)
-  const violations = blanketTenXClaimAllowed
-    ? []
-    : scannedFiles.flatMap((repoPath) => findBroadGoogleSheetsTenXClaims(readFileSync(join(repoRoot, repoPath), 'utf8'), repoPath))
+  const violations = scannedFiles.flatMap((repoPath) =>
+    findBroadGoogleSheetsTenXClaims(readFileSync(join(repoRoot, repoPath), 'utf8'), repoPath),
+  )
   return {
-    blanketTenXClaimAllowed,
     scannedFiles,
     violations,
   }
@@ -105,10 +91,7 @@ function main(): void {
       .map((violation) => `${violation.path}:${String(violation.line)}:${String(violation.column)} ${violation.match}`)
       .join('\n')
     throw new Error(
-      [
-        'Public claim check failed: broad Google Sheets 10x wording is forbidden until dominance scorecard claimPolicy.blanketTenXClaimAllowed is true.',
-        formattedViolations,
-      ].join('\n'),
+      ['Public claim check failed: broad Google Sheets 10x wording is forbidden on public surfaces.', formattedViolations].join('\n'),
     )
   }
 
@@ -116,7 +99,6 @@ function main(): void {
     JSON.stringify(
       {
         scannedFileCount: report.scannedFiles.length,
-        blanketTenXClaimAllowed: report.blanketTenXClaimAllowed,
         violationCount: report.violations.length,
       },
       null,
@@ -159,26 +141,6 @@ function isPublicDocFile(path: string): boolean {
 function isInternalPlanningDoc(repoPath: string): boolean {
   const name = basename(repoPath)
   return INTERNAL_DOC_NAME_PATTERNS.some((pattern) => pattern.test(name))
-}
-
-function loadScorecard(path: string): ScorecardLike {
-  const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'))
-  if (!isRecord(parsed)) {
-    throw new Error(`Dominance scorecard at ${path} must be an object`)
-  }
-  const claimPolicy = parsed['claimPolicy']
-  if (!isRecord(claimPolicy) || typeof claimPolicy['blanketTenXClaimAllowed'] !== 'boolean') {
-    throw new Error(`Dominance scorecard at ${path} is missing claimPolicy.blanketTenXClaimAllowed`)
-  }
-  return {
-    claimPolicy: {
-      blanketTenXClaimAllowed: claimPolicy['blanketTenXClaimAllowed'],
-    },
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {

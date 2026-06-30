@@ -1,13 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { agentFrameworkLlmsRequiredLinks } from './check-docs-discovery-agent-pages.ts'
-import {
-  requireFile,
-  requireIncludes,
-  requireNoUnsupportedGoogleSheetsTenXClaims,
-  requireNotIncludes,
-  requirePublishedSource,
-} from './check-docs-discovery-core.ts'
+import { requireFile, requireIncludes, requireNotIncludes, requirePublishedSource } from './check-docs-discovery-core.ts'
 import { loadDocsDiscoveryContext } from './check-docs-discovery-context.ts'
 import { requireSitemapPublishedSources } from './check-docs-discovery-sitemap.ts'
 import { requireHomepageDiscovery } from './check-docs-discovery-homepage.ts'
@@ -78,7 +72,6 @@ const {
   qaDiscussionTemplate,
   showAndTellDiscussionTemplate,
   generalDiscussionTemplate,
-  dominanceScorecard,
   workbookCompatibilityReport,
   workbookCompatibilityReportJson,
   workbookCompatibilityReportTranscript,
@@ -173,12 +166,6 @@ requireHomepageDiscovery(index, siteCss, productCss, docsRoot)
 requireDocsLocalHtmlLinksHaveSources(docsRoot)
 await requireXlsxCalcAlternativeDiscovery(docsRoot)
 await requireTypeScriptFirstPublicSnippets(repoRoot)
-requireNoUnsupportedGoogleSheetsTenXClaims(dominanceScorecard, {
-  'README.md': readme,
-  'docs/index.html': index,
-  'docs/google-sheets-api-alternative-node-workpaper.md': googleSheetsApiBoundaryDoc,
-  'packages/headless/README.md': headlessReadme,
-})
 requirePackageMetadataDiscovery({ headlessPackageJson, scopedWorkpaperPackageJson, scopedWorkpaperPackageReadme })
 requireIncludes(index, '"downloadUrl": "https://www.npmjs.com/package/@bilig/workpaper"', 'docs/index.html')
 requireIncludes(index, '"installUrl": "https://www.npmjs.com/package/@bilig/workpaper"', 'docs/index.html')

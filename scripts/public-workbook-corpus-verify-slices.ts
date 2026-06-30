@@ -252,7 +252,7 @@ function formatVerifySliceCommand(
 ): string {
   const command = [
     'pnpm',
-    `public-workbook-corpus:${args.slice}`,
+    `research:public-corpus:${args.slice}`,
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),

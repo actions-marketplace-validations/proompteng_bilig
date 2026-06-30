@@ -158,13 +158,13 @@ The 2025-2026 recent-complex lane tracks public workbooks separately from the
 checked-in reduction corpus:
 
 ```sh
-pnpm public-workbook-corpus:recent-complex:plan
-pnpm public-workbook-corpus:discover-recent-complex-github
-pnpm public-workbook-corpus:discover-recent-complex-zenodo
-pnpm public-workbook-corpus:discover-recent-complex-figshare
-pnpm public-workbook-corpus:fetch-recent-complex
-pnpm public-workbook-corpus:verify-recent-complex
-pnpm public-workbook-corpus:headless-recent-complex
+pnpm research:public-corpus:recent-complex:plan
+pnpm research:public-corpus:discover-recent-complex-github
+pnpm research:public-corpus:discover-recent-complex-zenodo
+pnpm research:public-corpus:discover-recent-complex-figshare
+pnpm research:public-corpus:fetch-recent-complex
+pnpm research:public-corpus:verify-recent-complex
+pnpm research:public-corpus:headless-recent-complex
 ```
 
 The default CKAN discovery set includes national and regional open-data portals
@@ -257,7 +257,6 @@ value, and a small repro path.
 
 Useful links:
 
-- [public workbook corpus report](public-workbook-corpus-report.md)
 - [oracle design feedback thread](https://github.com/proompteng/bilig/discussions/382)
 - [new issue](https://github.com/proompteng/bilig/issues/new/choose)
 - [first-timers-only queue](https://github.com/proompteng/bilig/issues?q=is%3Aissue%20state%3Aopen%20label%3Afirst-timers-only)

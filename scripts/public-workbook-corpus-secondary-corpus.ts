@@ -1,9 +1,21 @@
 import { existsSync, readFileSync } from 'node:fs'
 
-import { isRecord, readNonNegativeInteger } from './public-workbook-corpus-completion-audit-helpers.ts'
-import type { PublicWorkbookCorpusSecondaryFormulaCorpusStatus } from './public-workbook-corpus-completion-audit-types.ts'
+import { isRecord, readNonNegativeInteger } from './public-workbook-corpus-research-helpers.ts'
 
 export const hyperFormulaSecondaryCorpusArtifact = 'packages/benchmarks/baselines/workpaper-vs-hyperformula.json'
+
+export interface PublicWorkbookCorpusSecondaryFormulaCorpusStatus {
+  readonly artifact: string
+  readonly artifactPresent: boolean
+  readonly suite: string | null
+  readonly resultCount: number
+  readonly comparableCount: number
+  readonly workpaperWins: number
+  readonly hyperformulaWins: number
+  readonly comparableVerificationEquivalentCount: number
+  readonly allComparableVerificationEquivalent: boolean
+  readonly parseError: string | null
+}
 
 export function readHyperFormulaSecondaryCorpus(path: string): PublicWorkbookCorpusSecondaryFormulaCorpusStatus {
   if (!existsSync(path)) {

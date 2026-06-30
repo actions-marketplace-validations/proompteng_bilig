@@ -27,15 +27,15 @@ describe('public workbook corpus feature witness plan', () => {
     })
     const plan = buildPublicWorkbookCorpusFeatureWitnessPlan({
       artifacts: [pivotArtifact],
-      cacheDir: '/repo/.cache/public-workbook-corpus',
+      cacheDir: '/repo/.cache/research-public-workbook-corpus',
       cases: [caseWithFeatures({ pivotCount: 0 })],
       discoveryLimit: 10_000,
       displayRootDir: '/repo',
       generatedAt: '2026-05-08T08:00:00.000Z',
-      manifestPath: '/repo/.cache/public-workbook-corpus/manifest.json',
+      manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
       stopMarkerActive: true,
       stopMarkerPath: '/repo/.agent-coordination/stop.md',
-      verifyCheckpointPath: '/repo/.cache/public-workbook-corpus/verification-checkpoint.json',
+      verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
     })
     const pivotCoverage = plan.coverage.find((entry) => entry.id === 'pivots')
 
@@ -83,11 +83,11 @@ describe('public workbook corpus feature witness plan', () => {
     })
     expect(pivotCoverage?.cachedCandidateCount).toBe(1)
     expect(pivotCoverage?.cachedCandidates[0]?.blockedVerifyArtifactCommand).toContain('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1')
-    expect(pivotCoverage?.cachedCandidates[0]?.blockedVerifyArtifactCommand).toContain('public-workbook-corpus:verify-artifact')
+    expect(pivotCoverage?.cachedCandidates[0]?.blockedVerifyArtifactCommand).toContain('research:public-corpus:verify-artifact')
     expect(pivotCoverage?.cachedCandidates[0]?.blockedVerifyArtifactCommand).toContain('--update-verify-checkpoint')
     expect(pivotCoverage?.cachedCandidates[0]?.blockedVerifyArtifactCommand).toContain('--allow-active-stop-marker')
     expect(pivotCoverage?.blockedCommands.discover).toContain('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1')
-    expect(pivotCoverage?.blockedCommands.discover).toContain('public-workbook-corpus:discover')
+    expect(pivotCoverage?.blockedCommands.discover).toContain('research:public-corpus:discover')
     expect(pivotCoverage?.blockedCommands.discover).toContain("--query 'pivot table xlsx'")
     expect(pivotCoverage?.blockedCommands.discover).toContain('--allow-active-stop-marker')
     expect(JSON.stringify(plan)).not.toContain('/repo/')
@@ -212,7 +212,7 @@ function artifactForCase(
     sourceId: entry.sourceId,
     sourceUrl: overrides.sourceUrl ?? entry.sourceUrl,
     downloadUrl: overrides.sourceUrl ?? entry.sourceUrl,
-    cachePath: overrides.cachePath ?? `.cache/public-workbook-corpus/${overrides.id ?? entry.id}.xlsx`,
+    cachePath: overrides.cachePath ?? `.cache/research-public-workbook-corpus/${overrides.id ?? entry.id}.xlsx`,
     fileName: overrides.fileName ?? entry.fileName,
     sha256: entry.sha256,
     byteSize: overrides.byteSize ?? entry.byteSize,

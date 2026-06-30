@@ -88,7 +88,7 @@ describe('bilig dominance prompt-to-artifact audit', () => {
         'public workbook corpus recorded verification cases below cached artifacts: 4940/5628',
       ],
       evidenceArtifacts: expect.arrayContaining(['packages/benchmarks/baselines/public-workbook-corpus-scorecard.json']),
-      checkCommands: expect.arrayContaining(['pnpm public-workbook-corpus:check']),
+      checkCommands: expect.arrayContaining(['pnpm research:public-corpus:check']),
       evidence: expect.arrayContaining([
         'live public workbook corpus cached artifacts: 5628/10000',
         'live public workbook corpus recorded verification cases: 4940/5628',

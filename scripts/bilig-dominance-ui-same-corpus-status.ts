@@ -360,7 +360,7 @@ export function buildUiSameCorpusStatus(
       : [],
     browserCaptureGuard,
     nextScorecardGenerateCommand: browserCaptureGuard.active ? null : nextScorecardGenerateCommand,
-    nextDominanceCheckCommand: 'pnpm dominance:generate && pnpm dominance:check && pnpm dominance:audit:check',
+    nextDominanceCheckCommand: 'pnpm claims:check',
   }
 }
 

@@ -86,7 +86,6 @@ const llmsFullSourceSpecs = [
   ['Try Bilig WorkPaper In Node', 'docs/try-bilig-headless-in-node.md'],
   ['Quote Approval WorkPaper API', 'docs/quote-approval-workpaper-api.md'],
   ['Compatibility Limits', 'docs/where-bilig-is-not-excel-compatible-yet.md'],
-  ['Public Workbook Corpus Report', 'docs/public-workbook-corpus-report.md'],
   ['npm Provenance And Package Trust', 'docs/npm-provenance-package-trust.md'],
 ] as const
 

@@ -58,7 +58,7 @@ export interface PublicWorkbookCorpusRecentComplexSummary {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const defaultCacheDir = join(rootDir, '.cache', 'public-workbook-corpus-recent-complex')
+const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus-recent-complex')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
 const defaultScorecardPath = join(defaultCacheDir, 'scorecard.json')
 const defaultHeadlessScorecardPath = join(defaultCacheDir, 'headless-scorecard.json')

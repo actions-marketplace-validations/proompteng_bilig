@@ -28,7 +28,7 @@ Current audit evidence from this checkout:
 - `pnpm calculation:semantics:check` passed with 301/301 canonical fixtures and 11/11 workbook-semantics fixtures covered.
 - `pnpm import-export:fidelity:check` passed with 42 covered features, 0 unsupported features, and 1 declined runtime feature: `xlsx.macros.execution`.
 - `pnpm workpaper:parity:check` passed against HyperFormula 3.2.0 surface metadata.
-- `pnpm dominance:check` passed, but still reports `goalStatus: active-not-achieved` and `blanketTenXClaimAllowed: false`.
+- Public claim checks must remain separate from semantic correctness evidence.
 - `pnpm test:correctness:formula` was started after build but stayed silent for multiple minutes and was terminated with exit 143. Treat that as an execution follow-up, not as a semantic failure.
 
 Key code findings:

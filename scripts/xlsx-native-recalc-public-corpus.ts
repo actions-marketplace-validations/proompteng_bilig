@@ -19,7 +19,7 @@ import { formatByteSize, startChildRssWatchdog, terminateChildProcess } from './
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
 const mib = 1024 * 1024
-const defaultCacheDir = join(rootDir, '.cache', 'public-workbook-corpus')
+const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
 const defaultCliPath = join(rootDir, 'packages', 'xlsx-formula-recalc', 'dist', 'cli.js')
 const defaultOutputDir = join(rootDir, '.cache', 'xlsx-native-recalc-public-corpus', 'outputs')

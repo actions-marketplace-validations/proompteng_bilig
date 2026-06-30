@@ -636,7 +636,7 @@ describe('public workbook corpus CLI resource guards', () => {
       recommendedDiscoveryLimit: 2,
       recommendedDiscoveryPlanCommand: null,
       recommendedDiscoveryCommand: null,
-      recommendedFetchCommand: expect.stringContaining('public-workbook-corpus:fetch'),
+      recommendedFetchCommand: expect.stringContaining('research:public-corpus:fetch'),
       blockedCommands: {},
       targetReachableFromKnownCandidates: true,
       sampledCandidateSources: [
@@ -714,7 +714,7 @@ describe('public workbook corpus CLI resource guards', () => {
       candidateSourceDeficitCount: 2,
       minimumAdditionalSourceCount: 2,
       recommendedDiscoveryLimit: 4,
-      recommendedDiscoveryCommand: expect.stringContaining('pnpm public-workbook-corpus:discover --'),
+      recommendedDiscoveryCommand: expect.stringContaining('pnpm research:public-corpus:discover --'),
       blockedCommands: {},
       targetReachableFromKnownCandidates: false,
     })
@@ -752,12 +752,12 @@ describe('public workbook corpus CLI resource guards', () => {
         overrideFlag: '--allow-active-stop-marker',
         overrideEnvVar: 'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE',
       },
-      recommendedDiscoveryPlanCommand: 'pnpm public-workbook-corpus:discover:plan -- --limit 4',
+      recommendedDiscoveryPlanCommand: 'pnpm research:public-corpus:discover:plan -- --limit 4',
       recommendedDiscoveryCommand: null,
       targetReachableFromKnownCandidates: false,
     })
     expect(blockedCommands['discover']).toContain('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1')
-    expect(blockedCommands['discover']).toContain('public-workbook-corpus:discover')
+    expect(blockedCommands['discover']).toContain('research:public-corpus:discover')
     expect(blockedCommands['discover']).toContain('--allow-active-stop-marker')
   })
 
@@ -798,7 +798,7 @@ describe('public workbook corpus CLI resource guards', () => {
       targetReachableFromKnownCandidates: true,
     })
     expect(blockedCommands['fetch']).toContain('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1')
-    expect(blockedCommands['fetch']).toContain('public-workbook-corpus:fetch')
+    expect(blockedCommands['fetch']).toContain('research:public-corpus:fetch')
     expect(blockedCommands['fetch']).toContain('--limit 2')
     expect(blockedCommands['fetch']).toContain('--allow-active-stop-marker')
   })
@@ -828,7 +828,7 @@ describe('public workbook corpus CLI resource guards', () => {
         '--limit',
         '2',
         '--fetch-script-name',
-        'public-workbook-corpus:fetch-financial',
+        'research:public-corpus:fetch-financial',
         '--fetch-batch-size',
         '6',
         '--corpus-run-stop-marker',
@@ -843,7 +843,7 @@ describe('public workbook corpus CLI resource guards', () => {
 
     expect(result.status).toBe(0)
     expect(blockedCommands['fetch']).toContain('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1')
-    expect(blockedCommands['fetch']).toContain('public-workbook-corpus:fetch-financial')
+    expect(blockedCommands['fetch']).toContain('research:public-corpus:fetch-financial')
     expect(blockedCommands['fetch']).toContain('--fetch-batch-size 6')
     expect(blockedCommands['fetch']).toContain('--allow-active-stop-marker')
   })
@@ -891,9 +891,9 @@ describe('public workbook corpus CLI resource guards', () => {
           totalWorkItems: 688,
           batchSize: 1,
           batchCount: 688,
-          commands: [expect.stringContaining('public-workbook-corpus:verify-missing:plan')],
+          commands: [expect.stringContaining('research:public-corpus:verify-missing:plan')],
           blockedCommands: expect.arrayContaining([
-            expect.stringContaining('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:verify-missing'),
+            expect.stringContaining('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:verify-missing'),
             expect.stringContaining('--limit 1'),
           ]),
         },
@@ -902,9 +902,9 @@ describe('public workbook corpus CLI resource guards', () => {
           totalWorkItems: 4_897,
           batchSize: 1,
           batchCount: 4_897,
-          commands: [expect.stringContaining('public-workbook-corpus:verify-stale:plan')],
+          commands: [expect.stringContaining('research:public-corpus:verify-stale:plan')],
           blockedCommands: expect.arrayContaining([
-            expect.stringContaining('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:verify-stale'),
+            expect.stringContaining('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:verify-stale'),
             expect.stringContaining('--limit 1'),
           ]),
         },
@@ -912,7 +912,7 @@ describe('public workbook corpus CLI resource guards', () => {
           status: 'blocked-by-stop-marker',
           totalWorkItems: 1_983,
           batchCount: 1,
-          commands: [expect.stringContaining('public-workbook-corpus:discover:plan')],
+          commands: [expect.stringContaining('research:public-corpus:discover:plan')],
           blockedCommands: [expect.stringContaining('--limit 11983')],
         },
         fetchAdditionalArtifacts: {
@@ -920,25 +920,23 @@ describe('public workbook corpus CLI resource guards', () => {
           totalWorkItems: 4_372,
           batchSize: 6,
           batchCount: 729,
-          commands: [expect.stringContaining('public-workbook-corpus:fetch:plan')],
+          commands: [expect.stringContaining('research:public-corpus:fetch:plan')],
           blockedCommands: expect.arrayContaining([
-            expect.stringContaining('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:fetch'),
+            expect.stringContaining('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:fetch'),
             expect.stringContaining('--limit 5634'),
           ]),
         },
         finalEvidenceRefresh: {
           status: 'blocked-by-stop-marker',
-          commands: expect.arrayContaining([
-            'pnpm public-workbook-corpus:completion-audit:check -- --require-complete',
-            'pnpm dominance:generate',
-            'pnpm dominance:check',
-          ]),
-          blockedCommands: [expect.stringContaining('public-workbook-corpus:verify')],
+          commands: expect.arrayContaining(['pnpm public:evidence:check', 'pnpm claims:check']),
+          blockedCommands: [expect.stringContaining('research:public-corpus:verify')],
         },
       },
     })
     expect(JSON.stringify(plan)).not.toContain('/repo/')
-    expect(plan.phases.verifyMissingCachedArtifacts.commands[0]).toContain('--manifest .cache/public-workbook-corpus/manifest.json')
+    expect(plan.phases.verifyMissingCachedArtifacts.commands[0]).toContain(
+      '--manifest .cache/research-public-workbook-corpus/manifest.json',
+    )
     expect(plan.phases.verifyMissingCachedArtifacts.commands[0]).toContain(
       '--scorecard packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
     )
@@ -974,9 +972,9 @@ describe('public workbook corpus CLI resource guards', () => {
         '--fetch-batch-size',
         '6',
         '--fetch-plan-script-name',
-        'public-workbook-corpus:fetch-financial:plan',
+        'research:public-corpus:fetch-financial:plan',
         '--fetch-script-name',
-        'public-workbook-corpus:fetch-financial',
+        'research:public-corpus:fetch-financial',
         '--corpus-run-stop-marker',
         stopMarkerPath,
       ],
@@ -991,18 +989,18 @@ describe('public workbook corpus CLI resource guards', () => {
     const blockedCommands = stringArrayField(fetchPhase, 'blockedCommands')
 
     expect(result.status).toBe(0)
-    expect(commands[0]).toContain('public-workbook-corpus:fetch-financial:plan')
-    expect(blockedCommands[0]).toContain('public-workbook-corpus:fetch-financial')
+    expect(commands[0]).toContain('research:public-corpus:fetch-financial:plan')
+    expect(blockedCommands[0]).toContain('research:public-corpus:fetch-financial')
     expect(blockedCommands[0]).toContain('--fetch-batch-size 6')
   })
 
   it('preserves financial discovery scripts in financial resume plans', () => {
     const plan = buildPublicWorkbookCorpusResumePlan(
       resumePlanArgs({
-        discoverPlanScriptName: 'public-workbook-corpus:discover-financial:plan',
-        discoverScriptName: 'public-workbook-corpus:discover-financial',
-        fetchPlanScriptName: 'public-workbook-corpus:fetch-financial:plan',
-        fetchScriptName: 'public-workbook-corpus:fetch-financial',
+        discoverPlanScriptName: 'research:public-corpus:discover-financial:plan',
+        discoverScriptName: 'research:public-corpus:discover-financial',
+        fetchPlanScriptName: 'research:public-corpus:fetch-financial:plan',
+        fetchScriptName: 'research:public-corpus:fetch-financial',
         fetchPlan: {
           candidateSourceCount: 0,
           candidateSourceDeficitCount: 50,
@@ -1022,12 +1020,12 @@ describe('public workbook corpus CLI resource guards', () => {
     )
     const commands = plan.phases.discoverAdditionalSources.commands.join('\n')
 
-    expect(commands).toContain('pnpm public-workbook-corpus:discover-financial:plan -- --limit 50')
+    expect(commands).toContain('pnpm research:public-corpus:discover-financial:plan -- --limit 50')
     expect(commands).toContain(
-      'pnpm public-workbook-corpus:discover-financial -- --manifest .cache/public-workbook-corpus/manifest.json --cache-dir .cache/public-workbook-corpus --limit 50',
+      'pnpm research:public-corpus:discover-financial -- --manifest .cache/research-public-workbook-corpus/manifest.json --cache-dir .cache/research-public-workbook-corpus --limit 50',
     )
-    expect(commands).not.toContain('public-workbook-corpus:discover --')
-    expect(plan.phases.fetchAdditionalArtifacts.commands.join('\n')).toContain('public-workbook-corpus:fetch-financial')
+    expect(commands).not.toContain('research:public-corpus:discover --')
+    expect(plan.phases.fetchAdditionalArtifacts.commands.join('\n')).toContain('research:public-corpus:fetch-financial')
     expect(validatePublicWorkbookCorpusResumePlan(plan)).toEqual([])
   })
 
@@ -1039,17 +1037,17 @@ describe('public workbook corpus CLI resource guards', () => {
       scorecard: null,
       checkpointCases: [passedCase(artifactA)],
       commandPaths: {
-        manifestPath: '/repo/.cache/public-workbook-corpus/manifest.json',
+        manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
         scorecardPath: '/repo/packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
-        verifyCheckpointPath: '/repo/.cache/public-workbook-corpus/verification-checkpoint.json',
-        cacheDir: '/repo/.cache/public-workbook-corpus',
+        verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
+        cacheDir: '/repo/.cache/research-public-workbook-corpus',
         displayRootDir: '/repo',
         stopMarkerActive: true,
       },
     })
 
     expect(status.nextMissingVerificationCommand).toBeNull()
-    expect(status.blockedMissingVerificationCommand).toContain('--manifest .cache/public-workbook-corpus/manifest.json')
+    expect(status.blockedMissingVerificationCommand).toContain('--manifest .cache/research-public-workbook-corpus/manifest.json')
     expect(status.blockedMissingVerificationCommand).toContain(
       '--scorecard packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
     )
@@ -1170,14 +1168,14 @@ describe('public workbook corpus CLI resource guards', () => {
       phases: {
         ...plan.phases,
         fetchAdditionalArtifacts: Object.assign({}, plan.phases.fetchAdditionalArtifacts, {
-          commands: ['pnpm public-workbook-corpus:fetch -- --limit 10006'],
+          commands: ['pnpm research:public-corpus:fetch -- --limit 10006'],
         }),
       },
     }
 
     expect(validatePublicWorkbookCorpusResumePlan(invalidPlan)).toEqual(
       expect.arrayContaining([
-        'fetchAdditionalArtifacts mutating command is runnable while stop marker is active: pnpm public-workbook-corpus:fetch -- --limit 10006',
+        'fetchAdditionalArtifacts mutating command is runnable while stop marker is active: pnpm research:public-corpus:fetch -- --limit 10006',
         'fetchAdditionalArtifacts mutating command limit 10006 exceeds one fetch tranche ending at 10005',
       ]),
     )
@@ -1194,14 +1192,14 @@ describe('public workbook corpus CLI resource guards', () => {
       phases: {
         ...plan.phases,
         refreshStaleRecordedEvidence: Object.assign({}, plan.phases.refreshStaleRecordedEvidence, {
-          commands: ['pnpm public-workbook-corpus:verify-stale -- --limit 20'],
+          commands: ['pnpm research:public-corpus:verify-stale -- --limit 20'],
         }),
       },
     }
 
     expect(validatePublicWorkbookCorpusResumePlan(invalidPlan)).toEqual(
       expect.arrayContaining([
-        'refreshStaleRecordedEvidence mutating command is runnable while stop marker is active: pnpm public-workbook-corpus:verify-stale -- --limit 20',
+        'refreshStaleRecordedEvidence mutating command is runnable while stop marker is active: pnpm research:public-corpus:verify-stale -- --limit 20',
       ]),
     )
   })
@@ -1360,7 +1358,7 @@ describe('public workbook corpus CLI resource guards', () => {
     expect(result.status).not.toBe(0)
     expect(result.stderr).toContain('Public workbook corpus verification incomplete')
     expect(result.stderr).toContain('recorded verification cases below cached artifacts: 1/2')
-    expect(result.stderr).toContain('next command: pnpm public-workbook-corpus:verify-missing')
+    expect(result.stderr).toContain('next command: pnpm research:public-corpus:verify-missing')
   })
 
   it('passes check when checkpoint evidence covers a stale scorecard', async () => {
@@ -1514,8 +1512,8 @@ describe('public workbook corpus CLI resource guards', () => {
           sourceUrl: artifactB.sourceUrl,
         },
       ],
-      nextMissingVerificationCommand: expect.stringContaining('public-workbook-corpus:verify-missing'),
-      nextMissingVerificationPlanCommand: expect.stringContaining('public-workbook-corpus:verify-missing:plan'),
+      nextMissingVerificationCommand: expect.stringContaining('research:public-corpus:verify-missing'),
+      nextMissingVerificationPlanCommand: expect.stringContaining('research:public-corpus:verify-missing:plan'),
     })
     expect(status).toMatchObject({
       nextMissingVerificationCommand: expect.stringContaining(`--manifest ${manifestPath}`),
@@ -1586,8 +1584,8 @@ describe('public workbook corpus CLI resource guards', () => {
           reason: 'missing-used-range-evidence',
         },
       ],
-      nextStaleVerificationCommand: expect.stringContaining('public-workbook-corpus:verify-stale'),
-      nextStaleVerificationPlanCommand: expect.stringContaining('public-workbook-corpus:verify-stale:plan'),
+      nextStaleVerificationCommand: expect.stringContaining('research:public-corpus:verify-stale'),
+      nextStaleVerificationPlanCommand: expect.stringContaining('research:public-corpus:verify-stale:plan'),
       gaps: expect.arrayContaining(['recorded verification cases need evidence refresh: 1']),
     })
   })
@@ -1642,9 +1640,9 @@ describe('public workbook corpus CLI resource guards', () => {
       blockedStaleVerificationCommand: expect.stringContaining('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1'),
     })
     expect(status).toMatchObject({
-      nextMissingVerificationPlanCommand: expect.stringContaining('public-workbook-corpus:verify-missing:plan'),
+      nextMissingVerificationPlanCommand: expect.stringContaining('research:public-corpus:verify-missing:plan'),
       blockedMissingVerificationCommand: expect.stringContaining('--allow-active-stop-marker'),
-      nextStaleVerificationPlanCommand: expect.stringContaining('public-workbook-corpus:verify-stale:plan'),
+      nextStaleVerificationPlanCommand: expect.stringContaining('research:public-corpus:verify-stale:plan'),
       blockedStaleVerificationCommand: expect.stringContaining('--allow-active-stop-marker'),
     })
   })
@@ -1817,8 +1815,8 @@ describe('public workbook corpus CLI resource guards', () => {
         },
       ],
       nextVerificationCommand: null,
-      blockedVerificationCommand: expect.stringContaining('public-workbook-corpus:verify-missing'),
-      artifactVerificationCommand: expect.stringContaining('public-workbook-corpus:verify-artifact'),
+      blockedVerificationCommand: expect.stringContaining('research:public-corpus:verify-missing'),
+      artifactVerificationCommand: expect.stringContaining('research:public-corpus:verify-artifact'),
     })
     const blockedVerificationCommand = readPlanCommand(planned, 'blockedVerificationCommand')
     const artifactVerificationCommand = readPlanCommand(planned, 'artifactVerificationCommand')
@@ -1891,8 +1889,8 @@ describe('public workbook corpus CLI resource guards', () => {
         },
       ],
       nextVerificationCommand: null,
-      blockedVerificationCommand: expect.stringContaining('public-workbook-corpus:verify-stale'),
-      artifactVerificationCommand: expect.stringContaining('public-workbook-corpus:verify-artifact'),
+      blockedVerificationCommand: expect.stringContaining('research:public-corpus:verify-stale'),
+      artifactVerificationCommand: expect.stringContaining('research:public-corpus:verify-artifact'),
     })
     const blockedVerificationCommand = readPlanCommand(planned, 'blockedVerificationCommand')
     const artifactVerificationCommand = readPlanCommand(planned, 'artifactVerificationCommand')
@@ -2060,64 +2058,66 @@ describe('public workbook corpus CLI resource guards', () => {
   it('exposes safe verify-missing package scripts', () => {
     const packageJson = readPackageJson()
 
-    expect(packageJson.scripts?.['public-workbook-corpus:link-plan']).toBe('bun scripts/public-workbook-corpus.ts link-plan')
-    expect(packageJson.scripts?.['public-workbook-corpus:link-plan:check']).toContain(
+    expect(packageJson.scripts?.['research:public-corpus:link-plan']).toBe('bun scripts/public-workbook-corpus.ts link-plan')
+    expect(packageJson.scripts?.['research:public-corpus:link-plan:check']).toContain(
       'bun scripts/public-workbook-corpus.ts link-plan --source-url',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:add-link']).toBe('bun scripts/public-workbook-corpus.ts add-link')
-    expect(packageJson.scripts?.['public-workbook-corpus:add-link:check']).toContain(
+    expect(packageJson.scripts?.['research:public-corpus:add-link']).toBe('bun scripts/public-workbook-corpus.ts add-link')
+    expect(packageJson.scripts?.['research:public-corpus:add-link:check']).toContain(
       'bun scripts/public-workbook-corpus.ts add-link --dry-run',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:fetch:plan']).toBe(
+    expect(packageJson.scripts?.['research:public-corpus:fetch:plan']).toBe(
       'bun scripts/public-workbook-corpus.ts fetch --dry-run --sample-limit 20',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:fetch-source']).toBe('bun scripts/public-workbook-corpus.ts fetch-source')
-    expect(packageJson.scripts?.['public-workbook-corpus:verify-artifact']).toBe('bun scripts/public-workbook-corpus.ts verify-artifact')
-    expect(packageJson.scripts?.['public-workbook-corpus:discover:plan']).toBe('bun scripts/public-workbook-corpus.ts discover-plan')
-    expect(packageJson.scripts?.['public-workbook-corpus:verify-missing']).toBe('bun scripts/public-workbook-corpus.ts verify-missing')
-    expect(packageJson.scripts?.['public-workbook-corpus:verify-missing:plan']).toBe(
+    expect(packageJson.scripts?.['research:public-corpus:fetch-source']).toBe('bun scripts/public-workbook-corpus.ts fetch-source')
+    expect(packageJson.scripts?.['research:public-corpus:verify-artifact']).toBe('bun scripts/public-workbook-corpus.ts verify-artifact')
+    expect(packageJson.scripts?.['research:public-corpus:discover:plan']).toBe('bun scripts/public-workbook-corpus.ts discover-plan')
+    expect(packageJson.scripts?.['research:public-corpus:verify-missing']).toBe('bun scripts/public-workbook-corpus.ts verify-missing')
+    expect(packageJson.scripts?.['research:public-corpus:verify-missing:plan']).toBe(
       'bun scripts/public-workbook-corpus.ts verify-missing --dry-run --limit 20',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:verify-stale']).toBe('bun scripts/public-workbook-corpus.ts verify-stale')
-    expect(packageJson.scripts?.['public-workbook-corpus:verify-stale:plan']).toBe(
+    expect(packageJson.scripts?.['research:public-corpus:verify-stale']).toBe('bun scripts/public-workbook-corpus.ts verify-stale')
+    expect(packageJson.scripts?.['research:public-corpus:verify-stale:plan']).toBe(
       'bun scripts/public-workbook-corpus.ts verify-stale --dry-run --limit 20',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:verify-financial']).toContain(
-      '--verify-checkpoint .cache/public-workbook-corpus-financial/verification-checkpoint.json',
+    expect(packageJson.scripts?.['research:public-corpus:verify-financial']).toContain(
+      '--verify-checkpoint .cache/research-public-workbook-corpus-financial/verification-checkpoint.json',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:check-financial']).toContain(
-      '--manifest .cache/public-workbook-corpus-financial/manifest.json',
+    expect(packageJson.scripts?.['research:public-corpus:check-financial']).toContain(
+      '--manifest .cache/research-public-workbook-corpus-financial/manifest.json',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:check-financial']).toContain('--cache-dir .cache/public-workbook-corpus-financial')
-    expect(packageJson.scripts?.['public-workbook-corpus:check-financial']).toContain(
-      '--verify-checkpoint .cache/public-workbook-corpus-financial/verification-checkpoint.json',
+    expect(packageJson.scripts?.['research:public-corpus:check-financial']).toContain(
+      '--cache-dir .cache/research-public-workbook-corpus-financial',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:refresh-scorecard-from-checkpoint']).toBe(
+    expect(packageJson.scripts?.['research:public-corpus:check-financial']).toContain(
+      '--verify-checkpoint .cache/research-public-workbook-corpus-financial/verification-checkpoint.json',
+    )
+    expect(packageJson.scripts?.['research:public-corpus:refresh-scorecard-from-checkpoint']).toBe(
       'bun scripts/public-workbook-corpus.ts refresh-scorecard-from-checkpoint',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:refresh-scorecard-from-checkpoint:check']).toBe(
+    expect(packageJson.scripts?.['research:public-corpus:refresh-scorecard-from-checkpoint:check']).toBe(
       'bun scripts/public-workbook-corpus.ts refresh-scorecard-from-checkpoint --check',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:resume-plan']).toBe('bun scripts/public-workbook-corpus-resume-plan.ts')
-    expect(packageJson.scripts?.['public-workbook-corpus:resume-plan:check']).toBe(
+    expect(packageJson.scripts?.['research:public-corpus:resume-plan']).toBe('bun scripts/public-workbook-corpus-resume-plan.ts')
+    expect(packageJson.scripts?.['research:public-corpus:resume-plan:check']).toBe(
       'bun scripts/public-workbook-corpus-resume-plan.ts --check',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:resume-financial:plan']).toContain(
-      '--discover-plan-script-name public-workbook-corpus:discover-financial:plan',
+    expect(packageJson.scripts?.['research:public-corpus:resume-financial:plan']).toContain(
+      '--discover-plan-script-name research:public-corpus:discover-financial:plan',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:resume-financial:plan']).toContain(
-      '--discover-script-name public-workbook-corpus:discover-financial',
+    expect(packageJson.scripts?.['research:public-corpus:resume-financial:plan']).toContain(
+      '--discover-script-name research:public-corpus:discover-financial',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:resume-financial:check']).toContain(
-      '--discover-plan-script-name public-workbook-corpus:discover-financial:plan',
+    expect(packageJson.scripts?.['research:public-corpus:resume-financial:check']).toContain(
+      '--discover-plan-script-name research:public-corpus:discover-financial:plan',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:resume-financial:check']).toContain(
-      '--discover-script-name public-workbook-corpus:discover-financial',
+    expect(packageJson.scripts?.['research:public-corpus:resume-financial:check']).toContain(
+      '--discover-script-name research:public-corpus:discover-financial',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:feature-witness:plan']).toBe(
+    expect(packageJson.scripts?.['research:public-corpus:feature-witness:plan']).toBe(
       'bun scripts/public-workbook-corpus-feature-witness-plan.ts',
     )
-    expect(packageJson.scripts?.['public-workbook-corpus:feature-witness:check']).toBe(
+    expect(packageJson.scripts?.['research:public-corpus:feature-witness:check']).toBe(
       'bun scripts/public-workbook-corpus-feature-witness-plan.ts --check',
     )
   })
@@ -2127,7 +2127,7 @@ type ResumePlanArgs = Parameters<typeof buildPublicWorkbookCorpusResumePlan>[0]
 
 function resumePlanArgs(overrides: Partial<ResumePlanArgs> = {}): ResumePlanArgs {
   return {
-    cacheDir: '/repo/.cache/public-workbook-corpus',
+    cacheDir: '/repo/.cache/research-public-workbook-corpus',
     fetchBatchSize: 6,
     fetchLimit: 10_000,
     fetchPlan: {
@@ -2139,7 +2139,7 @@ function resumePlanArgs(overrides: Partial<ResumePlanArgs> = {}): ResumePlanArgs
     },
     generatedAt: '2026-05-07T08:00:00.000Z',
     displayRootDir: '/repo',
-    manifestPath: '/repo/.cache/public-workbook-corpus/manifest.json',
+    manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
     scorecardPath: '/repo/packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
     status: {
       targetWorkbookCount: 10_000,
@@ -2151,7 +2151,7 @@ function resumePlanArgs(overrides: Partial<ResumePlanArgs> = {}): ResumePlanArgs
     stopMarkerActive: true,
     stopMarkerPath: '/repo/.agent-coordination/stop.md',
     verifyBatchSize: 20,
-    verifyCheckpointPath: '/repo/.cache/public-workbook-corpus/verification-checkpoint.json',
+    verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
     ...overrides,
   }
 }

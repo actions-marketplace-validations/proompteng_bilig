@@ -66,12 +66,12 @@ describe('run-ci', () => {
     expect(source).not.toContain(
       "withEnv(\n  directPackageScript('correctness public workbook corpus', 'test:correctness:corpus'),\n  vitestChunkEnv('10'),\n)",
     )
-    expect(source).toContain(
-      "directPackageScript('financial public workbook corpus resume check', 'public-workbook-corpus:resume-financial:check')",
-    )
-    expect(source).toContain(
-      "directPackageScript('public workbook corpus synthetic memory gate', 'public-workbook-corpus:memory-gate:synthetic')",
-    )
+    expect(source).not.toContain('research:public-corpus:resume-financial:check')
+    expect(source).not.toContain('public workbook corpus completion audit check')
+    expect(source).not.toContain('bilig dominance scorecard check')
+    expect(source).not.toContain('bilig dominance audit check')
+    expect(source).toContain("directPackageScript('xlsx import synthetic memory gate', 'xlsx-import:memory-gate:synthetic')")
+    expect(source).not.toContain("directPackageScript('public workbook corpus memory gate', 'research:public-corpus:memory-gate')")
     expect(source).toContain('...(skipBrowserGates')
     expect(source).toContain(
       "bunScript('UI responsiveness live browser scorecard check', 'scripts/gen-ui-responsiveness-live-browser-scorecard.ts', '--check')",
@@ -99,11 +99,12 @@ describe('run-ci', () => {
     expect(scripts['ci:github']).toBe('BILIG_CI_PROFILE=fast BILIG_CI_SKIP_BROWSER=1 tsx scripts/run-ci.ts')
     expect(scripts['ci:full']).toBe('BILIG_CI_PROFILE=full tsx scripts/run-ci.ts')
     expect(packageJson).toContain(
-      '"public-workbook-corpus:memory-gate": "bun scripts/public-workbook-corpus-memory-gate.ts --require-public"',
+      '"research:public-corpus:memory-gate": "bun scripts/public-workbook-corpus-memory-gate.ts --require-public"',
     )
     expect(packageJson).toContain(
-      '"public-workbook-corpus:memory-gate:synthetic": "bun scripts/public-workbook-corpus-memory-gate.ts --synthetic-only"',
+      '"xlsx-import:memory-gate:synthetic": "bun scripts/public-workbook-corpus-memory-gate.ts --synthetic-only"',
     )
+    expect(packageJson).not.toContain('"research:public-corpus:memory-gate:synthetic"')
   })
 
   it('guards broad pre-push lint through the same resource gate', () => {

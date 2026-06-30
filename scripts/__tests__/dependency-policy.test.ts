@@ -655,32 +655,36 @@ describe('repository dependency policy', () => {
     expect(sourceCopy).toContain('writeSync(fd, chunk, chunkOffset, chunk.byteLength - chunkOffset)')
   })
 
-  it('keeps the native recalc public corpus script as a hard 50-workbook gate', () => {
+  it('keeps the native recalc public corpus runner manual and off canonical cache paths', () => {
     const manifest = packageManifest('.')
     const scripts = objectField(manifest, 'scripts')
-    const script = stringField(scripts, 'xlsx-native-recalc:public-corpus')
+    const defaultScript = scripts['xlsx-native-recalc:public-corpus']
+    const script = stringField(scripts, 'research:xlsx-native-recalc:public-corpus')
 
+    expect(defaultScript).toBeUndefined()
     expect(script).toContain('bun scripts/xlsx-native-recalc-public-corpus.ts')
     expect(script).toContain('--limit 50')
     expect(script).toContain('--max-rss-mb 350')
     expect(script).toContain('--require-formula-workbook-count 50')
     expect(script).toContain('--require-passed-formula-workbook-count 50')
     expect(script).toContain('--require-passed')
-    expect(script).toContain('--corpus .cache/public-workbook-corpus/manifest.json .cache/public-workbook-corpus')
-    expect(script).toContain('--corpus .cache/public-workbook-corpus-financial/manifest.json .cache/public-workbook-corpus-financial')
+    expect(script).toContain('--corpus .cache/research-public-workbook-corpus/manifest.json .cache/research-public-workbook-corpus')
+    expect(script).toContain(
+      '--corpus .cache/research-public-workbook-corpus-financial/manifest.json .cache/research-public-workbook-corpus-financial',
+    )
+    expect(script).not.toMatch(/\.cache\/public-workbook-corpus/u)
     expect(script).not.toContain('--dry-run')
   })
 
-  it('keeps the issue 442 memory gate as an exact required OCHA gate', () => {
+  it('keeps the issue 442 memory gate deterministic instead of requiring ignored cache state', () => {
     const manifest = packageManifest('.')
     const scripts = objectField(manifest, 'scripts')
     const script = stringField(scripts, 'xlsx-native-recalc:issue-442-gate')
 
     expect(script).toContain('bun scripts/xlsx-native-recalc-memory-gate.ts')
-    expect(script).toContain('--issue-442-path .cache/issue-442/ocha-operational-partners-presence-jan-sep-2024.xlsx')
-    expect(script).toContain('--require-issue-442')
+    expect(script).toContain('--synthetic-issue-442')
     expect(script).toContain('--issue-442-only')
-    expect(script).not.toContain('--synthetic-only')
+    expect(script).not.toContain('.cache/research-issue-442')
   })
 
   it('keeps large XLSX file-mode wrappers off materialized workbook and hidden fallback paths', () => {

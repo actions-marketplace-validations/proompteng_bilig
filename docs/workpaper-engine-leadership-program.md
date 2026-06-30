@@ -85,10 +85,8 @@ Current state:
   `packages/benchmarks/baselines/workpaper-vs-hyperformula.json`
 - that artifact currently shows WorkPaper leading `80/100` scorecard-eligible
   comparable mean workloads and `78/100` mean+p95 workloads
-- the broader active Sheets / Excel objective is tracked by
-  `packages/benchmarks/baselines/bilig-dominance-scorecard.json`, which keeps
-  blanket `10x` claims disallowed until direct evidence exists for each
-  category
+- public claim safety is handled by `pnpm claims:check`, which rejects unsupported
+  blanket `10x` or dominance language in public docs
 
 So the remaining work is not:
 
@@ -226,15 +224,6 @@ Formula breadth and canonical closure:
 - canonical closure source:
   - `packages/formula/src/compatibility.ts`
   - `packages/formula/src/__tests__/fixtures/formula-dominance-snapshot.json`
-
-Top-level Sheets / Excel dominance tracking:
-
-- artifact:
-  - `packages/benchmarks/baselines/bilig-dominance-scorecard.json`
-- source generator:
-  - `scripts/gen-bilig-dominance-scorecard.ts`
-- check command:
-  - `pnpm dominance:check`
 
 ## Program States
 
@@ -434,9 +423,9 @@ The important trend changes are:
   earlier noisy red runs
 - batch-edit and formula-edit rows are not current blockers
 - `useColumnIndex` is now a real direct lookup path
-- the new generated dominance scorecard blocks a blanket `10x` claim because
-  direct Sheets / Excel evidence is not captured and only four comparable
-  HyperFormula workloads are `10x` wins on both mean and p95
+- the public claim guard blocks a blanket `10x` claim because direct Sheets /
+  Excel evidence is not captured and only four comparable HyperFormula
+  workloads are `10x` wins on both mean and p95
 
 ### Priority 2: Protect formula production-quality leadership
 

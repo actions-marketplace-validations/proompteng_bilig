@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildNativeRecalcCliArgs,
   nativeRecalcMemoryGateBudgets,
+  writeSyntheticIssue442NativeRecalcWorkbook,
   writeSyntheticNativeRecalcWorkbook,
   type NativeRecalcGateTarget,
 } from '../xlsx-native-recalc-memory-gate.ts'
@@ -73,6 +74,26 @@ describe('xlsx native recalc memory gate', () => {
     }
   })
 
+  it('writes a synthetic issue-442-style workbook without requiring a cached external file', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-recalc-issue-442-gate-'))
+    try {
+      const artifact = writeSyntheticIssue442NativeRecalcWorkbook(tempDir)
+
+      expect(existsSync(artifact.filePath)).toBe(true)
+      expect(artifact.editTarget).toBe('Data!R57152')
+      expect(artifact.reads).toEqual(['Data!U57152', 'Data!V57152'])
+      expect(artifact.expectedReads).toEqual({ 'Data!U57152': 168.75, 'Data!V57152': 28.125 })
+
+      const files = unzipSync(readFileSync(artifact.filePath))
+      const sheetXml = strFromU8(files['xl/worksheets/sheet1.xml'] ?? new Uint8Array())
+      expect(sheetXml).toContain('<dimension ref="R1:V57152"/>')
+      expect(sheetXml).toContain('<c r="U57152"><f>R57152*10.546875</f><v>0</v></c>')
+      expect(sheetXml).toContain('<c r="V57152"><f>U57152/6</f><v>0</v></c>')
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
+
   it('exposes the focused memory gate as a package script', () => {
     const packageJson = asRecord(JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')))
     const scripts = asRecord(packageJson['scripts'])
@@ -80,8 +101,8 @@ describe('xlsx native recalc memory gate', () => {
 
     expect(scripts['xlsx-native-recalc:memory-gate']).toBe('bun scripts/xlsx-native-recalc-memory-gate.ts')
     expect(issue442Script).toContain('bun scripts/xlsx-native-recalc-memory-gate.ts')
-    expect(issue442Script).toContain('--issue-442-path .cache/issue-442/ocha-operational-partners-presence-jan-sep-2024.xlsx')
-    expect(issue442Script).toContain('--require-issue-442')
+    expect(issue442Script).toContain('--synthetic-issue-442')
     expect(issue442Script).toContain('--issue-442-only')
+    expect(issue442Script).not.toContain('.cache/research-issue-442')
   })
 })

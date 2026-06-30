@@ -68,7 +68,7 @@ export interface PublicWorkbookCorpusFinancialPlan {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const defaultFinancialCacheDir = join(rootDir, '.cache', 'public-workbook-corpus-financial')
+const defaultFinancialCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus-financial')
 const defaultFinancialManifestPath = join(defaultFinancialCacheDir, 'manifest.json')
 const defaultFinancialScorecardPath = join(defaultFinancialCacheDir, 'scorecard.json')
 const defaultFinancialVerifyCheckpointPath = join(defaultFinancialCacheDir, 'verification-checkpoint.json')
@@ -378,7 +378,7 @@ function formatFinancialDiscoveryPlanCommand(args: {
 }): string {
   return formatCommand([
     'pnpm',
-    'public-workbook-corpus:discover-financial:plan',
+    'research:public-corpus:discover-financial:plan',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),
@@ -401,7 +401,7 @@ function formatFinancialDiscoveryCommand(args: {
   return formatMutatingCommand(
     [
       'pnpm',
-      'public-workbook-corpus:discover-financial',
+      'research:public-corpus:discover-financial',
       '--',
       '--manifest',
       formatCommandPath(args.manifestPath),
@@ -423,7 +423,7 @@ function formatFinancialFetchPlanCommand(args: {
 }): string {
   return formatCommand([
     'pnpm',
-    'public-workbook-corpus:fetch-financial:plan',
+    'research:public-corpus:fetch-financial:plan',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),
@@ -444,7 +444,7 @@ function formatFinancialFetchCommand(args: {
   return formatMutatingCommand(
     [
       'pnpm',
-      'public-workbook-corpus:fetch-financial',
+      'research:public-corpus:fetch-financial',
       '--',
       '--manifest',
       formatCommandPath(args.manifestPath),
@@ -470,7 +470,7 @@ function formatFinancialResumePlanCommand(args: {
 }): string {
   return formatCommand([
     'pnpm',
-    args.check ? 'public-workbook-corpus:resume-financial:check' : 'public-workbook-corpus:resume-financial:plan',
+    args.check ? 'research:public-corpus:resume-financial:check' : 'research:public-corpus:resume-financial:plan',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),
@@ -497,7 +497,7 @@ function formatFinancialVerifyCommand(args: {
   return formatMutatingCommand(
     [
       'pnpm',
-      'public-workbook-corpus:verify-financial',
+      'research:public-corpus:verify-financial',
       '--',
       '--manifest',
       formatCommandPath(args.manifestPath),
@@ -520,7 +520,7 @@ function formatFinancialCheckCommand(args: {
 }): string {
   return formatCommand([
     'pnpm',
-    'public-workbook-corpus:check-financial',
+    'research:public-corpus:check-financial',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),
@@ -535,10 +535,10 @@ function formatFinancialCheckCommand(args: {
 
 function validateFinancialCommands(plan: PublicWorkbookCorpusFinancialPlan, findings: string[]): void {
   if (plan.needsAdditionalDiscovery) {
-    if (!plan.commands.discoverPlan?.includes('public-workbook-corpus:discover-financial:plan')) {
+    if (!plan.commands.discoverPlan?.includes('research:public-corpus:discover-financial:plan')) {
       findings.push('discover plan command is missing while discovery is needed')
     }
-    if (!plan.commands.discover?.includes('public-workbook-corpus:discover-financial')) {
+    if (!plan.commands.discover?.includes('research:public-corpus:discover-financial')) {
       findings.push('discover command is missing while discovery is needed')
     }
   } else {
@@ -549,31 +549,31 @@ function validateFinancialCommands(plan: PublicWorkbookCorpusFinancialPlan, find
       findings.push('discover command is present when discovery is not needed')
     }
   }
-  if (!plan.commands.fetchPlan.includes('public-workbook-corpus:fetch-financial:plan')) {
+  if (!plan.commands.fetchPlan.includes('research:public-corpus:fetch-financial:plan')) {
     findings.push('fetch plan command is missing')
   }
-  if (plan.remainingArtifactSlots > 0 && !plan.commands.fetch?.includes('public-workbook-corpus:fetch-financial')) {
+  if (plan.remainingArtifactSlots > 0 && !plan.commands.fetch?.includes('research:public-corpus:fetch-financial')) {
     findings.push('bounded fetch command is missing while artifacts remain')
   }
   if (plan.remainingArtifactSlots > 0 && !plan.commands.fetch?.includes('--fetch-batch-size')) {
     findings.push('bounded fetch command is missing fetch batch size')
   }
-  if (!plan.commands.fetchAll.includes('public-workbook-corpus:fetch-financial')) {
+  if (!plan.commands.fetchAll.includes('research:public-corpus:fetch-financial')) {
     findings.push('fetch-all command is missing')
   }
   if (!plan.commands.fetchAll.includes('--fetch-batch-size')) {
     findings.push('fetch-all command is missing fetch batch size')
   }
-  if (!plan.commands.resumePlan.includes('public-workbook-corpus:resume-financial:plan')) {
+  if (!plan.commands.resumePlan.includes('research:public-corpus:resume-financial:plan')) {
     findings.push('resume plan command is missing')
   }
-  if (!plan.commands.resumeCheck.includes('public-workbook-corpus:resume-financial:check')) {
+  if (!plan.commands.resumeCheck.includes('research:public-corpus:resume-financial:check')) {
     findings.push('resume check command is missing')
   }
-  if (!plan.commands.verify.includes('public-workbook-corpus:verify-financial')) {
+  if (!plan.commands.verify.includes('research:public-corpus:verify-financial')) {
     findings.push('verify command is missing')
   }
-  if (!plan.commands.check.includes('public-workbook-corpus:check-financial')) {
+  if (!plan.commands.check.includes('research:public-corpus:check-financial')) {
     findings.push('check command is missing')
   }
   const mutatingCommands = [plan.commands.discover, plan.commands.fetch, plan.commands.fetchAll, plan.commands.verify].filter(

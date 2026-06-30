@@ -55,7 +55,7 @@ export interface ResumePlanPhase {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const defaultCacheDir = join(rootDir, '.cache', 'public-workbook-corpus')
+const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
 const defaultScorecardPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'public-workbook-corpus-scorecard.json')
 const defaultVerifyCheckpointPath = join(defaultCacheDir, 'verification-checkpoint.json')
@@ -102,10 +102,10 @@ export function buildPublicWorkbookCorpusResumePlanFromArgs(): PublicWorkbookCor
   const verifyBatchSize = readNumberArg('--verify-batch-size', 20)
   const fetchLimit = readNumberArg('--fetch-limit', 10_000)
   const fetchBatchSize = readNumberArg('--fetch-batch-size', 6)
-  const discoverPlanScriptName = readStringArg('--discover-plan-script-name', 'public-workbook-corpus:discover:plan')
-  const discoverScriptName = readStringArg('--discover-script-name', 'public-workbook-corpus:discover')
-  const fetchPlanScriptName = readStringArg('--fetch-plan-script-name', 'public-workbook-corpus:fetch:plan')
-  const fetchScriptName = readStringArg('--fetch-script-name', 'public-workbook-corpus:fetch')
+  const discoverPlanScriptName = readStringArg('--discover-plan-script-name', 'research:public-corpus:discover:plan')
+  const discoverScriptName = readStringArg('--discover-script-name', 'research:public-corpus:discover')
+  const fetchPlanScriptName = readStringArg('--fetch-plan-script-name', 'research:public-corpus:fetch:plan')
+  const fetchScriptName = readStringArg('--fetch-script-name', 'research:public-corpus:fetch')
   const generatedAt = readStringArg('--generated-at', new Date().toISOString())
   const status = readPublicWorkbookCorpusStatus({
     manifestPath,
@@ -302,11 +302,7 @@ export function validatePublicWorkbookCorpusResumePlan(plan: PublicWorkbookCorpu
   }
   validateFetchPhaseTrancheLimit(plan, findings)
   const finalCommands = plan.phases.finalEvidenceRefresh.commands
-  for (const requiredCommand of [
-    'pnpm public-workbook-corpus:completion-audit:check -- --require-complete',
-    'pnpm dominance:generate',
-    'pnpm dominance:check',
-  ]) {
+  for (const requiredCommand of ['pnpm public:evidence:check', 'pnpm claims:check']) {
     if (!finalCommands.includes(requiredCommand)) {
       findings.push(`final evidence refresh is missing command: ${requiredCommand}`)
     }
@@ -325,7 +321,7 @@ function buildVerifyMissingPhase(args: Parameters<typeof buildPublicWorkbookCorp
     [
       command([
         'pnpm',
-        'public-workbook-corpus:verify-missing:plan',
+        'research:public-corpus:verify-missing:plan',
         '--',
         '--manifest',
         commandPath(args.manifestPath, args.displayRootDir),
@@ -340,7 +336,7 @@ function buildVerifyMissingPhase(args: Parameters<typeof buildPublicWorkbookCorp
     [
       [
         'pnpm',
-        'public-workbook-corpus:verify-missing',
+        'research:public-corpus:verify-missing',
         '--',
         '--manifest',
         commandPath(args.manifestPath, args.displayRootDir),
@@ -378,7 +374,7 @@ function buildRefreshStaleRecordedEvidencePhase(
     [
       command([
         'pnpm',
-        'public-workbook-corpus:verify-stale:plan',
+        'research:public-corpus:verify-stale:plan',
         '--',
         '--manifest',
         commandPath(args.manifestPath, args.displayRootDir),
@@ -393,7 +389,7 @@ function buildRefreshStaleRecordedEvidencePhase(
     [
       [
         'pnpm',
-        'public-workbook-corpus:verify-stale',
+        'research:public-corpus:verify-stale',
         '--',
         '--manifest',
         commandPath(args.manifestPath, args.displayRootDir),
@@ -423,8 +419,8 @@ function buildDiscoverPhase(args: Parameters<typeof buildPublicWorkbookCorpusRes
   if (totalWorkItems === 0) {
     return notNeededPhase('known candidate sources can reach the target artifact count')
   }
-  const discoverPlanScriptName = args.discoverPlanScriptName ?? 'public-workbook-corpus:discover:plan'
-  const discoverScriptName = args.discoverScriptName ?? 'public-workbook-corpus:discover'
+  const discoverPlanScriptName = args.discoverPlanScriptName ?? 'research:public-corpus:discover:plan'
+  const discoverScriptName = args.discoverScriptName ?? 'research:public-corpus:discover'
   return {
     status: phaseStatus(args.stopMarkerActive),
     reason: 'known candidate sources cannot fill the remaining artifact target',
@@ -458,8 +454,8 @@ function buildFetchPhase(args: Parameters<typeof buildPublicWorkbookCorpusResume
   }
   const batchSize = normalizedBatchSize(args.fetchBatchSize)
   const nextFetchLimit = Math.min(args.fetchLimit, args.status.cachedArtifactCount + batchSize)
-  const fetchPlanScriptName = args.fetchPlanScriptName ?? 'public-workbook-corpus:fetch:plan'
-  const fetchScriptName = args.fetchScriptName ?? 'public-workbook-corpus:fetch'
+  const fetchPlanScriptName = args.fetchPlanScriptName ?? 'research:public-corpus:fetch:plan'
+  const fetchScriptName = args.fetchScriptName ?? 'research:public-corpus:fetch'
   const reason = args.fetchPlan.targetReachableFromKnownCandidates
     ? 'known candidate sources can be fetched to fill the remaining artifact target'
     : 'candidate source discovery must run before fetch can fill the remaining artifact target'
@@ -512,15 +508,11 @@ function buildFinalEvidenceRefreshPhase(args: Parameters<typeof buildPublicWorkb
     batchCount: 1,
     ...phaseCommands(
       args.stopMarkerActive,
-      [
-        command(['pnpm', 'public-workbook-corpus:completion-audit:check', '--', '--require-complete']),
-        command(['pnpm', 'dominance:generate']),
-        command(['pnpm', 'dominance:check']),
-      ],
+      [command(['pnpm', 'public:evidence:check']), command(['pnpm', 'claims:check'])],
       [
         [
           'pnpm',
-          'public-workbook-corpus:verify',
+          'research:public-corpus:verify',
           '--',
           '--manifest',
           commandPath(args.manifestPath, args.displayRootDir),
@@ -693,7 +685,7 @@ function validateFetchPhaseTrancheLimit(plan: PublicWorkbookCorpusResumePlan, fi
   const maximumNextFetchLimit = plan.currentState.cachedArtifactCount + phase.batchSize
   for (const mutatingCommand of [...phase.commands, ...phase.blockedCommands].filter(
     (commandText) =>
-      commandText.includes('public-workbook-corpus:fetch --') || commandText.includes('public-workbook-corpus:fetch-financial --'),
+      commandText.includes('research:public-corpus:fetch --') || commandText.includes('research:public-corpus:fetch-financial --'),
   )) {
     const limit = commandLimit(mutatingCommand)
     if (limit !== null && limit > maximumNextFetchLimit) {
@@ -708,13 +700,13 @@ function validateFetchPhaseTrancheLimit(plan: PublicWorkbookCorpusResumePlan, fi
 
 function isCorpusMutatingCommand(value: string): boolean {
   return [
-    'public-workbook-corpus:verify-missing --',
-    'public-workbook-corpus:verify-stale --',
-    'public-workbook-corpus:discover --',
-    'public-workbook-corpus:discover-financial --',
-    'public-workbook-corpus:fetch --',
-    'public-workbook-corpus:fetch-financial --',
-    'public-workbook-corpus:verify --',
+    'research:public-corpus:verify-missing --',
+    'research:public-corpus:verify-stale --',
+    'research:public-corpus:discover --',
+    'research:public-corpus:discover-financial --',
+    'research:public-corpus:fetch --',
+    'research:public-corpus:fetch-financial --',
+    'research:public-corpus:verify --',
   ].some((needle) => value.includes(needle))
 }
 

@@ -35,8 +35,8 @@ Current checkpoint on `main`:
 So the remaining performance gap is no longer “lookup is completely fake” or
 “recalculation is broadly red.” The remaining gap is turning current mean wins
 into durable mean+p95 wins, closing named HyperFormula mean-win rows, and
-keeping the new top-level dominance scorecard honest about the much larger
-Google Sheets / Microsoft Excel objective.
+keeping public claim policy honest about the much larger Google Sheets /
+Microsoft Excel objective.
 
 It complements:
 
@@ -94,11 +94,9 @@ Current closest WorkPaper wins:
 | `aggregate-overlapping-sliding-window` | `0.8335704735358855` | `0.8348433734901536` | `0.7703596194107942` | yes                | aggregate reuse tail hardening                                     |
 | `build-many-sheets`                    | `0.8007693406232433` | `0.8106821067908949` | `0.7722547970783897` | no                 | multi-sheet construction overhead                                  |
 
-The repo now also tracks the broader active goal in
-`packages/benchmarks/baselines/bilig-dominance-scorecard.json`. That scorecard
-explicitly keeps the blanket `10x` claim disallowed: only four comparable
-HyperFormula workloads are currently `10x` wins on both mean and p95, and there
-is not yet direct generated evidence against Google Sheets or Microsoft Excel.
+Public performance language is guarded by `pnpm claims:check` and the checked-in
+headless performance leadership scorecard. Blanket `10x` claims stay out of
+public docs unless the deterministic claim policy allows them.
 
 Rows that earlier versions of this document treated as active red lanes but
 that are now green or no longer the decision driver:
@@ -122,7 +120,7 @@ The live implementation order is now:
 3. Preserve all existing green holdout rows and rerun the competitive generate
    and check commands before claiming a stable win.
 4. Add direct generated product-level artifacts for the Sheets / Excel
-   categories captured in the dominance scorecard.
+   categories covered by public claim policy.
 
 ## Source Corpus
 
@@ -562,8 +560,8 @@ Acceptance:
 - public lane remains visible and improves from the current `62/73` mean wins
 - holdout lane remains visible and improves from the current `18/27` mean wins
 - closest wins gain margin without changing benchmark sampling or verification
-- top-level dominance scorecard remains current and blocks blanket `10x`
-  language until direct Sheets / Excel evidence exists
+- public claim checks continue blocking blanket `10x` language until direct
+  Sheets / Excel evidence exists
 
 ## Benchmark and Proof Discipline
 

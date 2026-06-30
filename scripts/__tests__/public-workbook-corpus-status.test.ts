@@ -29,7 +29,7 @@ describe('public workbook corpus status checks', () => {
         [
           'Public workbook corpus target incomplete:',
           'cached artifacts below target: 0/2',
-          'next command: pnpm public-workbook-corpus:resume-plan:check -- --manifest',
+          'next command: pnpm research:public-corpus:resume-plan:check -- --manifest',
           'manifest\\.json',
           '--cache-dir',
           'cache',

@@ -132,7 +132,7 @@ describe('public workbook corpus shared links', () => {
       source: {
         downloadUrl: 'https://docs.google.com/spreadsheets/d/abc123SharedSheet/export?format=xlsx',
       },
-      nextFetchSourceCommand: expect.stringContaining('public-workbook-corpus:fetch-source'),
+      nextFetchSourceCommand: expect.stringContaining('research:public-corpus:fetch-source'),
     })
     expect(storedManifest.sources).toEqual([])
   })
@@ -220,10 +220,10 @@ describe('public workbook corpus shared links', () => {
       recordedCaseIds: [],
       unverifiedArtifactIds: [],
       commands: {
-        addLink: expect.stringContaining('public-workbook-corpus:add-link'),
-        fetchSource: expect.stringContaining('public-workbook-corpus:fetch-source'),
+        addLink: expect.stringContaining('research:public-corpus:add-link'),
+        fetchSource: expect.stringContaining('research:public-corpus:fetch-source'),
         verifyArtifacts: [],
-        status: expect.stringContaining('public-workbook-corpus:status'),
+        status: expect.stringContaining('research:public-corpus:check:offline'),
       },
     })
     expect(storedManifest.sources).toEqual([])
@@ -410,8 +410,8 @@ describe('public workbook corpus shared links', () => {
     expect(result.stdout).not.toContain(repoRoot())
     expect(plan).toMatchObject({
       commands: {
-        addLink: expect.stringContaining('--manifest .cache/public-workbook-corpus/manifest.json'),
-        fetchSource: expect.stringContaining('--cache-dir .cache/public-workbook-corpus'),
+        addLink: expect.stringContaining('--manifest .cache/research-public-workbook-corpus/manifest.json'),
+        fetchSource: expect.stringContaining('--cache-dir .cache/research-public-workbook-corpus'),
         status: expect.stringContaining('--scorecard packages/benchmarks/baselines/public-workbook-corpus-scorecard.json'),
       },
     })
@@ -443,8 +443,8 @@ describe('public workbook corpus shared links', () => {
     expect(result.status).toBe(0)
     expect(result.stdout).not.toContain(repoRoot())
     expect(dryRun).toMatchObject({
-      nextFetchSourceCommand: expect.stringContaining('--cache-dir .cache/public-workbook-corpus'),
-      nextPlanCommand: expect.stringContaining('--verify-checkpoint .cache/public-workbook-corpus/verification-checkpoint.json'),
+      nextFetchSourceCommand: expect.stringContaining('--cache-dir .cache/research-public-workbook-corpus'),
+      nextPlanCommand: expect.stringContaining('--verify-checkpoint .cache/research-public-workbook-corpus/verification-checkpoint.json'),
     })
   })
 
@@ -568,12 +568,12 @@ describe('public workbook corpus shared links', () => {
     expect(
       formatPublicWorkbookCorpusVerifyArtifactCommand({
         artifactId: 'workbook-abc123',
-        cacheDir: '/repo/.cache/public-workbook-corpus',
-        manifestPath: '/repo/.cache/public-workbook-corpus/manifest.json',
-        verifyCheckpointPath: '/repo/.cache/public-workbook-corpus/verification-checkpoint.json',
+        cacheDir: '/repo/.cache/research-public-workbook-corpus',
+        manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
+        verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
       }),
     ).toBe(
-      'pnpm public-workbook-corpus:verify-artifact -- --manifest /repo/.cache/public-workbook-corpus/manifest.json --cache-dir /repo/.cache/public-workbook-corpus --verify-checkpoint /repo/.cache/public-workbook-corpus/verification-checkpoint.json --artifact-id workbook-abc123 --update-verify-checkpoint',
+      'pnpm research:public-corpus:verify-artifact -- --manifest /repo/.cache/research-public-workbook-corpus/manifest.json --cache-dir /repo/.cache/research-public-workbook-corpus --verify-checkpoint /repo/.cache/research-public-workbook-corpus/verification-checkpoint.json --artifact-id workbook-abc123 --update-verify-checkpoint',
     )
   })
 
@@ -581,13 +581,13 @@ describe('public workbook corpus shared links', () => {
     expect(
       formatPublicWorkbookCorpusVerifyArtifactCommand({
         artifactId: 'workbook-abc123',
-        cacheDir: '/repo/.cache/public-workbook-corpus',
-        manifestPath: '/repo/.cache/public-workbook-corpus/manifest.json',
+        cacheDir: '/repo/.cache/research-public-workbook-corpus',
+        manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
         updateVerifyCheckpoint: false,
-        verifyCheckpointPath: '/repo/.cache/public-workbook-corpus/verification-checkpoint.json',
+        verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
       }),
     ).toBe(
-      'pnpm public-workbook-corpus:verify-artifact -- --manifest /repo/.cache/public-workbook-corpus/manifest.json --cache-dir /repo/.cache/public-workbook-corpus --verify-checkpoint /repo/.cache/public-workbook-corpus/verification-checkpoint.json --artifact-id workbook-abc123',
+      'pnpm research:public-corpus:verify-artifact -- --manifest /repo/.cache/research-public-workbook-corpus/manifest.json --cache-dir /repo/.cache/research-public-workbook-corpus --verify-checkpoint /repo/.cache/research-public-workbook-corpus/verification-checkpoint.json --artifact-id workbook-abc123',
     )
   })
 
@@ -595,13 +595,13 @@ describe('public workbook corpus shared links', () => {
     expect(
       formatPublicWorkbookCorpusVerifyArtifactCommand({
         artifactId: 'workbook-abc123',
-        cacheDir: '/repo/.cache/public-workbook-corpus',
-        manifestPath: '/repo/.cache/public-workbook-corpus/manifest.json',
+        cacheDir: '/repo/.cache/research-public-workbook-corpus',
+        manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
         stopMarkerActive: true,
-        verifyCheckpointPath: '/repo/.cache/public-workbook-corpus/verification-checkpoint.json',
+        verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
       }),
     ).toBe(
-      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:verify-artifact -- --manifest /repo/.cache/public-workbook-corpus/manifest.json --cache-dir /repo/.cache/public-workbook-corpus --verify-checkpoint /repo/.cache/public-workbook-corpus/verification-checkpoint.json --artifact-id workbook-abc123 --update-verify-checkpoint --allow-active-stop-marker',
+      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:verify-artifact -- --manifest /repo/.cache/research-public-workbook-corpus/manifest.json --cache-dir /repo/.cache/research-public-workbook-corpus --verify-checkpoint /repo/.cache/research-public-workbook-corpus/verification-checkpoint.json --artifact-id workbook-abc123 --update-verify-checkpoint --allow-active-stop-marker',
     )
   })
 })

@@ -307,10 +307,10 @@ describe('xlsx native recalc public corpus runner', () => {
     })
   })
 
-  it('exposes the public corpus runner as a package script', () => {
+  it('exposes the public corpus runner as an explicit research package script', () => {
     const packageJson = asRecord(JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')))
     const scripts = asRecord(packageJson['scripts'])
-    const script = String(scripts['xlsx-native-recalc:public-corpus'])
+    const script = String(scripts['research:xlsx-native-recalc:public-corpus'])
 
     expect(script).toContain('bun scripts/xlsx-native-recalc-public-corpus.ts')
     expect(script).toContain('--limit 50')
@@ -318,7 +318,10 @@ describe('xlsx native recalc public corpus runner', () => {
     expect(script).toContain('--require-formula-workbook-count 50')
     expect(script).toContain('--require-passed-formula-workbook-count 50')
     expect(script).toContain('--require-passed')
-    expect(script).toContain('--corpus .cache/public-workbook-corpus/manifest.json .cache/public-workbook-corpus')
-    expect(script).toContain('--corpus .cache/public-workbook-corpus-financial/manifest.json .cache/public-workbook-corpus-financial')
+    expect(script).toContain('--corpus .cache/research-public-workbook-corpus/manifest.json .cache/research-public-workbook-corpus')
+    expect(script).toContain(
+      '--corpus .cache/research-public-workbook-corpus-financial/manifest.json .cache/research-public-workbook-corpus-financial',
+    )
+    expect(scripts['xlsx-native-recalc:public-corpus']).toBeUndefined()
   })
 })

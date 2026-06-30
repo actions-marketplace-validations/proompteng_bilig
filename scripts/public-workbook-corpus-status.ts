@@ -343,7 +343,7 @@ function formatPublicWorkbookCorpusVerifySliceCommand(
   slice: 'verify-missing' | 'verify-stale',
   mode: 'plan' | 'verify',
 ): string {
-  const script = mode === 'plan' ? `public-workbook-corpus:${slice}:plan` : `public-workbook-corpus:${slice}`
+  const script = mode === 'plan' ? `research:public-corpus:${slice}:plan` : `research:public-corpus:${slice}`
   const args =
     mode === 'plan'
       ? [
@@ -391,7 +391,7 @@ function splitPublicWorkbookCorpusVerifySliceCommand(
 function formatPublicWorkbookCorpusResumePlanCheckCommand(paths: PublicWorkbookCorpusCommandPaths): string {
   return [
     'pnpm',
-    'public-workbook-corpus:resume-plan:check',
+    'research:public-corpus:resume-plan:check',
     '--',
     '--manifest',
     commandPath(paths.manifestPath, paths.displayRootDir),

@@ -303,7 +303,7 @@ function buildChecklistItem(args: {
         : args.category.evidenceArtifacts,
     checkCommands:
       args.criterion.id === 'import-export-compatibility'
-        ? [...args.category.checkCommands, 'pnpm public-workbook-corpus:check']
+        ? [...args.category.checkCommands, 'pnpm research:public-corpus:check']
         : args.category.checkCommands,
     gaps,
     liveBlockers: args.liveBlockers,

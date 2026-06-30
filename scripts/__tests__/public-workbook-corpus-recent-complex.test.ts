@@ -257,17 +257,17 @@ describe('public workbook recent complex headless corpus gate', () => {
   it('exposes package scripts for the recent complex corpus lane', () => {
     const scripts = readPackageScripts()
 
-    expect(scripts['public-workbook-corpus:recent-complex:plan']).toBe('bun scripts/public-workbook-corpus-recent-complex.ts plan')
-    expect(scripts['public-workbook-corpus:retarget-recent-complex']).toContain('public-workbook-corpus.ts retarget')
-    expect(scripts['public-workbook-corpus:discover-recent-complex']).toContain('discover-recent-complex-ckan')
-    expect(scripts['public-workbook-corpus:discover-recent-complex-hdx']).toContain('https://data.humdata.org/api/3/action')
-    expect(scripts['public-workbook-corpus:discover-recent-complex-github']).toContain('discover-recent-complex-github')
-    expect(scripts['public-workbook-corpus:discover-recent-complex-zenodo']).toContain('discover-recent-complex-zenodo')
-    expect(scripts['public-workbook-corpus:discover-recent-complex-figshare']).toContain('discover-recent-complex-figshare')
-    expect(scripts['public-workbook-corpus:fetch-recent-complex']).toContain('--fetch-batch-size 2')
-    expect(scripts['public-workbook-corpus:fetch-recent-complex']).toContain('--limit 5000')
-    expect(scripts['public-workbook-corpus:headless-recent-complex']).toContain('public-workbook-corpus-recent-complex.ts headless')
-    expect(scripts['public-workbook-corpus:check-recent-complex']).toContain('--require-target')
+    expect(scripts['research:public-corpus:recent-complex:plan']).toBe('bun scripts/public-workbook-corpus-recent-complex.ts plan')
+    expect(scripts['research:public-corpus:retarget-recent-complex']).toContain('public-workbook-corpus.ts retarget')
+    expect(scripts['research:public-corpus:discover-recent-complex']).toContain('discover-recent-complex-ckan')
+    expect(scripts['research:public-corpus:discover-recent-complex-hdx']).toContain('https://data.humdata.org/api/3/action')
+    expect(scripts['research:public-corpus:discover-recent-complex-github']).toContain('discover-recent-complex-github')
+    expect(scripts['research:public-corpus:discover-recent-complex-zenodo']).toContain('discover-recent-complex-zenodo')
+    expect(scripts['research:public-corpus:discover-recent-complex-figshare']).toContain('discover-recent-complex-figshare')
+    expect(scripts['research:public-corpus:fetch-recent-complex']).toContain('--fetch-batch-size 2')
+    expect(scripts['research:public-corpus:fetch-recent-complex']).toContain('--limit 5000')
+    expect(scripts['research:public-corpus:headless-recent-complex']).toContain('public-workbook-corpus-recent-complex.ts headless')
+    expect(scripts['research:public-corpus:check-recent-complex']).toContain('--require-target')
   })
 
   it('prioritizes model and template discovery before broad recent workbook queries', () => {

@@ -8,6 +8,7 @@ import { assertLocalCiResourceGuardAllowsRun } from './ci-local-resource-guard.t
 import { ensureWasmKernelArtifact } from './ensure-wasm-kernel.js'
 
 const DEFAULT_CI_FILE_CHUNK_SIZE = 3
+const DEFAULT_ALL_FILE_CHUNK_SIZE = 16
 const DEFAULT_CI_BATCH_COOLDOWN_MS = 1_000
 const BROAD_CORPUS_FILE_THRESHOLD = 4
 
@@ -28,8 +29,12 @@ function shouldUseBoundedVitestDefaults(args: readonly string[], env: NodeJS.Pro
   return Boolean(env['BILIG_CI_PROFILE']) || args.includes('--run')
 }
 
-export function buildVitestArgBatches(args: readonly string[], env: NodeJS.ProcessEnv = process.env): string[][] {
-  return splitVitestRunArgsForCi(args, env).map((batchArgs) => buildVitestArgs(batchArgs, env))
+export function buildVitestArgBatches(
+  args: readonly string[],
+  env: NodeJS.ProcessEnv = process.env,
+  defaultRunFiles: readonly string[] = [],
+): string[][] {
+  return splitVitestRunArgsForCi(args, env, defaultRunFiles).map((batchArgs) => buildVitestArgs(batchArgs, env))
 }
 
 export function resolveVitestBin(rootDir: string, platform: NodeJS.Platform = process.platform): string {
@@ -59,27 +64,29 @@ export function isBroadCorpusVitestRun(args: readonly string[]): boolean {
   return publicCorpusTestFiles.length > 0 && excelCorpusTestFiles.length > 0
 }
 
-function splitVitestRunArgsForCi(args: readonly string[], env: NodeJS.ProcessEnv): string[][] {
-  if (!env['BILIG_CI_PROFILE']) {
-    return [[...args]]
-  }
-
+function splitVitestRunArgsForCi(args: readonly string[], env: NodeJS.ProcessEnv, defaultRunFiles: readonly string[] = []): string[][] {
   const runIndex = args.indexOf('--run')
   if (runIndex < 0) {
     return [[...args]]
   }
 
   const prefixArgs = args.slice(0, runIndex + 1)
-  const runArgs = args.slice(runIndex + 1)
-  if (runArgs.length === 0 || runArgs.some((arg) => arg.startsWith('-'))) {
+  const requestedRunArgs = args.slice(runIndex + 1)
+  if (requestedRunArgs.some((arg) => arg.startsWith('-'))) {
+    return [[...args]]
+  }
+  const isDefaultAllFileRun = requestedRunArgs.length === 0
+  const runArgs = isDefaultAllFileRun ? [...defaultRunFiles] : requestedRunArgs
+  if (runArgs.length === 0) {
     return [[...args]]
   }
 
   const chunkSize =
-    readPositiveInt(env['BILIG_VITEST_FILE_CHUNK_SIZE']) ?? (isBroadCorpusVitestRun(args) ? runArgs.length : DEFAULT_CI_FILE_CHUNK_SIZE)
+    readPositiveInt(env['BILIG_VITEST_FILE_CHUNK_SIZE']) ??
+    (isBroadCorpusVitestRun(args) ? runArgs.length : isDefaultAllFileRun ? DEFAULT_ALL_FILE_CHUNK_SIZE : DEFAULT_CI_FILE_CHUNK_SIZE)
   const environmentGroups = splitRunFilesByVitestEnvironment(runArgs)
   if (environmentGroups.length === 1 && runArgs.length <= chunkSize) {
-    return [[...args]]
+    return isDefaultAllFileRun ? [[...prefixArgs, ...runArgs]] : [[...args]]
   }
 
   const batches: string[][] = []
@@ -90,6 +97,27 @@ function splitVitestRunArgsForCi(args: readonly string[], env: NodeJS.ProcessEnv
   }
   return batches
 }
+
+export function discoverDefaultVitestRunFiles(rootDir: string): string[] {
+  const result = spawnSync('git', ['ls-files'], {
+    cwd: rootDir,
+    encoding: 'utf8',
+  })
+  if (result.error || result.status !== 0) {
+    return []
+  }
+  return result.stdout
+    .split(/\r?\n/u)
+    .filter((file) => defaultVitestIncludePatterns.some((pattern) => pattern.test(file)))
+    .filter((file) => !file.includes('/dist/') && !file.includes('/build/'))
+    .toSorted()
+}
+
+const defaultVitestIncludePatterns = [
+  /^packages\/[^/]+\/src\/.*\.test\.tsx?$/u,
+  /^apps\/[^/]+\/src\/.*\.test\.tsx?$/u,
+  /^scripts\/.*\.test\.ts$/u,
+] as const
 
 function splitRunFilesByVitestEnvironment(runFiles: readonly string[]): string[][] {
   const groups: string[][] = []
@@ -163,7 +191,8 @@ function main(): never {
 
   const vitestBin = resolveVitestBin(rootDir)
   ensureWasmKernelArtifact()
-  const batches = buildVitestArgBatches(requestedArgs)
+  const defaultRunFiles = requestedArgs.length === 1 && requestedArgs[0] === '--run' ? discoverDefaultVitestRunFiles(rootDir) : []
+  const batches = splitVitestRunArgsForCi(requestedArgs, process.env, defaultRunFiles).map((batchArgs) => buildVitestArgs(batchArgs))
   const batchCooldownMs = readVitestBatchCooldownMs()
   for (const [index, args] of batches.entries()) {
     if (index > 0) {

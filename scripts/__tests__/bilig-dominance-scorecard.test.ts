@@ -333,11 +333,13 @@ describe('bilig dominance scorecard', () => {
     expect(workflow?.currentEvidence).toContain(
       'generated-source CI checks are serialized to avoid pnpm workspace-state races in the evidence gate',
     )
-    expect(workflow?.currentEvidence).toContain('completion audit criteria passed: false')
-    expect(workflow?.currentEvidence).toContain('Google Sheets 10x release-claim gate present: true')
+    expect(workflow?.currentEvidence).toContain('default dominance package scripts absent: true')
+    expect(workflow?.currentEvidence).toContain('run-ci dominance checks absent: true')
+    expect(workflow?.currentEvidence).toContain('Google Sheets 10x release-claim gate script absent: true')
+    expect(workflow?.currentEvidence).toContain('public claims check present: true')
     expect(workflow?.blockers).toEqual([])
     expect(workflow?.evidenceArtifacts).toContain('scripts/run-ci.ts')
-    expect(workflow?.checkCommands).toContain('pnpm google-sheets-10x:claim:check')
+    expect(workflow?.checkCommands).toContain('pnpm claims:check')
   })
 
   it('does not keep deployment network policy as a blocker after security evidence covers it', () => {
@@ -354,12 +356,15 @@ describe('bilig dominance scorecard', () => {
     expect(security?.blockers).toEqual([])
   })
 
-  it('wires the dominance check into fast CI generated checks', () => {
+  it('keeps behavior-backed checks in CI while leaving dominance scorecards out of required gates', () => {
     const packageJson = readFileSync(resolve(repoRoot, 'package.json'), 'utf8')
     const runCi = readFileSync(resolve(repoRoot, 'scripts/run-ci.ts'), 'utf8')
 
-    expect(packageJson).toContain('"dominance:check": "bun scripts/gen-bilig-dominance-scorecard.ts --check"')
-    expect(packageJson).toContain('"google-sheets-10x:claim:check": "bun scripts/google-sheets-10x-claim-gate.ts"')
+    expect(packageJson).not.toContain('"dominance:check"')
+    expect(packageJson).not.toContain('"dominance:generate"')
+    expect(packageJson).not.toContain('"dominance:audit"')
+    expect(packageJson).not.toContain('"google-sheets-10x:claim:check"')
+    expect(packageJson).toContain('"claims:check": "bun scripts/check-public-claims.ts"')
     expect(packageJson).toContain('"calculation:semantics:check": "bun scripts/gen-calculation-semantics-scorecard.ts --check"')
     expect(packageJson).toContain('"calculation:excel-live:check": "bun scripts/gen-microsoft-excel-live-calculation-scorecard.ts --check"')
     expect(packageJson).toContain(
@@ -395,7 +400,9 @@ describe('bilig dominance scorecard', () => {
     expect(packageJson).toContain('"ui:browser-live:generate": "bun scripts/gen-ui-responsiveness-live-browser-scorecard.ts"')
     expect(packageJson).toContain('"ui:browser-live:check": "bun scripts/gen-ui-responsiveness-live-browser-scorecard.ts --check"')
     expect(packageJson).toContain('"security:posture:check": "bun scripts/gen-security-posture-scorecard.ts --check"')
-    expect(runCi).toContain("bunScript('bilig dominance scorecard check', 'scripts/gen-bilig-dominance-scorecard.ts', '--check')")
+    expect(runCi).not.toContain("bunScript('bilig dominance scorecard check', 'scripts/gen-bilig-dominance-scorecard.ts', '--check')")
+    expect(runCi).not.toContain("bunScript('bilig dominance audit check', 'scripts/bilig-dominance-audit.ts', '--check')")
+    expect(runCi).toContain("bunScript('public claims check', 'scripts/check-public-claims.ts')")
     expect(runCi).toContain(
       "bunScript('calculation semantics scorecard check', 'scripts/gen-calculation-semantics-scorecard.ts', '--check')",
     )

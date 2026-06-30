@@ -141,8 +141,6 @@ describe('run-vitest wrapper arguments', () => {
       'scripts/__tests__/public-workbook-corpus.test.ts',
       'scripts/__tests__/public-workbook-corpus-cli.test.ts',
       'scripts/__tests__/public-workbook-corpus-evidence-refresh.test.ts',
-      'scripts/__tests__/public-workbook-corpus-completion-audit.test.ts',
-      'scripts/__tests__/public-workbook-corpus-completion-audit-roundtrip.test.ts',
       'scripts/__tests__/public-workbook-corpus-feature-witness-plan.test.ts',
       'scripts/__tests__/public-workbook-corpus-financial-plan.test.ts',
       'scripts/__tests__/public-workbook-corpus-links.test.ts',
@@ -170,6 +168,25 @@ describe('run-vitest wrapper arguments', () => {
     ).toEqual([
       ['--run', 'a.test.ts', 'b.test.ts', '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose'],
       ['--run', 'c.test.ts', '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose'],
+    ])
+  })
+
+  it('splits default all-file runs into bounded batches', () => {
+    const files = Array.from({ length: 18 }, (_, index) => `packages/core/src/__tests__/all-${index + 1}.test.ts`)
+
+    expect(buildVitestArgBatches(['--run'], {}, files)).toEqual([
+      ['--run', ...files.slice(0, 16), '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose'],
+      ['--run', ...files.slice(16), '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose'],
+    ])
+  })
+
+  it('allows all-file run chunk size overrides', () => {
+    const files = ['a.test.ts', 'b.test.ts', 'c.test.ts', 'd.test.ts', 'e.test.ts']
+
+    expect(buildVitestArgBatches(['--run'], { BILIG_VITEST_FILE_CHUNK_SIZE: '2' }, files)).toEqual([
+      ['--run', 'a.test.ts', 'b.test.ts', '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose'],
+      ['--run', 'c.test.ts', 'd.test.ts', '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose'],
+      ['--run', 'e.test.ts', '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose'],
     ])
   })
 
@@ -268,8 +285,8 @@ describe('run-vitest wrapper arguments', () => {
         '--run',
         'scripts/__tests__/public-workbook-corpus.test.ts',
         'scripts/__tests__/public-workbook-corpus-cli.test.ts',
-        'scripts/__tests__/public-workbook-corpus-completion-audit.test.ts',
         'scripts/__tests__/public-workbook-corpus-links.test.ts',
+        'scripts/__tests__/public-workbook-corpus-resource-limit-plan.test.ts',
       ]),
     ).toBe(true)
   })

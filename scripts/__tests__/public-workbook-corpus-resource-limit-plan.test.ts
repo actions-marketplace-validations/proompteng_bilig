@@ -31,17 +31,17 @@ describe('public workbook corpus resource-limit plan', () => {
       evidence: [...resourceLimitedCase(currentArtifact).evidence, publicWorkbookImportWarningClassifierEvidence],
     }
     const plan = buildPublicWorkbookCorpusResourceLimitPlan({
-      cacheDir: '/repo/.cache/public-workbook-corpus',
+      cacheDir: '/repo/.cache/research-public-workbook-corpus',
       displayRootDir: '/repo',
       generatedAt: '2026-05-08T10:00:00.000Z',
       manifest: manifestWithArtifacts([currentArtifact, staleArtifact]),
-      manifestPath: '/repo/.cache/public-workbook-corpus/manifest.json',
+      manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
       recordedCases: [currentCase, staleResourceLimitedCase(staleArtifact)],
       sampleLimit: 10,
       scorecardPath: '/repo/packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
       stopMarkerActive: true,
       stopMarkerPath: '/repo/.agent-coordination/stop.md',
-      verifyCheckpointPath: '/repo/.cache/public-workbook-corpus/verification-checkpoint.json',
+      verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
       verifyMaxRssMiB: 1536,
     })
 
@@ -69,8 +69,8 @@ describe('public workbook corpus resource-limit plan', () => {
       classifications: ['xlsx.publicCorpus.resourceLimit:rss>1536MiB'],
       rssEvidence: ['Public corpus verification RSS limit exceeded: 1.60 GiB > 1.50 GiB'],
     })
-    expect(plan.currentSamples[0]?.probeCommand).toContain('public-workbook-corpus:verify-artifact')
-    expect(plan.currentSamples[0]?.probeCommand).toContain('--manifest .cache/public-workbook-corpus/manifest.json')
+    expect(plan.currentSamples[0]?.probeCommand).toContain('research:public-corpus:verify-artifact')
+    expect(plan.currentSamples[0]?.probeCommand).toContain('--manifest .cache/research-public-workbook-corpus/manifest.json')
     expect(plan.currentSamples[0]?.probeCommand).not.toContain('/repo/')
     expect(plan.currentSamples[0]?.probeCommand).not.toContain('--allow-active-stop-marker')
     expect(plan.currentSamples[0]?.checkpointRefreshCommand).toContain('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1')
@@ -81,17 +81,17 @@ describe('public workbook corpus resource-limit plan', () => {
   it('rejects inconsistent resource-limit plan counts and unsafe commands', () => {
     const artifact = workbookArtifact('workbook-current', 2_000)
     const plan = buildPublicWorkbookCorpusResourceLimitPlan({
-      cacheDir: '/repo/.cache/public-workbook-corpus',
+      cacheDir: '/repo/.cache/research-public-workbook-corpus',
       displayRootDir: '/repo',
       generatedAt: '2026-05-08T10:00:00.000Z',
       manifest: manifestWithArtifacts([artifact]),
-      manifestPath: '/repo/.cache/public-workbook-corpus/manifest.json',
+      manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
       recordedCases: [resourceLimitedCase(artifact)],
       sampleLimit: 10,
       scorecardPath: '/repo/packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
       stopMarkerActive: true,
       stopMarkerPath: '/repo/.agent-coordination/stop.md',
-      verifyCheckpointPath: '/repo/.cache/public-workbook-corpus/verification-checkpoint.json',
+      verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
       verifyMaxRssMiB: 1536,
     })
     const invalidPlan = {
@@ -178,8 +178,8 @@ describe('public workbook corpus resource-limit plan', () => {
     const packageJson = asRecord(JSON.parse(readFileSync(packageJsonPath(), 'utf8')))
     const scripts = asRecord(packageJson['scripts'])
 
-    expect(scripts['public-workbook-corpus:resource-limit:plan']).toBe('bun scripts/public-workbook-corpus-resource-limit-plan.ts')
-    expect(scripts['public-workbook-corpus:resource-limit:check']).toBe('bun scripts/public-workbook-corpus-resource-limit-plan.ts --check')
+    expect(scripts['research:public-corpus:resource-limit:plan']).toBe('bun scripts/public-workbook-corpus-resource-limit-plan.ts')
+    expect(scripts['research:public-corpus:resource-limit:check']).toBe('bun scripts/public-workbook-corpus-resource-limit-plan.ts --check')
   })
 })
 

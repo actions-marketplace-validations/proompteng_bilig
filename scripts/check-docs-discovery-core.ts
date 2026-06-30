@@ -162,39 +162,6 @@ export function requirePackageScriptsDocumented(
   }
 }
 
-export function requireNoUnsupportedGoogleSheetsTenXClaims(scorecardJson: string, publicSources: Record<string, string>): void {
-  const scorecard = JSON.parse(scorecardJson) as unknown
-  const googleSheetsGatePassed =
-    typeof scorecard === 'object' &&
-    scorecard !== null &&
-    'overallGoogleSheets10xStatus' in scorecard &&
-    typeof scorecard.overallGoogleSheets10xStatus === 'object' &&
-    scorecard.overallGoogleSheets10xStatus !== null &&
-    'passed' in scorecard.overallGoogleSheets10xStatus &&
-    scorecard.overallGoogleSheets10xStatus.passed === true
-  if (googleSheetsGatePassed) {
-    return
-  }
-
-  const forbiddenClaims = [
-    '10x faster than Google Sheets',
-    '10x better than Google Sheets',
-    '10x more responsive than Google Sheets',
-    '10x Google Sheets',
-    'beats Google Sheets by 10x',
-    'beat Google Sheets by 10x',
-  ]
-  for (const [sourceName, source] of Object.entries(publicSources)) {
-    const normalizedSource = source.toLowerCase()
-    const match = forbiddenClaims.find((claim) => normalizedSource.includes(claim.toLowerCase()))
-    if (match) {
-      throw new Error(
-        `${sourceName} contains unsupported broad Google Sheets 10x wording "${match}" while overallGoogleSheets10xStatus is not passed`,
-      )
-    }
-  }
-}
-
 export async function requireFile(path: string): Promise<void> {
   const info = await stat(path)
   if (!info.isFile()) {

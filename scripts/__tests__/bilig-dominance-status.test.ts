@@ -110,7 +110,7 @@ describe('bilig dominance status', () => {
         nextCaptureRequiresOverride: false,
       },
       nextScorecardGenerateCommand: 'pnpm ui:browser-live:generate -- --capture .cache/ui-responsiveness/same-corpus-capture.json',
-      nextDominanceCheckCommand: 'pnpm dominance:generate && pnpm dominance:check && pnpm dominance:audit:check',
+      nextDominanceCheckCommand: 'pnpm claims:check',
       blockedCommands: [],
     })
     expect(status.overallGoogleSheets10xStatus).toMatchObject({
@@ -448,16 +448,16 @@ describe('bilig dominance status', () => {
       stopMarkerPath: '.agent-coordination/stop.md',
     })
 
-    expect(status.publicWorkbookCorpus.nextMissingVerificationPlanCommand).toBe('pnpm public-workbook-corpus:verify-missing:plan')
+    expect(status.publicWorkbookCorpus.nextMissingVerificationPlanCommand).toBe('pnpm research:public-corpus:verify-missing:plan')
     expect(status.publicWorkbookCorpus.nextFetchCommand).toBeNull()
     expect(status.publicWorkbookCorpus.nextMissingVerificationCommand).toBeNull()
-    expect(status.publicWorkbookCorpus.nextStaleVerificationPlanCommand).toBe('pnpm public-workbook-corpus:verify-stale:plan')
+    expect(status.publicWorkbookCorpus.nextStaleVerificationPlanCommand).toBe('pnpm research:public-corpus:verify-stale:plan')
     expect(status.publicWorkbookCorpus.nextStaleVerificationCommand).toBeNull()
     expect(status.publicWorkbookCorpus.blockedCommands).toEqual([
-      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:discover -- --limit 10060 --allow-active-stop-marker',
-      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:fetch -- --limit 9906 --fetch-batch-size 6 --allow-active-stop-marker',
-      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:verify-missing -- --limit 1 --allow-active-stop-marker',
-      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:verify-stale -- --limit 1 --allow-active-stop-marker',
+      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:discover -- --limit 10060 --allow-active-stop-marker',
+      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:fetch -- --limit 9906 --fetch-batch-size 6 --allow-active-stop-marker',
+      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:verify-missing -- --limit 1 --allow-active-stop-marker',
+      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:verify-stale -- --limit 1 --allow-active-stop-marker',
     ])
     expect(status.publicWorkbookCorpus.nextCorpusRunRequiresExplicitResume).toBe(true)
     expect(status.publicWorkbookCorpus.corpusRunStopMarkerOverrideEnvVar).toBe('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE')
@@ -520,15 +520,15 @@ describe('bilig dominance status', () => {
       recommendedFetchBatchSize: 6,
       needsAdditionalDiscovery: false,
       targetReachableFromKnownCandidates: true,
-      nextPlanCommand: 'pnpm public-workbook-corpus:discover-financial:plan',
-      nextCheckCommand: 'pnpm public-workbook-corpus:discover-financial:check',
-      nextFetchPlanCommand: expect.stringContaining('public-workbook-corpus:fetch-financial:plan'),
+      nextPlanCommand: 'pnpm research:public-corpus:discover-financial:plan',
+      nextCheckCommand: 'pnpm research:public-corpus:discover-financial:check',
+      nextFetchPlanCommand: expect.stringContaining('research:public-corpus:fetch-financial:plan'),
       nextFetchCommand: null,
       nextVerifyCommand: null,
       blockedCommands: [
-        expect.stringContaining('public-workbook-corpus:fetch-financial'),
+        expect.stringContaining('research:public-corpus:fetch-financial'),
         expect.stringContaining('--limit 5000'),
-        expect.stringContaining('public-workbook-corpus:verify-financial'),
+        expect.stringContaining('research:public-corpus:verify-financial'),
       ],
     })
   })
@@ -546,8 +546,8 @@ describe('bilig dominance status', () => {
     expect(status.publicWorkbookCorpus.featureWitnessPlan).toMatchObject({
       recordedCaseCount: 9_880,
       missingWitnessCount: 1,
-      nextPlanCommand: 'pnpm public-workbook-corpus:feature-witness:plan',
-      nextCheckCommand: 'pnpm public-workbook-corpus:feature-witness:check',
+      nextPlanCommand: 'pnpm research:public-corpus:feature-witness:plan',
+      nextCheckCommand: 'pnpm research:public-corpus:feature-witness:check',
       coverage: [
         {
           id: 'pivots',
@@ -567,8 +567,8 @@ describe('bilig dominance status', () => {
   })
 
   it('formats repo-local status paths without exposing the checkout root', () => {
-    expect(formatBiligDominanceStatusPathForMessage('/repo/.cache/public-workbook-corpus/manifest.json', '/repo')).toBe(
-      '.cache/public-workbook-corpus/manifest.json',
+    expect(formatBiligDominanceStatusPathForMessage('/repo/.cache/research-public-workbook-corpus/manifest.json', '/repo')).toBe(
+      '.cache/research-public-workbook-corpus/manifest.json',
     )
     expect(formatBiligDominanceStatusPathForMessage('/tmp/public-workbook-corpus/manifest.json', '/repo')).toBe(
       '/tmp/public-workbook-corpus/manifest.json',
@@ -632,13 +632,13 @@ function incompletePublicWorkbookCorpusStatus(): PublicWorkbookCorpusStatus {
     recordedPassedCaseCount: 9_750,
     recordedCoversManifest: false,
     nextMissingVerificationCommand: null,
-    nextMissingVerificationPlanCommand: 'pnpm public-workbook-corpus:verify-missing:plan',
+    nextMissingVerificationPlanCommand: 'pnpm research:public-corpus:verify-missing:plan',
     blockedMissingVerificationCommand:
-      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:verify-missing -- --limit 1 --allow-active-stop-marker',
+      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:verify-missing -- --limit 1 --allow-active-stop-marker',
     nextStaleVerificationCommand: null,
-    nextStaleVerificationPlanCommand: 'pnpm public-workbook-corpus:verify-stale:plan',
+    nextStaleVerificationPlanCommand: 'pnpm research:public-corpus:verify-stale:plan',
     blockedStaleVerificationCommand:
-      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:verify-stale -- --limit 1 --allow-active-stop-marker',
+      'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:verify-stale -- --limit 1 --allow-active-stop-marker',
     scorecardCoversManifest: false,
     targetComplete: false,
     gaps: [
@@ -673,10 +673,10 @@ function financialPlanFixture(): PublicWorkbookCorpusFinancialPlan {
     generatedAt: '2026-05-08T10:00:00.000Z',
     manifestExists: true,
     targetWorkbookCount: 5_000,
-    manifestPath: '.cache/public-workbook-corpus-financial/manifest.json',
-    cacheDir: '.cache/public-workbook-corpus-financial',
-    scorecardPath: '.cache/public-workbook-corpus-financial/scorecard.json',
-    verifyCheckpointPath: '.cache/public-workbook-corpus-financial/verification-checkpoint.json',
+    manifestPath: '.cache/research-public-workbook-corpus-financial/manifest.json',
+    cacheDir: '.cache/research-public-workbook-corpus-financial',
+    scorecardPath: '.cache/research-public-workbook-corpus-financial/scorecard.json',
+    verifyCheckpointPath: '.cache/research-public-workbook-corpus-financial/verification-checkpoint.json',
     stopMarker: {
       active: true,
       path: '.agent-coordination/stop.md',
@@ -700,16 +700,16 @@ function financialPlanFixture(): PublicWorkbookCorpusFinancialPlan {
       discoverPlan: null,
       discover: null,
       fetchPlan:
-        'pnpm public-workbook-corpus:fetch-financial:plan -- --manifest .cache/public-workbook-corpus-financial/manifest.json --cache-dir .cache/public-workbook-corpus-financial --limit 5000',
+        'pnpm research:public-corpus:fetch-financial:plan -- --manifest .cache/research-public-workbook-corpus-financial/manifest.json --cache-dir .cache/research-public-workbook-corpus-financial --limit 5000',
       fetch:
-        'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:fetch-financial -- --manifest .cache/public-workbook-corpus-financial/manifest.json --cache-dir .cache/public-workbook-corpus-financial --limit 20 --fetch-batch-size 6 --allow-active-stop-marker',
+        'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:fetch-financial -- --manifest .cache/research-public-workbook-corpus-financial/manifest.json --cache-dir .cache/research-public-workbook-corpus-financial --limit 20 --fetch-batch-size 6 --allow-active-stop-marker',
       fetchAll:
-        'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:fetch-financial -- --manifest .cache/public-workbook-corpus-financial/manifest.json --cache-dir .cache/public-workbook-corpus-financial --limit 5000 --fetch-batch-size 6 --allow-active-stop-marker',
-      resumePlan: 'pnpm public-workbook-corpus:resume-financial:plan',
-      resumeCheck: 'pnpm public-workbook-corpus:resume-financial:check',
+        'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:fetch-financial -- --manifest .cache/research-public-workbook-corpus-financial/manifest.json --cache-dir .cache/research-public-workbook-corpus-financial --limit 5000 --fetch-batch-size 6 --allow-active-stop-marker',
+      resumePlan: 'pnpm research:public-corpus:resume-financial:plan',
+      resumeCheck: 'pnpm research:public-corpus:resume-financial:check',
       verify:
-        'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:verify-financial -- --manifest .cache/public-workbook-corpus-financial/manifest.json --cache-dir .cache/public-workbook-corpus-financial --scorecard .cache/public-workbook-corpus-financial/scorecard.json --verify-checkpoint .cache/public-workbook-corpus-financial/verification-checkpoint.json --allow-active-stop-marker',
-      check: 'pnpm public-workbook-corpus:check-financial',
+        'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:verify-financial -- --manifest .cache/research-public-workbook-corpus-financial/manifest.json --cache-dir .cache/research-public-workbook-corpus-financial --scorecard .cache/research-public-workbook-corpus-financial/scorecard.json --verify-checkpoint .cache/research-public-workbook-corpus-financial/verification-checkpoint.json --allow-active-stop-marker',
+      check: 'pnpm research:public-corpus:check-financial',
     },
     sampledCandidateSources: [],
   }
@@ -740,7 +740,7 @@ function featureWitnessPlanFixture(): PublicWorkbookCorpusFeatureWitnessPlan {
         },
         blockedCommands: {
           discover:
-            "BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:discover -- --manifest .cache/public-workbook-corpus/manifest.json --cache-dir .cache/public-workbook-corpus --query 'pivot table xlsx' --limit 10000 --allow-active-stop-marker",
+            "BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:discover -- --manifest .cache/research-public-workbook-corpus/manifest.json --cache-dir .cache/research-public-workbook-corpus --query 'pivot table xlsx' --limit 10000 --allow-active-stop-marker",
         },
       },
     ],
@@ -752,7 +752,7 @@ function featureWitnessPlanFixture(): PublicWorkbookCorpusFeatureWitnessPlan {
         discoveryQuery: 'pivot table xlsx',
         discoverCommand: null,
         blockedDiscoverCommand:
-          "BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm public-workbook-corpus:discover -- --manifest .cache/public-workbook-corpus/manifest.json --cache-dir .cache/public-workbook-corpus --query 'pivot table xlsx' --limit 10000 --allow-active-stop-marker",
+          "BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1 pnpm research:public-corpus:discover -- --manifest .cache/research-public-workbook-corpus/manifest.json --cache-dir .cache/research-public-workbook-corpus --query 'pivot table xlsx' --limit 10000 --allow-active-stop-marker",
         cachedCandidateCount: 0,
         cachedCandidates: [],
       },

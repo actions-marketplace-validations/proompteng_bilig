@@ -80,6 +80,7 @@ async function main(): Promise<void> {
   const syntheticMaxRssBytes = readMegabytesArg('--synthetic-max-rss-mb', nativeRecalcMemoryGateBudgets.syntheticRowChainMaxRssBytes)
   const issue442MaxRssBytes = readMegabytesArg('--issue-442-max-rss-mb', nativeRecalcMemoryGateBudgets.issue442MaxRssBytes)
   const issue442Path = readStringArg('--issue-442-path', '')
+  const syntheticIssue442 = readFlagArg('--synthetic-issue-442')
   const requireIssue442 = readFlagArg('--require-issue-442')
   const issue442Only = readFlagArg('--issue-442-only')
   mkdirSync(outputDir, { recursive: true })
@@ -102,7 +103,19 @@ async function main(): Promise<void> {
         expectedReads: synthetic.expectedReads,
       })
     }
-    if (issue442Path) {
+    if (syntheticIssue442) {
+      const synthetic = writeSyntheticIssue442NativeRecalcWorkbook(cacheDir)
+      targets.push({
+        id: synthetic.id,
+        label: synthetic.fileName,
+        inputPath: synthetic.filePath,
+        outputPath: join(outputDir, 'synthetic-issue-442.native.xlsx'),
+        maxRssBytes: issue442MaxRssBytes,
+        edits: [{ target: synthetic.editTarget, value: 16 }],
+        reads: synthetic.reads,
+        expectedReads: synthetic.expectedReads,
+      })
+    } else if (issue442Path) {
       targets.push({
         id: 'issue-442-ocha-native-recalc',
         label: 'ocha-operational-partners-presence-jan-sep-2024.xlsx',
@@ -279,6 +292,37 @@ export function writeSyntheticNativeRecalcWorkbook(
   }
 }
 
+export function writeSyntheticIssue442NativeRecalcWorkbook(cacheDir: string): SyntheticWorkbookArtifact {
+  const rowCount = 57_152
+  const filesDir = join(cacheDir, 'files')
+  mkdirSync(filesDir, { recursive: true })
+  const worksheetXml = syntheticIssue442WorksheetXml(rowCount)
+  const bytes = zipSync({
+    '[Content_Types].xml': strToU8(contentTypesXml()),
+    '_rels/.rels': strToU8(rootRelationshipsXml()),
+    'xl/workbook.xml': strToU8(workbookXml()),
+    'xl/_rels/workbook.xml.rels': strToU8(workbookRelationshipsXml()),
+    'xl/worksheets/sheet1.xml': strToU8(worksheetXml),
+  })
+  const sha256 = createHash('sha256').update(bytes).digest('hex')
+  const fileName = `synthetic-issue-442-native-recalc-${String(rowCount)}.xlsx`
+  const filePath = join(filesDir, `${sha256}.xlsx`)
+  writeFileSync(filePath, bytes)
+  return {
+    id: 'synthetic-issue-442-native-recalc',
+    fileName,
+    filePath,
+    sha256,
+    byteSize: bytes.byteLength,
+    editTarget: `Data!R${String(rowCount)}`,
+    reads: [`Data!U${String(rowCount)}`, `Data!V${String(rowCount)}`],
+    expectedReads: {
+      [`Data!U${String(rowCount)}`]: 168.75,
+      [`Data!V${String(rowCount)}`]: 28.125,
+    },
+  }
+}
+
 function syntheticNativeRecalcWorksheetXml(rowCount: number): string {
   const rows: string[] = []
   for (let row = 1; row <= rowCount; row += 1) {
@@ -292,6 +336,24 @@ function syntheticNativeRecalcWorksheetXml(rowCount: number): string {
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
     '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
     `<dimension ref="A1:C${String(rowCount)}"/>`,
+    `<sheetData>${rows.join('')}</sheetData>`,
+    '</worksheet>',
+  ].join('')
+}
+
+function syntheticIssue442WorksheetXml(rowCount: number): string {
+  const rows: string[] = []
+  for (let row = 1; row <= rowCount; row += 1) {
+    rows.push(
+      `<row r="${String(row)}"><c r="R${String(row)}"><v>${String(row)}</v></c><c r="U${String(
+        row,
+      )}"><f>R${String(row)}*10.546875</f><v>0</v></c><c r="V${String(row)}"><f>U${String(row)}/6</f><v>0</v></c></row>`,
+    )
+  }
+  return [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
+    `<dimension ref="R1:V${String(rowCount)}"/>`,
     `<sheetData>${rows.join('')}</sheetData>`,
     '</worksheet>',
   ].join('')

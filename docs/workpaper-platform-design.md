@@ -169,8 +169,7 @@ The current state is therefore:
   `80/100` scorecard-eligible comparable mean workloads and `78/100`
   mean+p95 workloads; the current worst p95 row is
   `structural-append-formula-rows-small`
-- top-level dominance scorecard: shipped at
-  `packages/benchmarks/baselines/bilig-dominance-scorecard.json`
+- public claim guard: shipped as `pnpm claims:check`
 - blanket `10x` superiority claim: still disallowed without direct Google
   Sheets / Microsoft Excel category evidence and named workload ratios
 
@@ -359,7 +358,7 @@ Because the expanded default artifact now exists, the correct statement is:
   comparable scorecard, but not blanket `10x` superiority
 - WorkPaper still must not claim a blanket `10x` win without citing a specific
   workload ratio from that artifact and, for the broader product claim, direct
-  Sheets / Excel category evidence from the generated dominance scorecard
+  Sheets / Excel category evidence
 
 ## What Exceeds HyperFormula Today
 

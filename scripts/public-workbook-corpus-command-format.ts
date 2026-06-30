@@ -26,7 +26,7 @@ export function formatPublicWorkbookCorpusDiscoverCommand(args: {
 }): string {
   const parts = [
     'pnpm',
-    'public-workbook-corpus:discover',
+    'research:public-corpus:discover',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),
@@ -51,7 +51,7 @@ export function splitPublicWorkbookCorpusFetchCommand(args: {
 }): SplitPublicWorkbookCorpusCommand {
   const parts = [
     'pnpm',
-    args.scriptName ?? 'public-workbook-corpus:fetch',
+    args.scriptName ?? 'research:public-corpus:fetch',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),
@@ -82,7 +82,7 @@ export function formatPublicWorkbookCorpusAddLinkCommand(args: {
   readonly linkInput: PublicWorkbookLinkInput
   readonly manifestPath: string
 }): string {
-  return linkCommandParts('public-workbook-corpus:add-link', args.linkInput, args.manifestPath).map(shellQuote).join(' ')
+  return linkCommandParts('research:public-corpus:add-link', args.linkInput, args.manifestPath).map(shellQuote).join(' ')
 }
 
 export function formatPublicWorkbookCorpusLinkPlanCommand(args: {
@@ -92,7 +92,7 @@ export function formatPublicWorkbookCorpusLinkPlanCommand(args: {
   readonly verifyCheckpointPath: string
 }): string {
   return [
-    ...linkCommandParts('public-workbook-corpus:link-plan', args.linkInput, args.manifestPath),
+    ...linkCommandParts('research:public-corpus:link-plan', args.linkInput, args.manifestPath),
     '--scorecard',
     formatCommandPath(args.scorecardPath),
     '--verify-checkpoint',
@@ -132,7 +132,7 @@ export function formatPublicWorkbookCorpusStatusCommand(args: {
 }): string {
   return [
     'pnpm',
-    'public-workbook-corpus:status',
+    'research:public-corpus:check:offline',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),
@@ -188,7 +188,7 @@ function publicWorkbookCorpusFetchSourceCommandParts(args: {
 }): string[] {
   return [
     'pnpm',
-    'public-workbook-corpus:fetch-source',
+    'research:public-corpus:fetch-source',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),
@@ -219,7 +219,7 @@ function publicWorkbookCorpusVerifyArtifactCommandParts(args: {
 }): string[] {
   return [
     'pnpm',
-    'public-workbook-corpus:verify-artifact',
+    'research:public-corpus:verify-artifact',
     '--',
     '--manifest',
     formatCommandPath(args.manifestPath),

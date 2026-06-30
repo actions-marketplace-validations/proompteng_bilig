@@ -50,7 +50,6 @@ export interface DocsDiscoveryContext {
   readonly showAndTellDiscussionTemplate: string
   readonly generalDiscussionTemplate: string
   readonly pullRequestTemplate: string
-  readonly dominanceScorecard: string
   readonly headlessSpreadsheetEngineComparison: string
   readonly sheetjsExceljsAlternativeFormulaWorkbookApi: string
   readonly hyperformulaAlternativeHeadlessWorkpaper: string
@@ -137,7 +136,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     showAndTellDiscussionTemplate,
     generalDiscussionTemplate,
     pullRequestTemplate,
-    dominanceScorecard,
     headlessSpreadsheetEngineComparison,
     sheetjsExceljsAlternativeFormulaWorkbookApi,
     hyperformulaAlternativeHeadlessWorkpaper,
@@ -214,7 +212,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     readFile(join(repoRoot, '.github', 'DISCUSSION_TEMPLATE', 'show-and-tell.yml'), 'utf8'),
     readFile(join(repoRoot, '.github', 'DISCUSSION_TEMPLATE', 'general.yml'), 'utf8'),
     readFile(join(repoRoot, '.github', 'PULL_REQUEST_TEMPLATE.md'), 'utf8'),
-    readFile(join(repoRoot, 'packages', 'benchmarks', 'baselines', 'bilig-dominance-scorecard.json'), 'utf8'),
     readFile(join(docsRoot, 'headless-spreadsheet-engine-comparison.md'), 'utf8'),
     readFile(join(docsRoot, 'sheetjs-exceljs-alternative-formula-workbook-api.md'), 'utf8'),
     readFile(join(docsRoot, 'hyperformula-alternative-headless-workpaper.md'), 'utf8'),
@@ -300,7 +297,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     showAndTellDiscussionTemplate,
     generalDiscussionTemplate,
     pullRequestTemplate,
-    dominanceScorecard,
     headlessSpreadsheetEngineComparison,
     sheetjsExceljsAlternativeFormulaWorkbookApi,
     hyperformulaAlternativeHeadlessWorkpaper,

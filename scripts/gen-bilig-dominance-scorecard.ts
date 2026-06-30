@@ -778,19 +778,12 @@ export function buildBiligDominanceScorecard(input: BuildScorecardInput): BiligD
         currentEvidence: [
           'generated parity, formula inventory, formula dominance, workspace resolution, benchmark, publish, and smoke gates exist',
           'generated-source CI checks are serialized to avoid pnpm workspace-state races in the evidence gate',
-          'this generated scorecard prevents blanket 10x claims from outrunning evidence',
-          `dominance package scripts present: ${String(
-            operatorWorkflowEvidence.dominanceGenerateScriptPresent &&
-              operatorWorkflowEvidence.dominanceCheckScriptPresent &&
-              operatorWorkflowEvidence.dominanceAuditCheckScriptPresent,
-          )}`,
-          `run-ci executes dominance checks: ${String(
-            operatorWorkflowEvidence.runCiDominanceCheckPresent && operatorWorkflowEvidence.runCiDominanceAuditCheckPresent,
-          )}`,
-          `Google Sheets 10x release-claim gate present: ${String(operatorWorkflowEvidence.googleSheetsTenXClaimGateScriptPresent)}`,
-          `blanket claim policy coupled to completion audit: ${String(operatorWorkflowEvidence.blanketClaimPolicyCoupledToCompletionAudit)}`,
+          'public claims check blocks broad 10x wording without depending on completion scorecards',
+          `default dominance package scripts absent: ${String(operatorWorkflowEvidence.dominancePackageScriptsAbsent)}`,
+          `run-ci dominance checks absent: ${String(operatorWorkflowEvidence.runCiDominanceChecksAbsent)}`,
+          `Google Sheets 10x release-claim gate script absent: ${String(operatorWorkflowEvidence.googleSheetsTenXClaimGateScriptAbsent)}`,
+          `public claims check present: ${String(operatorWorkflowEvidence.publicClaimsCheckScriptPresent)}`,
           `prompt-to-artifact audit coupled to live status: ${String(operatorWorkflowEvidence.promptArtifactAuditCoupledToLiveStatus)}`,
-          `completion audit criteria passed: ${String(completionAudit.allCriteriaPassed)}`,
         ],
         evidenceArtifacts: [
           'package.json',
@@ -800,7 +793,7 @@ export function buildBiligDominanceScorecard(input: BuildScorecardInput): BiligD
           input.formulaSnapshotPath,
           input.surfaceSnapshotPath,
         ],
-        checkCommands: ['pnpm dominance:check', 'pnpm google-sheets-10x:claim:check', 'pnpm run ci'],
+        checkCommands: ['pnpm claims:check', 'pnpm run ci'],
         blockers: operatorWorkflowBlockers,
       },
     ],

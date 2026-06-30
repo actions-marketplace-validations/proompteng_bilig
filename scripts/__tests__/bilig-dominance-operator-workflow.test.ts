@@ -4,21 +4,17 @@ import { rootDir } from '../bilig-dominance-scorecard-input.ts'
 import { loadOperatorWorkflowEvidence, operatorWorkflowGaps } from '../bilig-dominance-operator-workflow.ts'
 
 describe('bilig dominance operator workflow evidence', () => {
-  it('loads repo wiring for dominance checks and blanket-claim policy', () => {
+  it('loads repo wiring for demoted dominance checks and standalone claim policy', () => {
     const evidence = loadOperatorWorkflowEvidence(rootDir)
 
     expect(operatorWorkflowGaps(evidence)).toEqual([])
     expect(evidence).toMatchObject({
-      dominanceGenerateScriptPresent: true,
-      dominanceCheckScriptPresent: true,
-      dominanceAuditCheckScriptPresent: true,
-      googleSheetsTenXClaimGateScriptPresent: true,
+      dominancePackageScriptsAbsent: true,
+      googleSheetsTenXClaimGateScriptAbsent: true,
       publicClaimsCheckScriptPresent: true,
-      runCiDominanceCheckPresent: true,
-      runCiDominanceAuditCheckPresent: true,
+      runCiDominanceChecksAbsent: true,
       runCiPublicClaimsCheckPresent: true,
       generatedSourceChecksSerialized: true,
-      blanketClaimPolicyCoupledToCompletionAudit: true,
       promptArtifactAuditCoupledToLiveStatus: true,
     })
   })

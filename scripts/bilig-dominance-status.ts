@@ -23,7 +23,7 @@ import { publicWorkbookCorpusCaseMatchesArtifact } from './public-workbook-corpu
 import type { PublicWorkbookCorpusStatus } from './public-workbook-corpus-status.ts'
 import { readPublicWorkbookCorpusStatus } from './public-workbook-corpus-status.ts'
 import { readReusablePublicWorkbookCorpusCases } from './public-workbook-corpus-verify-checkpoint.ts'
-import { financialWorkbookTargetCount } from './public-workbook-corpus-completion-audit-helpers.ts'
+import { financialWorkbookTargetCount } from './public-workbook-corpus-research-helpers.ts'
 import type { PublicWorkbookManifest } from './public-workbook-corpus-types.ts'
 import { buildPublicWorkbookCorpusFinancialPlan, type PublicWorkbookCorpusFinancialPlan } from './public-workbook-corpus-financial-plan.ts'
 import {
@@ -131,11 +131,11 @@ export interface BiligDominanceStatus {
   readonly uiSameCorpus: UiSameCorpusStatus
 }
 
-const defaultCacheDir = join(rootDir, '.cache', 'public-workbook-corpus')
+const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
 const defaultScorecardPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'public-workbook-corpus-scorecard.json')
 const defaultVerifyCheckpointPath = join(defaultCacheDir, 'verification-checkpoint.json')
-const defaultFinancialCacheDir = join(rootDir, '.cache', 'public-workbook-corpus-financial')
+const defaultFinancialCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus-financial')
 const defaultFinancialManifestPath = join(defaultFinancialCacheDir, 'manifest.json')
 const defaultFinancialScorecardPath = join(defaultFinancialCacheDir, 'scorecard.json')
 const defaultFinancialVerifyCheckpointPath = join(defaultFinancialCacheDir, 'verification-checkpoint.json')
@@ -458,8 +458,8 @@ function buildFinancialPlanStatus(
     recommendedFetchBatchSize: plan.recommendedFetchBatchSize,
     needsAdditionalDiscovery: plan.needsAdditionalDiscovery,
     targetReachableFromKnownCandidates: plan.targetReachableFromKnownCandidates,
-    nextPlanCommand: 'pnpm public-workbook-corpus:discover-financial:plan',
-    nextCheckCommand: 'pnpm public-workbook-corpus:discover-financial:check',
+    nextPlanCommand: 'pnpm research:public-corpus:discover-financial:plan',
+    nextCheckCommand: 'pnpm research:public-corpus:discover-financial:check',
     nextFetchPlanCommand: plan.commands.fetchPlan,
     nextFetchCommand: plan.stopMarker.active ? null : plan.commands.fetch,
     nextVerifyCommand: plan.stopMarker.active ? null : plan.commands.verify,
@@ -475,8 +475,8 @@ function buildFeatureWitnessPlanStatus(
   return {
     recordedCaseCount: plan.recordedCaseCount,
     missingWitnessCount: plan.missingWitnessCount,
-    nextPlanCommand: 'pnpm public-workbook-corpus:feature-witness:plan',
-    nextCheckCommand: 'pnpm public-workbook-corpus:feature-witness:check',
+    nextPlanCommand: 'pnpm research:public-corpus:feature-witness:plan',
+    nextCheckCommand: 'pnpm research:public-corpus:feature-witness:check',
     coverage: plan.coverage.map((entry) => ({
       id: entry.id,
       label: entry.label,
@@ -548,11 +548,11 @@ function readSameCorpusPublicAccessCheckOrNull(path: string): SameCorpusPublicAc
 }
 
 function formatPublicWorkbookCorpusDiscoveryPlanCommand(limit: number): string {
-  return ['pnpm', 'public-workbook-corpus:discover:plan', '--', '--limit', String(limit)].map(shellQuote).join(' ')
+  return ['pnpm', 'research:public-corpus:discover:plan', '--', '--limit', String(limit)].map(shellQuote).join(' ')
 }
 
 function formatPublicWorkbookCorpusDiscoveryCommand(limit: number): string {
-  return ['pnpm', 'public-workbook-corpus:discover', '--', '--limit', String(limit)].map(shellQuote).join(' ')
+  return ['pnpm', 'research:public-corpus:discover', '--', '--limit', String(limit)].map(shellQuote).join(' ')
 }
 
 function formatPublicWorkbookCorpusFetchPlanCommand(args: {
@@ -563,7 +563,7 @@ function formatPublicWorkbookCorpusFetchPlanCommand(args: {
 }): string {
   return [
     'pnpm',
-    'public-workbook-corpus:fetch:plan',
+    'research:public-corpus:fetch:plan',
     '--',
     '--manifest',
     formatBiligDominanceStatusPathForMessage(args.manifestPath, args.displayRootDir),
@@ -589,7 +589,7 @@ function formatNextPublicWorkbookCorpusFetchCommand(args: {
   }
   return [
     'pnpm',
-    'public-workbook-corpus:fetch',
+    'research:public-corpus:fetch',
     '--',
     '--limit',
     String(args.cachedArtifactCount + batchSize),

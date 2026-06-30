@@ -10,7 +10,7 @@ import {
   readNumberArg,
   readStringArg,
 } from './public-workbook-corpus-cli.ts'
-import { buildFeatureWitnessCoverage } from './public-workbook-corpus-completion-audit-helpers.ts'
+import { buildFeatureWitnessCoverage } from './public-workbook-corpus-research-helpers.ts'
 import { parsePublicWorkbookManifestJson } from './public-workbook-corpus-json.ts'
 import { publicWorkbookCorpusCaseMatchesArtifact } from './public-workbook-corpus-missing.ts'
 import { readReusablePublicWorkbookCorpusCases } from './public-workbook-corpus-verify-checkpoint.ts'
@@ -65,7 +65,7 @@ export interface PublicWorkbookCorpusFeatureWitnessCandidate {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const defaultCacheDir = join(rootDir, '.cache', 'public-workbook-corpus')
+const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
 const defaultScorecardPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'public-workbook-corpus-scorecard.json')
 const defaultVerifyCheckpointPath = join(defaultCacheDir, 'verification-checkpoint.json')
@@ -188,7 +188,7 @@ export function buildPublicWorkbookCorpusFeatureWitnessPlan(args: {
     const candidateArtifacts = featureCandidateArtifacts(entry.id, args.artifacts ?? [])
     const discoverCommand = splitGuardedCommand(args.stopMarkerActive, [
       'pnpm',
-      'public-workbook-corpus:discover',
+      'research:public-corpus:discover',
       '--',
       '--manifest',
       commandPath(args.manifestPath, args.displayRootDir),
@@ -289,7 +289,7 @@ export function validatePublicWorkbookCorpusFeatureWitnessPlan(plan: PublicWorkb
     if (entry.cachedCandidateCount < entry.cachedCandidates.length) {
       findings.push(`feature witness candidate count is below listed candidates: ${entry.id}`)
     }
-    if (entry.commands.discover !== null && !entry.commands.discover.includes('public-workbook-corpus:discover')) {
+    if (entry.commands.discover !== null && !entry.commands.discover.includes('research:public-corpus:discover')) {
       findings.push(`feature witness discover command is missing discover script: ${entry.id}`)
     }
     if (plan.stopMarker.active && entry.commands.discover !== null) {
@@ -309,7 +309,7 @@ export function validatePublicWorkbookCorpusFeatureWitnessPlan(plan: PublicWorkb
       if (!candidate.artifactId.trim() || !candidate.fileName.trim() || !candidate.sourceUrl.trim()) {
         findings.push(`feature witness cached candidate has empty identity: ${entry.id}`)
       }
-      if (candidate.verifyArtifactCommand !== null && !candidate.verifyArtifactCommand.includes('public-workbook-corpus:verify-artifact')) {
+      if (candidate.verifyArtifactCommand !== null && !candidate.verifyArtifactCommand.includes('research:public-corpus:verify-artifact')) {
         findings.push(`feature witness cached candidate verify command is missing verify-artifact script: ${entry.id}`)
       }
       if (candidate.verifyArtifactCommand !== null && !candidate.verifyArtifactCommand.includes('--update-verify-checkpoint')) {
@@ -378,7 +378,7 @@ function featureWitnessCandidate(args: {
 }): PublicWorkbookCorpusFeatureWitnessCandidate {
   const verifyArtifactCommand = splitGuardedCommand(args.stopMarkerActive, [
     'pnpm',
-    'public-workbook-corpus:verify-artifact',
+    'research:public-corpus:verify-artifact',
     '--',
     '--manifest',
     commandPath(args.manifestPath, args.displayRootDir),

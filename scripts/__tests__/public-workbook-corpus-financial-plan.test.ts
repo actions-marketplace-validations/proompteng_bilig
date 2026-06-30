@@ -66,14 +66,14 @@ describe('public workbook financial corpus plan CLI', () => {
       recommendedDiscoveryLimit: 5,
       targetReachableFromKnownCandidates: false,
       commands: {
-        discoverPlan: expect.stringContaining('public-workbook-corpus:discover-financial:plan'),
-        discover: expect.stringContaining('public-workbook-corpus:discover-financial'),
-        fetchPlan: expect.stringContaining('public-workbook-corpus:fetch-financial:plan'),
-        fetch: expect.stringContaining('public-workbook-corpus:fetch-financial'),
-        resumePlan: expect.stringContaining('public-workbook-corpus:resume-financial:plan'),
-        resumeCheck: expect.stringContaining('public-workbook-corpus:resume-financial:check'),
-        verify: expect.stringContaining('public-workbook-corpus:verify-financial'),
-        check: expect.stringContaining('public-workbook-corpus:check-financial'),
+        discoverPlan: expect.stringContaining('research:public-corpus:discover-financial:plan'),
+        discover: expect.stringContaining('research:public-corpus:discover-financial'),
+        fetchPlan: expect.stringContaining('research:public-corpus:fetch-financial:plan'),
+        fetch: expect.stringContaining('research:public-corpus:fetch-financial'),
+        resumePlan: expect.stringContaining('research:public-corpus:resume-financial:plan'),
+        resumeCheck: expect.stringContaining('research:public-corpus:resume-financial:check'),
+        verify: expect.stringContaining('research:public-corpus:verify-financial'),
+        check: expect.stringContaining('research:public-corpus:check-financial'),
       },
       sampledCandidateSources: [],
     })
@@ -126,12 +126,12 @@ describe('public workbook financial corpus plan CLI', () => {
         requiresExplicitResume: false,
       },
       nextCommands: {
-        discover: expect.stringContaining('public-workbook-corpus:discover-financial'),
-        fetch: expect.stringContaining('public-workbook-corpus:fetch-financial'),
-        fetchPlan: expect.stringContaining('public-workbook-corpus:fetch-financial:plan'),
-        resumeCheck: expect.stringContaining('public-workbook-corpus:resume-financial:check'),
-        verify: expect.stringContaining('public-workbook-corpus:verify-financial'),
-        check: expect.stringContaining('public-workbook-corpus:check-financial'),
+        discover: expect.stringContaining('research:public-corpus:discover-financial'),
+        fetch: expect.stringContaining('research:public-corpus:fetch-financial'),
+        fetchPlan: expect.stringContaining('research:public-corpus:fetch-financial:plan'),
+        resumeCheck: expect.stringContaining('research:public-corpus:resume-financial:check'),
+        verify: expect.stringContaining('research:public-corpus:verify-financial'),
+        check: expect.stringContaining('research:public-corpus:check-financial'),
       },
       blockedCommands: {},
     })
@@ -176,15 +176,15 @@ describe('public workbook financial corpus plan CLI', () => {
         overrideEnvVar: 'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE',
       },
       nextCommands: {
-        fetchPlan: expect.stringContaining('public-workbook-corpus:fetch-financial:plan'),
-        resumeCheck: expect.stringContaining('public-workbook-corpus:resume-financial:check'),
-        check: expect.stringContaining('public-workbook-corpus:check-financial'),
+        fetchPlan: expect.stringContaining('research:public-corpus:fetch-financial:plan'),
+        resumeCheck: expect.stringContaining('research:public-corpus:resume-financial:check'),
+        check: expect.stringContaining('research:public-corpus:check-financial'),
       },
       blockedCommands: {
-        discover: expect.stringContaining('public-workbook-corpus:discover-financial'),
-        fetch: expect.stringContaining('public-workbook-corpus:fetch-financial'),
-        fetchAll: expect.stringContaining('public-workbook-corpus:fetch-financial'),
-        verify: expect.stringContaining('public-workbook-corpus:verify-financial'),
+        discover: expect.stringContaining('research:public-corpus:discover-financial'),
+        fetch: expect.stringContaining('research:public-corpus:fetch-financial'),
+        fetchAll: expect.stringContaining('research:public-corpus:fetch-financial'),
+        verify: expect.stringContaining('research:public-corpus:verify-financial'),
       },
     })
     expect(check.nextCommands).not.toHaveProperty('discover')
@@ -231,7 +231,7 @@ describe('public workbook financial corpus plan CLI', () => {
     })
     expect(commands['discoverPlan']).toBeNull()
     expect(commands['discover']).toBeNull()
-    expect(commands['fetch']).toEqual(expect.stringContaining('public-workbook-corpus:fetch-financial'))
+    expect(commands['fetch']).toEqual(expect.stringContaining('research:public-corpus:fetch-financial'))
     expect(sampledCandidateSources[0]).toMatchObject({
       id: 'source-a',
       license: {
@@ -297,19 +297,19 @@ describe('public workbook financial corpus plan CLI', () => {
     const packageJson = asRecord(JSON.parse(readFileSync(packageJsonPath(), 'utf8')))
     const scripts = asRecord(packageJson['scripts'])
 
-    expect(scripts['public-workbook-corpus:discover-financial:plan']).toBe('bun scripts/public-workbook-corpus-financial-plan.ts')
-    expect(scripts['public-workbook-corpus:discover-financial:check']).toBe('bun scripts/public-workbook-corpus-financial-plan.ts --check')
-    expect(scripts['public-workbook-corpus:fetch-financial:plan']).toBe(
-      'bun scripts/public-workbook-corpus.ts fetch --dry-run --manifest .cache/public-workbook-corpus-financial/manifest.json --cache-dir .cache/public-workbook-corpus-financial --limit 5000 --sample-limit 20 --fetch-script-name public-workbook-corpus:fetch-financial --fetch-batch-size 6',
+    expect(scripts['research:public-corpus:discover-financial:plan']).toBe('bun scripts/public-workbook-corpus-financial-plan.ts')
+    expect(scripts['research:public-corpus:discover-financial:check']).toBe('bun scripts/public-workbook-corpus-financial-plan.ts --check')
+    expect(scripts['research:public-corpus:fetch-financial:plan']).toBe(
+      'bun scripts/public-workbook-corpus.ts fetch --dry-run --manifest .cache/research-public-workbook-corpus-financial/manifest.json --cache-dir .cache/research-public-workbook-corpus-financial --limit 5000 --sample-limit 20 --fetch-script-name research:public-corpus:fetch-financial --fetch-batch-size 6',
     )
-    expect(scripts['public-workbook-corpus:fetch-financial']).toBe(
-      'bun scripts/public-workbook-corpus.ts fetch --manifest .cache/public-workbook-corpus-financial/manifest.json --cache-dir .cache/public-workbook-corpus-financial --limit 5000 --fetch-batch-size 6 --max-bytes 52428800',
+    expect(scripts['research:public-corpus:fetch-financial']).toBe(
+      'bun scripts/public-workbook-corpus.ts fetch --manifest .cache/research-public-workbook-corpus-financial/manifest.json --cache-dir .cache/research-public-workbook-corpus-financial --limit 5000 --fetch-batch-size 6 --max-bytes 52428800',
     )
-    expect(scripts['public-workbook-corpus:resume-financial:plan']).toBe(
-      'bun scripts/public-workbook-corpus-resume-plan.ts --manifest .cache/public-workbook-corpus-financial/manifest.json --cache-dir .cache/public-workbook-corpus-financial --scorecard .cache/public-workbook-corpus-financial/scorecard.json --verify-checkpoint .cache/public-workbook-corpus-financial/verification-checkpoint.json --fetch-limit 5000 --fetch-batch-size 6 --discover-plan-script-name public-workbook-corpus:discover-financial:plan --discover-script-name public-workbook-corpus:discover-financial --fetch-plan-script-name public-workbook-corpus:fetch-financial:plan --fetch-script-name public-workbook-corpus:fetch-financial',
+    expect(scripts['research:public-corpus:resume-financial:plan']).toBe(
+      'bun scripts/public-workbook-corpus-resume-plan.ts --manifest .cache/research-public-workbook-corpus-financial/manifest.json --cache-dir .cache/research-public-workbook-corpus-financial --scorecard .cache/research-public-workbook-corpus-financial/scorecard.json --verify-checkpoint .cache/research-public-workbook-corpus-financial/verification-checkpoint.json --fetch-limit 5000 --fetch-batch-size 6 --discover-plan-script-name research:public-corpus:discover-financial:plan --discover-script-name research:public-corpus:discover-financial --fetch-plan-script-name research:public-corpus:fetch-financial:plan --fetch-script-name research:public-corpus:fetch-financial',
     )
-    expect(scripts['public-workbook-corpus:resume-financial:check']).toBe(
-      'bun scripts/public-workbook-corpus-resume-plan.ts --check --manifest .cache/public-workbook-corpus-financial/manifest.json --cache-dir .cache/public-workbook-corpus-financial --scorecard .cache/public-workbook-corpus-financial/scorecard.json --verify-checkpoint .cache/public-workbook-corpus-financial/verification-checkpoint.json --fetch-limit 5000 --fetch-batch-size 6 --discover-plan-script-name public-workbook-corpus:discover-financial:plan --discover-script-name public-workbook-corpus:discover-financial --fetch-plan-script-name public-workbook-corpus:fetch-financial:plan --fetch-script-name public-workbook-corpus:fetch-financial',
+    expect(scripts['research:public-corpus:resume-financial:check']).toBe(
+      'bun scripts/public-workbook-corpus-resume-plan.ts --check --manifest .cache/research-public-workbook-corpus-financial/manifest.json --cache-dir .cache/research-public-workbook-corpus-financial --scorecard .cache/research-public-workbook-corpus-financial/scorecard.json --verify-checkpoint .cache/research-public-workbook-corpus-financial/verification-checkpoint.json --fetch-limit 5000 --fetch-batch-size 6 --discover-plan-script-name research:public-corpus:discover-financial:plan --discover-script-name research:public-corpus:discover-financial --fetch-plan-script-name research:public-corpus:fetch-financial:plan --fetch-script-name research:public-corpus:fetch-financial',
     )
   })
 
@@ -371,9 +371,9 @@ describe('public workbook financial corpus plan CLI', () => {
     expect(commands['fetch']).toContain('--allow-active-stop-marker')
     expect(commands['fetchAll']).toContain('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1')
     expect(commands['fetchAll']).toContain('--allow-active-stop-marker')
-    expect(commands['resumePlan']).toContain('public-workbook-corpus:resume-financial:plan')
+    expect(commands['resumePlan']).toContain('research:public-corpus:resume-financial:plan')
     expect(commands['resumePlan']).not.toContain('--allow-active-stop-marker')
-    expect(commands['resumeCheck']).toContain('public-workbook-corpus:resume-financial:check')
+    expect(commands['resumeCheck']).toContain('research:public-corpus:resume-financial:check')
     expect(commands['resumeCheck']).not.toContain('--allow-active-stop-marker')
     expect(commands['verify']).toContain('BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE=1')
     expect(commands['verify']).toContain('--allow-active-stop-marker')
@@ -390,10 +390,10 @@ describe('public workbook financial corpus plan CLI', () => {
       generatedAt: '2026-05-08T10:00:00.000Z',
       manifestExists: false,
       targetWorkbookCount: 5,
-      manifestPath: '.cache/public-workbook-corpus-financial/manifest.json',
-      cacheDir: '.cache/public-workbook-corpus-financial',
-      scorecardPath: '.cache/public-workbook-corpus-financial/scorecard.json',
-      verifyCheckpointPath: '.cache/public-workbook-corpus-financial/verification-checkpoint.json',
+      manifestPath: '.cache/research-public-workbook-corpus-financial/manifest.json',
+      cacheDir: '.cache/research-public-workbook-corpus-financial',
+      scorecardPath: '.cache/research-public-workbook-corpus-financial/scorecard.json',
+      verifyCheckpointPath: '.cache/research-public-workbook-corpus-financial/verification-checkpoint.json',
       stopMarker: {
         active: true,
         path: '.agent-coordination/stop.md',
@@ -414,15 +414,15 @@ describe('public workbook financial corpus plan CLI', () => {
       needsAdditionalDiscovery: true,
       targetReachableFromKnownCandidates: false,
       commands: {
-        discoverPlan: 'pnpm public-workbook-corpus:discover-financial:plan -- --allow-active-stop-marker',
-        discover: 'pnpm public-workbook-corpus:discover-financial',
-        fetchPlan: 'pnpm public-workbook-corpus:fetch-financial:plan',
+        discoverPlan: 'pnpm research:public-corpus:discover-financial:plan -- --allow-active-stop-marker',
+        discover: 'pnpm research:public-corpus:discover-financial',
+        fetchPlan: 'pnpm research:public-corpus:fetch-financial:plan',
         fetch: null,
-        fetchAll: 'pnpm public-workbook-corpus:fetch-financial',
-        resumePlan: 'pnpm public-workbook-corpus:resume-financial:plan',
-        resumeCheck: 'pnpm public-workbook-corpus:resume-financial:check',
-        verify: 'pnpm public-workbook-corpus:verify-financial',
-        check: 'pnpm public-workbook-corpus:check-financial',
+        fetchAll: 'pnpm research:public-corpus:fetch-financial',
+        resumePlan: 'pnpm research:public-corpus:resume-financial:plan',
+        resumeCheck: 'pnpm research:public-corpus:resume-financial:check',
+        verify: 'pnpm research:public-corpus:verify-financial',
+        check: 'pnpm research:public-corpus:check-financial',
       },
       sampledCandidateSources: [],
     }
