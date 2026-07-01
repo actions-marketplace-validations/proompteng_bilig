@@ -477,7 +477,6 @@ export function emitSameCorpusXlsx(args: EmitXlsxArgs): void {
     writeFileSync(outputFile, workbookBytes)
   }
 
-  const publicGithubRawUrl = `https://raw.githubusercontent.com/proompteng/bilig/main/packages/benchmarks/baselines/ui-same-corpus/${corpus.id}.xlsx`
   console.log(
     JSON.stringify(
       {
@@ -485,10 +484,9 @@ export function emitSameCorpusXlsx(args: EmitXlsxArgs): void {
         outputFile,
         corpusCaseId: corpus.id,
         materializedCells: corpus.materializedCellCount,
-        googleSheetsUploadMode: 'native_google_sheets',
-        publicGithubRawUrl,
-        publicForgejoRawUrl: `https://code.proompteng.ai/kalmyk/bilig/raw/branch/main/packages/benchmarks/baselines/ui-same-corpus/${corpus.id}.xlsx`,
-        microsoftExcelWebUrl: `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(publicGithubRawUrl)}`,
+        googleSheetsUploadMode: 'manual_local_xlsx_upload',
+        microsoftExcelWebUploadMode:
+          'upload this local XLSX through a durable public file host before using Office web viewer; do not rely on tracked repo fixtures',
         googleSheetsAuthStateCommand:
           'pnpm research:ui-same-corpus:capture -- --save-storage-state <state.json> --auth-product google-sheets --google-sheets-url <url> [--corpus wide-mixed-250k]',
         microsoftExcelWebAuthStateCommand:

@@ -42,7 +42,7 @@ interface WorkPaperVsTrueCalcScalarBenchmarkArtifact {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'workpaper-vs-truecalc.json')
+const outputPath = join(rootDir, '.cache', 'research-workpaper-benchmarks', 'workpaper-vs-truecalc.json')
 const isCheckMode = process.argv.slice(2).includes('--check')
 const sampleCount = 40
 const warmupCount = 8
@@ -51,7 +51,7 @@ const truecalcSourcePath = 'packages/benchmarks/node_modules/@truecalc/core'
 
 if (isCheckMode) {
   if (!existsSync(outputPath)) {
-    throw new Error('WorkPaper vs TrueCalc benchmark artifact is missing. Run: pnpm workpaper:bench:truecalc:generate')
+    throw new Error('WorkPaper vs TrueCalc benchmark artifact is missing. Run: pnpm research:workpaper:bench:truecalc:generate')
   }
 
   const rawArtifact = readJsonObject(outputPath)
@@ -60,12 +60,16 @@ if (isCheckMode) {
   const artifact = parseWorkPaperTrueCalcScalarArtifact(rawArtifact)
   const actualWorkloads = artifact.results.map((result) => result.workload)
   if (JSON.stringify(actualWorkloads) !== JSON.stringify([...TRUECALC_SCALAR_WORKLOADS])) {
-    throw new Error('WorkPaper vs TrueCalc benchmark workload coverage is out of date. Run: pnpm workpaper:bench:truecalc:generate')
+    throw new Error(
+      'WorkPaper vs TrueCalc benchmark workload coverage is out of date. Run: pnpm research:workpaper:bench:truecalc:generate',
+    )
   }
 
   const derivedScorecard = deriveWorkPaperTrueCalcScalarScorecard(artifact.results, artifact.scorecard.coverageNote)
   if (JSON.stringify(artifact.scorecard) !== JSON.stringify(derivedScorecard)) {
-    throw new Error('WorkPaper vs TrueCalc scorecard does not match benchmark results. Run: pnpm workpaper:bench:truecalc:generate')
+    throw new Error(
+      'WorkPaper vs TrueCalc scorecard does not match benchmark results. Run: pnpm research:workpaper:bench:truecalc:generate',
+    )
   }
 
   console.log(
@@ -139,7 +143,7 @@ function assertEngineSourcePath(artifactRecord: Record<string, unknown>, engineN
   const actualSourcePath = stringField(engine, 'sourcePath')
   if (actualSourcePath !== expectedSourcePath) {
     throw new Error(
-      `WorkPaper vs TrueCalc ${engineName} sourcePath is stale. Expected ${expectedSourcePath}, got ${actualSourcePath}. Run: pnpm workpaper:bench:truecalc:generate`,
+      `WorkPaper vs TrueCalc ${engineName} sourcePath is stale. Expected ${expectedSourcePath}, got ${actualSourcePath}. Run: pnpm research:workpaper:bench:truecalc:generate`,
     )
   }
 }

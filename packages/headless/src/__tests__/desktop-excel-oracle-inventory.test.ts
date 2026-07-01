@@ -433,7 +433,7 @@ describe('macOS Desktop Excel oracle inventory', () => {
     expect(source).toContain('matches Desktop Excel raw DrawingML anchors after structural row inserts')
   })
 
-  it('keeps the sort oracle in both package and corpus gates', () => {
+  it('keeps the sort oracle in both package and XLSX correctness gates', () => {
     const headlessPackageJson = readPackageManifest(join(repoRoot, 'packages/headless/package.json'))
     const rootPackageJson = readPackageManifest(join(repoRoot, 'package.json'))
 
@@ -441,11 +441,11 @@ describe('macOS Desktop Excel oracle inventory', () => {
     expect(headlessPackageJson.scripts?.['test:excel-oracle']).toContain('src/__tests__/macos-desktop-excel-*.test.ts')
     expect(headlessPackageJson.scripts?.['test:excel-oracle:live']).toContain('src/__tests__/desktop-excel-oracle-inventory.test.ts')
     expect(headlessPackageJson.scripts?.['test:excel-oracle:live']).toContain('src/__tests__/macos-desktop-excel-*.test.ts')
-    expect(rootPackageJson.scripts?.['test:correctness:corpus']).toContain(
+    expect(rootPackageJson.scripts?.['test:correctness:xlsx']).toContain(
       'packages/headless/src/__tests__/desktop-excel-oracle-inventory.test.ts',
     )
     for (const fileName of corpusDesktopExcelOracleFiles) {
-      expect(rootPackageJson.scripts?.['test:correctness:corpus']).toContain(`packages/headless/src/__tests__/${fileName}`)
+      expect(rootPackageJson.scripts?.['test:correctness:xlsx']).toContain(`packages/headless/src/__tests__/${fileName}`)
     }
   })
 })

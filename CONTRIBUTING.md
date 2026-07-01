@@ -55,7 +55,7 @@ For targeted changes, run the smallest useful gate first:
 - Formula or WorkPaper behavior: `pnpm test:correctness:core`
 - Formula package changes: `pnpm --filter @bilig/formula build`
 - Headless package changes: `pnpm --filter @bilig/headless build`
-- Import/export changes: `pnpm test:correctness:corpus`
+- Import/export changes: `pnpm test:correctness:xlsx`
 - Browser shell changes: `pnpm test:browser`
 - Docs discovery changes: `pnpm docs:discovery:check`
 

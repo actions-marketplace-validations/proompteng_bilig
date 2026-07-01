@@ -43,7 +43,7 @@ Then run the narrowest check that matches the change:
 - docs or examples: `pnpm docs:discovery:check`
 - formula behavior: `pnpm test:correctness:formula`
 - WorkPaper or engine behavior: `pnpm test:correctness:core`
-- import/export behavior: `pnpm test:correctness:corpus`
+- import/export behavior: `pnpm test:correctness:xlsx`
 - browser UI behavior: `pnpm test:browser`
 
 Run `pnpm run ci` before asking for review when the change touches runtime

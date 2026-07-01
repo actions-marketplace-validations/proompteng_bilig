@@ -309,7 +309,7 @@ const parallelFocusedCorrectnessLanes: readonly CiTask[] = [
   directPackageScript('correctness server', 'test:correctness:server'),
   directPackageScript('correctness browser runtime', 'test:correctness:browser'),
 ]
-const corpusCorrectnessLane = directPackageScript('correctness public workbook corpus', 'test:correctness:corpus')
+const xlsxCorrectnessLane = directPackageScript('correctness workbook import/export', 'test:correctness:xlsx')
 const excelOracleCorrectnessLane = directPackageScript('correctness Desktop Excel oracle harness', 'test:correctness:excel-oracle')
 const generatedSourceChecks: readonly CiTask[] = [
   bunScript('protocol check', 'scripts/gen-protocol.ts', '--check'),
@@ -344,20 +344,9 @@ const generatedSourceChecks: readonly CiTask[] = [
       ),
     ],
   },
-  bunScript(
-    'UI same-corpus XLSX fixture check',
-    'scripts/capture-ui-responsiveness-same-corpus.ts',
-    '--emit-xlsx',
-    'packages/benchmarks/baselines/ui-same-corpus',
-    '--check',
-  ),
   ...(skipBrowserGates
     ? []
     : [bunScript('UI responsiveness live browser scorecard check', 'scripts/gen-ui-responsiveness-live-browser-scorecard.ts', '--check')]),
-  tsxScript('WorkPaper TrueCalc scalar benchmark check', 'scripts/gen-workpaper-vs-truecalc-benchmark.ts', '--check'),
-  tsxScript('WorkPaper xlsx-calc benchmark check', 'scripts/gen-workpaper-vs-xlsx-calc-benchmark.ts', '--check'),
-  tsxScript('WorkPaper IronCalc Rust benchmark check', 'scripts/gen-workpaper-vs-ironcalc-rust-benchmark.ts', '--check'),
-  tsxScript('WorkPaper Univer benchmark check', 'scripts/gen-workpaper-vs-univer-benchmark.ts', '--check'),
   bunScript('public claims check', 'scripts/check-public-claims.ts'),
   bunScript('workspace resolution check', 'scripts/gen-workspace-resolution.ts', '--check'),
   bunScript('canonical naming check', 'scripts/check-canonical-naming.ts'),
@@ -441,7 +430,7 @@ try {
     // Keep Vitest lanes serialized locally; running four pnpm/vitest processes concurrently is prone to child-process
     // termination before assertion output on constrained machines.
     allCompleted.push(...(await runSequential('focused correctness checks', parallelFocusedCorrectnessLanes)))
-    allCompleted.push(...(await runSequential('corpus correctness benchmark', [corpusCorrectnessLane, excelOracleCorrectnessLane])))
+    allCompleted.push(...(await runSequential('workbook correctness checks', [xlsxCorrectnessLane, excelOracleCorrectnessLane])))
     if (!skipBrowserGates) {
       allCompleted.push(...(await runStage('browser smoke setup', [browserWebBundleBuild])))
     }

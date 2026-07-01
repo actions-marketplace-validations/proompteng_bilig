@@ -46,7 +46,7 @@ interface WorkPaperVsXlsxCalcBenchmarkArtifact {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'workpaper-vs-xlsx-calc.json')
+const outputPath = join(rootDir, '.cache', 'research-workpaper-benchmarks', 'workpaper-vs-xlsx-calc.json')
 const isCheckMode = process.argv.slice(2).includes('--check')
 const sampleCount = DEFAULT_COMPETITIVE_SAMPLE_COUNT
 const warmupCount = DEFAULT_COMPETITIVE_WARMUP_COUNT
@@ -55,7 +55,7 @@ const xlsxCalcSourcePath = 'packages/benchmarks/node_modules/xlsx-calc'
 
 if (isCheckMode) {
   if (!existsSync(outputPath)) {
-    throw new Error('WorkPaper vs xlsx-calc benchmark artifact is missing. Run: pnpm workpaper:bench:xlsx-calc:generate')
+    throw new Error('WorkPaper vs xlsx-calc benchmark artifact is missing. Run: pnpm research:workpaper:bench:xlsx-calc:generate')
   }
 
   const rawArtifact = readJsonObject(outputPath)
@@ -64,12 +64,16 @@ if (isCheckMode) {
   const artifact = parseWorkPaperXlsxCalcArtifact(rawArtifact)
   const actualWorkloads = artifact.results.map((result) => result.workload)
   if (JSON.stringify(actualWorkloads) !== JSON.stringify([...WORKPAPER_XLSX_CALC_WORKLOADS])) {
-    throw new Error('WorkPaper vs xlsx-calc benchmark workload coverage is out of date. Run: pnpm workpaper:bench:xlsx-calc:generate')
+    throw new Error(
+      'WorkPaper vs xlsx-calc benchmark workload coverage is out of date. Run: pnpm research:workpaper:bench:xlsx-calc:generate',
+    )
   }
 
   const derivedScorecard = deriveWorkPaperXlsxCalcScorecard(artifact.results, artifact.scorecard.coverageNote)
   if (JSON.stringify(artifact.scorecard) !== JSON.stringify(derivedScorecard)) {
-    throw new Error('WorkPaper vs xlsx-calc scorecard does not match benchmark results. Run: pnpm workpaper:bench:xlsx-calc:generate')
+    throw new Error(
+      'WorkPaper vs xlsx-calc scorecard does not match benchmark results. Run: pnpm research:workpaper:bench:xlsx-calc:generate',
+    )
   }
 
   console.log(
@@ -143,7 +147,7 @@ function assertEngineSourcePath(artifactRecord: Record<string, unknown>, engineN
   const actualSourcePath = stringField(engine, 'sourcePath')
   if (actualSourcePath !== expectedSourcePath) {
     throw new Error(
-      `WorkPaper vs xlsx-calc ${engineName} sourcePath is stale. Expected ${expectedSourcePath}, got ${actualSourcePath}. Run: pnpm workpaper:bench:xlsx-calc:generate`,
+      `WorkPaper vs xlsx-calc ${engineName} sourcePath is stale. Expected ${expectedSourcePath}, got ${actualSourcePath}. Run: pnpm research:workpaper:bench:xlsx-calc:generate`,
     )
   }
 }

@@ -55,18 +55,23 @@ describe('run-ci', () => {
     )
     expect(source).toContain('const wasmBuildTask: CiTask = {')
     expect(source).toContain(
-      "const corpusCorrectnessLane = directPackageScript('correctness public workbook corpus', 'test:correctness:corpus')",
+      "const xlsxCorrectnessLane = directPackageScript('correctness workbook import/export', 'test:correctness:xlsx')",
     )
     expect(source).toContain("directPackageScript('correctness Desktop Excel oracle harness', 'test:correctness:excel-oracle')")
-    expect(source).toContain("await runSequential('corpus correctness benchmark', [corpusCorrectnessLane, excelOracleCorrectnessLane])")
+    expect(source).toContain("await runSequential('workbook correctness checks', [xlsxCorrectnessLane, excelOracleCorrectnessLane])")
     expect(source).toContain('function vitestChunkEnv(defaultChunkSize: string): Readonly<Record<string, string>>')
     expect(source).toContain("BILIG_VITEST_FILE_CHUNK_SIZE: process.env['BILIG_VITEST_FILE_CHUNK_SIZE'] ?? defaultChunkSize")
     expect(source).toContain("withEnv(directPackageScript('correctness core', 'test:correctness:core'), vitestChunkEnv('10'))")
     expect(source).toContain("withEnv(directPackageScript('correctness formula', 'test:correctness:formula'), vitestChunkEnv('3'))")
     expect(source).not.toContain(
-      "withEnv(\n  directPackageScript('correctness public workbook corpus', 'test:correctness:corpus'),\n  vitestChunkEnv('10'),\n)",
+      [
+        "withEnv(\n  directPackageScript('correctness public workbook corpus', 'test",
+        'correctness',
+        "corpus'),\n  vitestChunkEnv('10'),\n)",
+      ].join(':'),
     )
     expect(source).not.toContain('research:public-corpus:resume-financial:check')
+    expect(source).not.toContain('research:public-corpus:test')
     expect(source).not.toContain('public workbook corpus completion audit check')
     expect(source).not.toContain(['bilig', 'dominance', 'scorecard check'].join(' '))
     expect(source).not.toContain(['bilig', 'dominance', 'audit check'].join(' '))
@@ -80,6 +85,12 @@ describe('run-ci', () => {
     expect(source).toContain('formula compatibility snapshot check')
     expect(source).toContain("directPackageScript('xlsx import synthetic memory gate', 'xlsx-import:memory-gate:synthetic')")
     expect(source).not.toContain("directPackageScript('public workbook corpus memory gate', 'research:public-corpus:memory-gate')")
+    expect(source).not.toContain('UI same-corpus XLSX fixture check')
+    expect(source).not.toContain('scripts/capture-ui-responsiveness-same-corpus.ts')
+    expect(source).not.toContain('WorkPaper TrueCalc scalar benchmark check')
+    expect(source).not.toContain('WorkPaper xlsx-calc benchmark check')
+    expect(source).not.toContain('WorkPaper IronCalc Rust benchmark check')
+    expect(source).not.toContain('WorkPaper Univer benchmark check')
     expect(source).toContain('...(skipBrowserGates')
     expect(source).toContain(
       "bunScript('UI responsiveness live browser scorecard check', 'scripts/gen-ui-responsiveness-live-browser-scorecard.ts', '--check')",
@@ -92,6 +103,7 @@ describe('run-ci', () => {
     expect(source).not.toContain("pnpm('protocol check'")
     expect(source).not.toContain("pnpm('wasm build'")
     expect(source).not.toContain("pnpm('correctness public workbook corpus'")
+    expect(source).not.toContain(['test', 'correctness', 'corpus'].join(':'))
     expect(source).not.toContain("await runStage('generated-source checks'")
     expect(source).not.toContain("await runStage('static package build prerequisites'")
     expect(source).not.toContain("await runStage('static direct checks'")
@@ -118,6 +130,19 @@ describe('run-ci', () => {
       '"xlsx-import:memory-gate:synthetic": "bun scripts/public-workbook-corpus-memory-gate.ts --synthetic-only"',
     )
     expect(packageJson).not.toContain('"research:public-corpus:memory-gate:synthetic"')
+    expect(scripts[['test', 'correctness', 'corpus'].join(':')]).toBeUndefined()
+    expect(scripts['test:correctness:xlsx']).toContain('packages/excel-fixtures/src/__tests__/oracle-harness.test.ts')
+    expect(scripts['test:correctness:xlsx']).not.toContain('scripts/__tests__/public-workbook-corpus')
+    expect(scripts['research:public-corpus:test']).toContain('scripts/__tests__/public-workbook-corpus')
+    expect(scripts[['ui', 'same-corpus', 'fixture', 'generate'].join(':')]).toBeUndefined()
+    expect(scripts[['ui', 'same-corpus', 'fixture', 'check'].join(':')]).toBeUndefined()
+    expect(scripts['research:ui-same-corpus:fixture:generate']).toContain('.cache/research-ui-same-corpus-fixtures')
+    expect(scripts['research:ui-same-corpus:fixture:check']).toContain('.cache/research-ui-same-corpus-fixtures --check')
+    expect(scripts['workpaper:bench:truecalc:check']).toBeUndefined()
+    expect(scripts['workpaper:bench:xlsx-calc:check']).toBeUndefined()
+    expect(scripts['workpaper:bench:ironcalc-rust:check']).toBeUndefined()
+    expect(scripts['workpaper:bench:univer:check']).toBeUndefined()
+    expect(scripts['research:workpaper:bench:truecalc:check']).toContain('scripts/gen-workpaper-vs-truecalc-benchmark.ts --check')
   })
 
   it('guards broad pre-push lint through the same resource gate', () => {

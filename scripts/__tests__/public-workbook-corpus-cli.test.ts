@@ -938,7 +938,7 @@ describe('public workbook corpus CLI resource guards', () => {
       '--manifest .cache/research-public-workbook-corpus/manifest.json',
     )
     expect(plan.phases.verifyMissingCachedArtifacts.commands[0]).toContain(
-      '--scorecard packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
+      '--scorecard .cache/research-public-workbook-corpus/scorecard.json',
     )
     expect(plan.phases.fetchAdditionalArtifacts.blockedCommands[0]).toContain('--limit 5634')
     expect(plan.phases.fetchAdditionalArtifacts.blockedCommands[0]).toContain('--fetch-batch-size 6')
@@ -1038,7 +1038,7 @@ describe('public workbook corpus CLI resource guards', () => {
       checkpointCases: [passedCase(artifactA)],
       commandPaths: {
         manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
-        scorecardPath: '/repo/packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
+        scorecardPath: '/repo/.cache/research-public-workbook-corpus/scorecard.json',
         verifyCheckpointPath: '/repo/.cache/research-public-workbook-corpus/verification-checkpoint.json',
         cacheDir: '/repo/.cache/research-public-workbook-corpus',
         displayRootDir: '/repo',
@@ -1048,9 +1048,7 @@ describe('public workbook corpus CLI resource guards', () => {
 
     expect(status.nextMissingVerificationCommand).toBeNull()
     expect(status.blockedMissingVerificationCommand).toContain('--manifest .cache/research-public-workbook-corpus/manifest.json')
-    expect(status.blockedMissingVerificationCommand).toContain(
-      '--scorecard packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
-    )
+    expect(status.blockedMissingVerificationCommand).toContain('--scorecard .cache/research-public-workbook-corpus/scorecard.json')
     expect(status.blockedMissingVerificationCommand).not.toContain('/repo/')
     expect(status.nextMissingVerificationPlanCommand).not.toContain('/repo/')
   })
@@ -2140,7 +2138,7 @@ function resumePlanArgs(overrides: Partial<ResumePlanArgs> = {}): ResumePlanArgs
     generatedAt: '2026-05-07T08:00:00.000Z',
     displayRootDir: '/repo',
     manifestPath: '/repo/.cache/research-public-workbook-corpus/manifest.json',
-    scorecardPath: '/repo/packages/benchmarks/baselines/public-workbook-corpus-scorecard.json',
+    scorecardPath: '/repo/.cache/research-public-workbook-corpus/scorecard.json',
     status: {
       targetWorkbookCount: 10_000,
       cachedArtifactCount: 10_000,

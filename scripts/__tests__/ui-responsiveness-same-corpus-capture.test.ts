@@ -378,13 +378,13 @@ describe('same-corpus UI responsiveness capture CLI', () => {
   })
 
   it('parses checked XLSX fixture mode', () => {
-    const args = parseEmitXlsxArgs(['--emit-xlsx', 'packages/benchmarks/baselines/ui-same-corpus', '--check'])
+    const args = parseEmitXlsxArgs(['--emit-xlsx', '.cache/research-ui-same-corpus-fixtures', '--check'])
 
     expect(args).toMatchObject({
       check: true,
       corpusId: 'wide-mixed-250k',
     })
-    expect(args?.targetDirectory.endsWith('/packages/benchmarks/baselines/ui-same-corpus')).toBe(true)
+    expect(args?.targetDirectory.endsWith('/.cache/research-ui-same-corpus-fixtures')).toBe(true)
   })
 
   it('rejects XLSX emission mode when the next flag would be consumed as the directory', () => {

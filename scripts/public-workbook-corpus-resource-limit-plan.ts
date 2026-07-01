@@ -58,7 +58,7 @@ export interface PublicWorkbookCorpusResourceLimitPlanEntry {
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
 const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
-const defaultScorecardPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'public-workbook-corpus-scorecard.json')
+const defaultScorecardPath = join(rootDir, '.cache', 'research-public-workbook-corpus', 'scorecard.json')
 const defaultVerifyCheckpointPath = join(defaultCacheDir, 'verification-checkpoint.json')
 const defaultCorpusRunStopMarkerPath = join(rootDir, '.agent-coordination', '20260507T074946Z-codex-stop-interactive-corpus-runs.md')
 const resourceLimitClassificationPrefix = 'xlsx.publicCorpus.resourceLimit:'

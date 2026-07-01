@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { basename, join, relative, resolve } from 'node:path'
+import { basename, join, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 export const rootDir = resolve(new URL('..', import.meta.url).pathname)
@@ -115,6 +115,11 @@ function addIfFile(files: Set<string>, repoRoot: string, repoPath: string): void
 
 function collectDocs(files: Set<string>, repoRoot: string, dir: string): void {
   if (!existsSync(dir)) {
+    return
+  }
+  const repoDir = relative(repoRoot, dir)
+  const archiveDir = join('docs', 'archive')
+  if (repoDir === archiveDir || repoDir.startsWith(`${archiveDir}${sep}`)) {
     return
   }
   for (const entry of readdirSync(dir)) {

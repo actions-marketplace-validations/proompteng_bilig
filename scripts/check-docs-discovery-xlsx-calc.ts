@@ -12,7 +12,7 @@ export async function requireXlsxCalcAlternativeDiscovery(docsRoot: string): Pro
     '"exportedReimportMatchesAfter": true',
     '"formulasSurvivedXlsxRoundTrip": true',
     'npx --package @bilig/xlsx-formula-recalc xlsx-recalc',
-    'packages/benchmarks/baselines/workpaper-vs-xlsx-calc.json',
+    '.cache/research-workpaper-benchmarks/workpaper-vs-xlsx-calc.json',
     'WorkPaper mean wins: `4/4`',
     'WorkPaper p95 wins: `4/4`',
     'coverage note: this is a limited SheetJS-style workbook-wide comparison',

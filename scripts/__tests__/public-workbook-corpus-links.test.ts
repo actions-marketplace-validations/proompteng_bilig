@@ -412,7 +412,7 @@ describe('public workbook corpus shared links', () => {
       commands: {
         addLink: expect.stringContaining('--manifest .cache/research-public-workbook-corpus/manifest.json'),
         fetchSource: expect.stringContaining('--cache-dir .cache/research-public-workbook-corpus'),
-        status: expect.stringContaining('--scorecard packages/benchmarks/baselines/public-workbook-corpus-scorecard.json'),
+        status: expect.stringContaining('--scorecard .cache/research-public-workbook-corpus/scorecard.json'),
       },
     })
   })

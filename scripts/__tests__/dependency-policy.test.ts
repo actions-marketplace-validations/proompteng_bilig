@@ -675,6 +675,44 @@ describe('repository dependency policy', () => {
     expect(script).not.toContain('--dry-run')
   })
 
+  it('keeps required CI and default correctness scripts free of research corpus and same-corpus workflow dependencies', () => {
+    const manifest = packageManifest('.')
+    const scripts = objectField(manifest, 'scripts')
+    const requiredScriptNames = [
+      'ci',
+      'ci:core',
+      'ci:github',
+      'ci:full',
+      'test:semantic:fast',
+      'test:semantic:medium',
+      'test:semantic:deep',
+      'test:correctness:fast',
+      'test:correctness:medium',
+      'test:correctness:deep',
+      'test:correctness:xlsx',
+    ] as const
+    const requiredScriptBodies = requiredScriptNames.map((name) => [name, stringField(scripts, name)] as const)
+    const runCiSource = readFileSync(join(repoRoot, 'scripts/run-ci.ts'), 'utf8')
+    const requiredSources = [['scripts/run-ci.ts', runCiSource], ...requiredScriptBodies] as const
+    const forbiddenPatterns = [
+      /research:public-corpus/u,
+      /scripts\/__tests__\/public-workbook-corpus/u,
+      /\.cache\/research-public-workbook-corpus/u,
+      /research:ui-same-corpus/u,
+      /ui:same-corpus/u,
+      /capture-ui-responsiveness-same-corpus/u,
+      /research:workpaper:bench:(?:truecalc|univer|xlsx-calc|ironcalc-rust)/u,
+      /gen-workpaper-vs-(?:truecalc|univer|xlsx-calc|ironcalc-rust)-benchmark/u,
+    ] as const
+    const violations = requiredSources.flatMap(([name, source]) =>
+      forbiddenPatterns.filter((pattern) => pattern.test(source)).map((pattern) => `${name}: ${String(pattern)}`),
+    )
+
+    expect(stringField(scripts, 'research:public-corpus:test')).toContain('scripts/__tests__/public-workbook-corpus')
+    expect(stringField(scripts, 'test:correctness:xlsx')).not.toContain('scripts/__tests__/public-workbook-corpus')
+    expect(violations).toEqual([])
+  })
+
   it('keeps the issue 442 memory gate deterministic instead of requiring ignored cache state', () => {
     const manifest = packageManifest('.')
     const scripts = objectField(manifest, 'scripts')

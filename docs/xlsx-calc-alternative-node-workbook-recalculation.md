@@ -98,12 +98,12 @@ It should end with checks like these:
 
 ## Measured Lane
 
-There is a checked-in `xlsx-calc` comparison, but it is deliberately narrow.
+There is a local `xlsx-calc` research comparison, but it is deliberately narrow.
 It covers four workbook-wide recalculation workloads: aggregate, exact-match
 lookup, approximate lookup, and formula-chain recalculation.
 
-Current artifact:
-[`packages/benchmarks/baselines/workpaper-vs-xlsx-calc.json`](https://github.com/proompteng/bilig/blob/main/packages/benchmarks/baselines/workpaper-vs-xlsx-calc.json)
+Current local artifact after generation:
+`.cache/research-workpaper-benchmarks/workpaper-vs-xlsx-calc.json`
 
 The artifact records:
 
@@ -118,11 +118,11 @@ The artifact records:
 Run the local check with:
 
 ```sh
-pnpm workpaper:bench:xlsx-calc:check
+pnpm research:workpaper:bench:xlsx-calc:check
 ```
 
 That benchmark does not mean "Bilig replaces Excel." It only says that this
-particular Node recalculation lane is measured, checked in, and easy to rerun.
+particular Node recalculation lane can be measured locally and is easy to rerun.
 
 ## What I Would Test
 

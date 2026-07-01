@@ -52,19 +52,19 @@ pnpm workpaper:bench:competitive:generate -- --jobs 8
 Each workload still runs its warmup and measured samples sequentially; `--jobs` only parallelizes
 different workloads and the checked artifact remains ordered canonically.
 
-## Other headless competitor artifacts
+## Other Headless Competitor Research
 
-The repo also tracks scoped competitor artifacts for local performance investigation:
+Scoped competitor generators remain available for local performance investigation:
 
 ```bash
-pnpm workpaper:bench:truecalc:generate
-pnpm workpaper:bench:univer:generate
-pnpm workpaper:bench:xlsx-calc:generate
+pnpm research:workpaper:bench:truecalc:generate
+pnpm research:workpaper:bench:univer:generate
+pnpm research:workpaper:bench:xlsx-calc:generate
 ```
 
-`workpaper-vs-univer.json` uses Univer's documented `@univerjs/preset-sheets-node-core` Node preset
-and times public Facade API edits through formula recalculation completion. These artifacts are
-explicit benchmark evidence, not a rolled-up public proof status.
+The Univer generator uses Univer's documented `@univerjs/preset-sheets-node-core` Node preset and
+times public Facade API edits through formula recalculation completion. These artifacts are written
+under `.cache/research-workpaper-benchmarks` and are not checked-in public proof status.
 
 ## Named giant-workbook corpus
 

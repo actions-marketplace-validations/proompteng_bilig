@@ -18,13 +18,9 @@ comparable workloads against HyperFormula `3.2.0`. The same artifact has
 
 - Primary workbook-wide artifact:
   `packages/benchmarks/baselines/workpaper-vs-hyperformula.json`.
-- Additional competitor artifacts remain checked in for local performance
-  investigation, but they are not rolled up into a public status or broad
-  claim:
-  - `packages/benchmarks/baselines/workpaper-vs-univer.json`
-  - `packages/benchmarks/baselines/workpaper-vs-ironcalc-rust.json`
-  - `packages/benchmarks/baselines/workpaper-vs-xlsx-calc.json`
-  - `packages/benchmarks/baselines/workpaper-vs-truecalc.json`
+- Additional competitor generators remain available under
+  `research:workpaper:bench:*`, but their artifacts are disposable local
+  research output and are not tracked public evidence.
 - Public generated evidence:
   `docs/public-evidence.json`.
 

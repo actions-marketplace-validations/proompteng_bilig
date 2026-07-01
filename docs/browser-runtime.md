@@ -56,4 +56,4 @@
 ## See also
 
 - [architecture.md](/Users/gregkonush/github.com/bilig/docs/architecture.md)
-- [zero-bilig-production-implementation-plan-v2.md](/Users/gregkonush/github.com/bilig/docs/zero-bilig-production-implementation-plan-v2.md)
+- [zero-bilig-production-implementation-plan-v2.md](/Users/gregkonush/github.com/bilig/docs/archive/2026-plans/zero-bilig-production-implementation-plan-v2.md)

@@ -15,7 +15,7 @@ The current production architecture is not CRDT-authoritative. The active design
 - [design.md](/Users/gregkonush/github.com/bilig/docs/design.md)
 - [architecture.md](/Users/gregkonush/github.com/bilig/docs/architecture.md)
 - [05-06-next-phase.md](/Users/gregkonush/github.com/bilig/docs/05-06-next-phase.md)
-- [replica-state-ownership-cleanup-2026-04-07.md](/Users/gregkonush/github.com/bilig/docs/replica-state-ownership-cleanup-2026-04-07.md)
+- [replica-state-ownership-cleanup-2026-04-07.md](/Users/gregkonush/github.com/bilig/docs/archive/2026-plans/replica-state-ownership-cleanup-2026-04-07.md)
 
 ## Why this file remains
 

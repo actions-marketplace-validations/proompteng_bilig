@@ -8,7 +8,7 @@ const roots = ['packages', 'apps', 'scripts', 'docs', 'e2e']
 const allowedHistoricalSegments = ['/history/', '/historical/']
 const ignoredDirNames = new Set(['node_modules', 'dist', 'coverage', '.git', '.turbo'])
 const ignoredExtensions = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.wasm', '.tsbuildinfo'])
-const contentScanExcludedFiles = new Set(['packages/benchmarks/baselines/public-workbook-corpus-scorecard.json'])
+const contentScanExcludedFiles = new Set<string>()
 const token = (...parts) => parts.join('')
 const bannedPatterns = [
   { label: token('top', '50'), regex: new RegExp(token('top', '50'), 'gi') },

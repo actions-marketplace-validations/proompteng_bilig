@@ -74,7 +74,7 @@ interface WorkPaperVsIronCalcRustBenchmarkArtifact {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const canonicalOutputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'workpaper-vs-ironcalc-rust.json')
+const canonicalOutputPath = join(rootDir, '.cache', 'research-workpaper-benchmarks', 'workpaper-vs-ironcalc-rust.json')
 const cacheDir = join(rootDir, '.cache', 'ironcalc-rust-bench')
 const sidecarSrcDir = join(cacheDir, 'src')
 const sidecarInputPath = join(cacheDir, 'input.json')
@@ -105,7 +105,7 @@ const rustSidecarChunkSize = Number.parseInt(process.env['BILIG_IRONCALC_RUST_CH
 
 if (isCheckMode) {
   if (!existsSync(canonicalOutputPath)) {
-    throw new Error('WorkPaper vs IronCalc Rust benchmark artifact is missing. Run: pnpm workpaper:bench:ironcalc-rust:generate')
+    throw new Error('WorkPaper vs IronCalc Rust benchmark artifact is missing. Run: pnpm research:workpaper:bench:ironcalc-rust:generate')
   }
 
   const rawArtifact = readJsonObject(canonicalOutputPath)
@@ -120,13 +120,13 @@ if (isCheckMode) {
     throw new Error(
       `WorkPaper vs IronCalc Rust claim artifact must use ${DEFAULT_EXPANDED_COMPETITIVE_SAMPLE_COUNT} samples, got ${String(
         benchmark['sampleCount'],
-      )}. Run: pnpm workpaper:bench:ironcalc-rust:generate`,
+      )}. Run: pnpm research:workpaper:bench:ironcalc-rust:generate`,
     )
   }
   const actualWorkloads = artifact.results.map((result) => result.workload)
   if (JSON.stringify(actualWorkloads) !== JSON.stringify([...WORKPAPER_IRONCALC_RUST_WORKLOADS])) {
     throw new Error(
-      'WorkPaper vs IronCalc Rust benchmark workload coverage is out of date. Run: pnpm workpaper:bench:ironcalc-rust:generate',
+      'WorkPaper vs IronCalc Rust benchmark workload coverage is out of date. Run: pnpm research:workpaper:bench:ironcalc-rust:generate',
     )
   }
 
@@ -137,11 +137,13 @@ if (isCheckMode) {
   )
   if (!scorecardsMatch(artifact.scorecard, derivedScorecard)) {
     throw new Error(
-      'WorkPaper vs IronCalc Rust scorecard does not match benchmark results. Run: pnpm workpaper:bench:ironcalc-rust:generate',
+      'WorkPaper vs IronCalc Rust scorecard does not match benchmark results. Run: pnpm research:workpaper:bench:ironcalc-rust:generate',
     )
   }
   if (JSON.stringify(artifact.scorecard.unsupportedWorkloads) !== JSON.stringify(WORKPAPER_IRONCALC_RUST_UNSUPPORTED_WORKLOADS)) {
-    throw new Error('WorkPaper vs IronCalc Rust unsupported workload list is out of date. Run: pnpm workpaper:bench:ironcalc-rust:generate')
+    throw new Error(
+      'WorkPaper vs IronCalc Rust unsupported workload list is out of date. Run: pnpm research:workpaper:bench:ironcalc-rust:generate',
+    )
   }
   if (artifact.scorecard.meanAndP95WinCount !== artifact.scorecard.comparableWorkloadCount) {
     const losingWorkloads = artifact.results
@@ -781,7 +783,7 @@ function assertEngineSourcePath(artifactRecord: Record<string, unknown>, engineN
   const actualSourcePath = stringField(engine, 'sourcePath')
   if (actualSourcePath !== expectedSourcePath) {
     throw new Error(
-      `WorkPaper vs IronCalc Rust ${engineName} sourcePath is stale. Expected ${expectedSourcePath}, got ${actualSourcePath}. Run: pnpm workpaper:bench:ironcalc-rust:generate`,
+      `WorkPaper vs IronCalc Rust ${engineName} sourcePath is stale. Expected ${expectedSourcePath}, got ${actualSourcePath}. Run: pnpm research:workpaper:bench:ironcalc-rust:generate`,
     )
   }
 }
@@ -791,7 +793,7 @@ function assertEngineVersion(artifactRecord: Record<string, unknown>, engineName
   const actualVersion = stringField(engine, 'version')
   if (actualVersion !== expectedVersion) {
     throw new Error(
-      `WorkPaper vs IronCalc Rust ${engineName} version is stale. Expected ${expectedVersion}, got ${actualVersion}. Run: pnpm workpaper:bench:ironcalc-rust:generate`,
+      `WorkPaper vs IronCalc Rust ${engineName} version is stale. Expected ${expectedVersion}, got ${actualVersion}. Run: pnpm research:workpaper:bench:ironcalc-rust:generate`,
     )
   }
 }
@@ -901,7 +903,7 @@ function assertNoRawBenchmarkSampleArrays(artifactRecord: Record<string, unknown
   throw new Error(
     `WorkPaper vs IronCalc Rust benchmark artifact stores ${String(
       sampleArrayCount,
-    )} raw sample arrays. Run: pnpm workpaper:bench:ironcalc-rust:generate`,
+    )} raw sample arrays. Run: pnpm research:workpaper:bench:ironcalc-rust:generate`,
   )
 }
 

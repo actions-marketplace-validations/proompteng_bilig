@@ -50,7 +50,7 @@ interface WorkPaperVsUniverBenchmarkArtifact {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'workpaper-vs-univer.json')
+const outputPath = join(rootDir, '.cache', 'research-workpaper-benchmarks', 'workpaper-vs-univer.json')
 const isCheckMode = process.argv.slice(2).includes('--check')
 const sampleCount = DEFAULT_COMPETITIVE_SAMPLE_COUNT
 const warmupCount = DEFAULT_COMPETITIVE_WARMUP_COUNT
@@ -59,7 +59,7 @@ const univerSourcePath = 'packages/benchmarks/node_modules/@univerjs/preset-shee
 
 if (isCheckMode) {
   if (!existsSync(outputPath)) {
-    throw new Error('WorkPaper vs Univer benchmark artifact is missing. Run: pnpm workpaper:bench:univer:generate')
+    throw new Error('WorkPaper vs Univer benchmark artifact is missing. Run: pnpm research:workpaper:bench:univer:generate')
   }
 
   const rawArtifact = readJsonObject(outputPath)
@@ -68,12 +68,12 @@ if (isCheckMode) {
   const artifact = parseWorkPaperUniverArtifact(rawArtifact)
   const actualWorkloads = artifact.results.map((result) => result.workload)
   if (JSON.stringify(actualWorkloads) !== JSON.stringify([...WORKPAPER_UNIVER_WORKLOADS])) {
-    throw new Error('WorkPaper vs Univer benchmark workload coverage is out of date. Run: pnpm workpaper:bench:univer:generate')
+    throw new Error('WorkPaper vs Univer benchmark workload coverage is out of date. Run: pnpm research:workpaper:bench:univer:generate')
   }
 
   const derivedScorecard = deriveWorkPaperUniverScorecard(artifact.results, artifact.scorecard.coverageNote)
   if (!scorecardsMatch(artifact.scorecard, derivedScorecard)) {
-    throw new Error('WorkPaper vs Univer scorecard does not match benchmark results. Run: pnpm workpaper:bench:univer:generate')
+    throw new Error('WorkPaper vs Univer scorecard does not match benchmark results. Run: pnpm research:workpaper:bench:univer:generate')
   }
 
   console.log(
@@ -149,7 +149,7 @@ function assertEngineSourcePath(artifactRecord: Record<string, unknown>, engineN
   const actualSourcePath = stringField(engine, 'sourcePath')
   if (actualSourcePath !== expectedSourcePath) {
     throw new Error(
-      `WorkPaper vs Univer ${engineName} sourcePath is stale. Expected ${expectedSourcePath}, got ${actualSourcePath}. Run: pnpm workpaper:bench:univer:generate`,
+      `WorkPaper vs Univer ${engineName} sourcePath is stale. Expected ${expectedSourcePath}, got ${actualSourcePath}. Run: pnpm research:workpaper:bench:univer:generate`,
     )
   }
 }
