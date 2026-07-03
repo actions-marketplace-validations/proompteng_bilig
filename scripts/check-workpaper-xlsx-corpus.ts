@@ -33,7 +33,7 @@ export type {
   WorkPaperXlsxCorpusCompatibilitySummary,
   WorkPaperXlsxFormulaSkipReason,
 } from './check-workpaper-xlsx-corpus-types.ts'
-import { formatByteSize } from './public-workbook-corpus-process.ts'
+import { formatByteSize } from './xlsx-fixture-corpus-process.ts'
 import {
   assertBroadCorpusSweepNotStopped,
   assertUnisolatedCliDebuggerPath,

@@ -7,12 +7,12 @@ import {
 } from '../packages/excel-import/src/xlsx-large-simple-headless-inspect.js'
 import type { LargeSimpleXlsxImportStats } from '../packages/excel-import/src/xlsx-large-simple-import.js'
 import { readXlsxZipEntryMetadata, readXlsxZipEntriesLazyFromByteSource, type XlsxZipByteSource } from '@bilig/xlsx/zip-reader'
-import type { PublicWorkbookArtifact, PublicWorkbookCorpusCase, PublicWorkbookFeatureCounts } from './public-workbook-corpus-types.ts'
-import { defaultSelfRssCheckIntervalMs, startSelfRssGuard } from './public-workbook-corpus-process.ts'
-import { largeSimpleImportPhaseTelemetryEvidence } from './public-workbook-corpus-large-simple-evidence.ts'
-import { FileBackedXlsxZipByteSource, isZipWorkbookSource, sha256XlsxZipByteSourceHex } from './public-workbook-corpus-xlsx-byte-source.ts'
+import type { XlsxFixtureArtifact, XlsxFixtureCorpusCase, XlsxFixtureFeatureCounts } from './xlsx-fixture-corpus-types.ts'
+import { defaultSelfRssCheckIntervalMs, startSelfRssGuard } from './xlsx-fixture-corpus-process.ts'
+import { largeSimpleImportPhaseTelemetryEvidence } from './xlsx-fixture-corpus-large-simple-evidence.ts'
+import { FileBackedXlsxZipByteSource, isZipWorkbookSource, sha256XlsxZipByteSourceHex } from './xlsx-fixture-corpus-xlsx-byte-source.ts'
 
-const verificationWorkerPhasePrefix = 'bilig-public-workbook-verify-phase='
+const verificationWorkerPhasePrefix = 'bilig-xlsx-fixture-verify-phase='
 const defaultVerifyTimeoutMs = 180_000
 const defaultVerifyMaxRssBytes = 1536 * 1024 * 1024
 const defaultVerifyMaxCellCount = 1_500_000
@@ -30,7 +30,7 @@ try {
   }
   const artifact = await readWorkerArtifact(artifactId)
   if (!artifact) {
-    throw new Error(`Manifest does not contain public workbook artifact ${artifactId}`)
+    throw new Error(`Manifest does not contain XLSX fixture artifact ${artifactId}`)
   }
   const runStructuralSmoke = readFlagArg('--structural-smoke')
   const maxCellCount = readNumberArg('--verify-max-cells', defaultVerifyMaxCellCount)
@@ -43,7 +43,7 @@ try {
   const result =
     tryVerifyCompactLargeSimpleArtifact(artifact, cacheDir, runStructuralSmoke, maxCellCount) ??
     (await (async () => {
-      const { verifyCachedWorkbookArtifact } = await import('./public-workbook-corpus-verify.ts')
+      const { verifyCachedWorkbookArtifact } = await import('./xlsx-fixture-corpus-verify.ts')
       return verifyCachedWorkbookArtifact(artifact, cacheDir, runStructuralSmoke, maxCellCount, workerOptions)
     })())
   process.stdout.write(`${JSON.stringify(result)}\n`)
@@ -52,11 +52,11 @@ try {
 }
 
 function tryVerifyCompactLargeSimpleArtifact(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   cacheDir: string,
   runStructuralSmoke: boolean,
   maxCellCount: number,
-): PublicWorkbookCorpusCase | null {
+): XlsxFixtureCorpusCase | null {
   const cachePath = join(cacheDir, artifact.cachePath)
   if (!existsSync(cachePath)) {
     return null
@@ -104,11 +104,11 @@ function hasCompactLargeSimpleWorksheetPayload(source: XlsxZipByteSource): boole
 }
 
 function buildCompactLargeSimpleCaseFromInspect(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   imported: LargeSimpleXlsxHeadlessInspectResult,
   runStructuralSmoke: boolean,
   maxCellCount: number,
-): PublicWorkbookCorpusCase | null {
+): XlsxFixtureCorpusCase | null {
   const featureCounts = featureCountsFromLargeSimpleStats(imported.stats)
   if (
     featureCounts.cellCount <= 100_000 ||
@@ -160,9 +160,9 @@ function buildCompactLargeSimpleCaseFromInspect(
       structuralSmokePassed: null,
     },
     unsupportedFeatureClassifications: [
-      ...(formulaOracleSkipped ? ['xlsx.publicCorpus.resourceLimit:preflightFormulaOracleBudget>2000formulas'] : []),
-      'xlsx.publicCorpus.resourceLimit:preflightRoundTripBudget>100000cells',
-      ...(runStructuralSmoke ? ['xlsx.publicCorpus.resourceLimit:preflightStructuralSmokeBudget>100000cells'] : []),
+      ...(formulaOracleSkipped ? ['xlsx.xlsxFixtureCorpus.resourceLimit:preflightFormulaOracleBudget>2000formulas'] : []),
+      'xlsx.xlsxFixtureCorpus.resourceLimit:preflightRoundTripBudget>100000cells',
+      ...(runStructuralSmoke ? ['xlsx.xlsxFixtureCorpus.resourceLimit:preflightStructuralSmokeBudget>100000cells'] : []),
     ],
     evidence: [
       `source=${artifact.sourceUrl}`,
@@ -187,7 +187,7 @@ function buildCompactLargeSimpleCaseFromInspect(
   }
 }
 
-async function readWorkerArtifact(artifactId: string): Promise<PublicWorkbookArtifact | undefined> {
+async function readWorkerArtifact(artifactId: string): Promise<XlsxFixtureArtifact | undefined> {
   const artifactJsonBase64 = readStringArg('--artifact-json-base64', '')
   if (artifactJsonBase64) {
     const artifact = parseWorkerArtifact(JSON.parse(Buffer.from(artifactJsonBase64, 'base64').toString('utf8')))
@@ -197,13 +197,13 @@ async function readWorkerArtifact(artifactId: string): Promise<PublicWorkbookArt
     return artifact
   }
   const manifestPath = readStringArg('--manifest', '.cache/xlsx-import-memory-gate/manifest.json')
-  const { parsePublicWorkbookManifestJson } = await import('./public-workbook-corpus-json.ts')
-  const manifest = parsePublicWorkbookManifestJson(JSON.parse(readFileSync(manifestPath, 'utf8')))
+  const { parseXlsxFixtureManifestJson } = await import('./xlsx-fixture-corpus-json.ts')
+  const manifest = parseXlsxFixtureManifestJson(JSON.parse(readFileSync(manifestPath, 'utf8')))
   return manifest.artifacts.find((entry) => entry.id === artifactId)
 }
 
 function readStringArg(name: string, fallback: string): string {
-  // Keep worker argument parsing local so the low-RSS verifier does not load the broad public corpus CLI module.
+  // Keep worker argument parsing local so the low-RSS verifier does not load the broad XLSX fixture corpus CLI module.
   let value: string | null = null
   let count = 0
   for (const [index, arg] of process.argv.entries()) {
@@ -297,7 +297,7 @@ function readBooleanArgValue(name: string, raw: string): boolean {
   throw new Error(`Expected ${name} to be true or false`)
 }
 
-function parseWorkerArtifact(value: unknown): PublicWorkbookArtifact {
+function parseWorkerArtifact(value: unknown): XlsxFixtureArtifact {
   const record = readRecord(value)
   const topicEvidence = readOptionalStringArray(record, 'topicEvidence')
   return {
@@ -316,7 +316,7 @@ function parseWorkerArtifact(value: unknown): PublicWorkbookArtifact {
   }
 }
 
-function parseWorkerLicense(value: unknown): PublicWorkbookArtifact['license'] {
+function parseWorkerLicense(value: unknown): XlsxFixtureArtifact['license'] {
   const record = readRecord(value)
   return {
     spdxId: readNullableString(record, 'spdxId'),
@@ -376,7 +376,7 @@ function capVerifyMaxRssBytes(value: number): number {
   const normalizedValue = Math.max(1, Math.trunc(value))
   if (normalizedValue > defaultVerifyMaxRssBytes) {
     throw new Error(
-      `Public workbook corpus verification RSS limits above ${String(Math.ceil(defaultVerifyMaxRssBytes / 1024 / 1024))} MiB are disabled because workbook workers can hang interactive hosts.`,
+      `XLSX fixture corpus verification RSS limits above ${String(Math.ceil(defaultVerifyMaxRssBytes / 1024 / 1024))} MiB are disabled because workbook workers can hang interactive hosts.`,
     )
   }
   return normalizedValue
@@ -393,15 +393,15 @@ function collectGarbage(): void {
   }
 }
 
-function roundTripWouldBeResourceSkipped(artifact: PublicWorkbookArtifact, featureCounts: PublicWorkbookFeatureCounts): boolean {
+function roundTripWouldBeResourceSkipped(artifact: XlsxFixtureArtifact, featureCounts: XlsxFixtureFeatureCounts): boolean {
   return featureCounts.cellCount > 100_000 || (featureCounts.sheetCount >= 30 && artifact.byteSize > 2 * 1024 * 1024)
 }
 
-function structuralSmokeWouldBeResourceSkipped(featureCounts: PublicWorkbookFeatureCounts): boolean {
+function structuralSmokeWouldBeResourceSkipped(featureCounts: XlsxFixtureFeatureCounts): boolean {
   return featureCounts.cellCount > 100_000 || featureCounts.sheetCount > 80
 }
 
-function featureCountsFromLargeSimpleStats(stats: LargeSimpleXlsxImportStats): PublicWorkbookFeatureCounts {
+function featureCountsFromLargeSimpleStats(stats: LargeSimpleXlsxImportStats): XlsxFixtureFeatureCounts {
   return {
     sheetCount: stats.sheetCount,
     cellCount: stats.cellCount,

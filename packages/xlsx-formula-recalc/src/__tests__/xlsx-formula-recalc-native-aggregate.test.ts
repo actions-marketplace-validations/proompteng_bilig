@@ -32,7 +32,7 @@ describe('xlsx-formula-recalc native aggregates', () => {
     }
   })
 
-  it('loads public-corpus style dependency rows and recalculates SUM ranges through the native kernel', async () => {
+  it('loads xlsx-fixture-corpus style dependency rows and recalculates SUM ranges through the native kernel', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-sum-range-'))
     try {
       const sourcePath = join(tempDir, 'public-sum-range.xlsx')
@@ -59,7 +59,7 @@ describe('xlsx-formula-recalc native aggregates', () => {
     }
   })
 
-  it('evaluates SUM and COUNTA formulas over scanned public-corpus ranges', async () => {
+  it('evaluates SUM and COUNTA formulas over scanned xlsx-fixture-corpus ranges', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-sum-counta-range-'))
     try {
       const sourcePath = join(tempDir, 'public-sum-counta-range.xlsx')
@@ -249,7 +249,7 @@ describe('xlsx-formula-recalc native aggregates', () => {
     }
   })
 
-  it('loads same-sheet scalar dependency rows for public-corpus formulas', async () => {
+  it('loads same-sheet scalar dependency rows for xlsx-fixture-corpus formulas', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-scalar-dependency-'))
     try {
       const sourcePath = join(tempDir, 'public-scalar-dependency.xlsx')
@@ -276,7 +276,7 @@ describe('xlsx-formula-recalc native aggregates', () => {
     }
   })
 
-  it('loads cross-sheet scalar dependency rows for public-corpus formulas', async () => {
+  it('loads cross-sheet scalar dependency rows for xlsx-fixture-corpus formulas', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-cross-sheet-scalar-'))
     try {
       const sourcePath = join(tempDir, 'public-cross-sheet-scalar.xlsx')
@@ -303,7 +303,7 @@ describe('xlsx-formula-recalc native aggregates', () => {
     }
   })
 
-  it('evaluates exact VLOOKUP formulas over scanned public-corpus table rows', async () => {
+  it('evaluates exact VLOOKUP formulas over scanned xlsx-fixture-corpus table rows', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-vlookup-'))
     try {
       const sourcePath = join(tempDir, 'public-vlookup.xlsx')

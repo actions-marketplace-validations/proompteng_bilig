@@ -26,20 +26,6 @@ pnpm workpaper:bench:generate
 pnpm workpaper:bench:check
 ```
 
-## Other Headless Competitor Research
-
-Scoped competitor generators remain available for local performance investigation. These artifacts
-are written under `.cache/research-workpaper-benchmarks` and are not checked-in public proof status.
-
-```bash
-pnpm research:workpaper:bench:truecalc:generate
-pnpm research:workpaper:bench:univer:generate
-pnpm research:workpaper:bench:xlsx-calc:generate
-```
-
-The Univer generator uses Univer's documented `@univerjs/preset-sheets-node-core` Node preset and
-times public Facade API edits through formula recalculation completion.
-
 ## Named giant-workbook corpus
 
 The package now ships deterministic named workbook cases for giant-data restore and warm-start

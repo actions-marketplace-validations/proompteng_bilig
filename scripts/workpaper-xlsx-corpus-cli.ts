@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'node:fs'
 import { extname, join, resolve } from 'node:path'
 
-import { assertPublicCorpusRunNotStopped, publicCorpusStopMarkerOverrideFlag } from './public-workbook-corpus-cli.ts'
+import { assertXlsxFixtureCorpusRunNotStopped, xlsxFixtureCorpusStopMarkerOverrideFlag } from './xlsx-fixture-corpus-cli.ts'
 import type { WorkPaperXlsxCorpusOptions } from './check-workpaper-xlsx-corpus-types.ts'
 import { parseStrictBooleanEnvFlag } from './strict-env.js'
 
@@ -50,7 +50,7 @@ export function parseWorkPaperXlsxCorpusCliArgs(argv: readonly string[]): WorkPa
       case allowLargeWorkPaperMaterializationFlag:
         allowLargeWorkPaperMaterialization = true
         break
-      case publicCorpusStopMarkerOverrideFlag:
+      case xlsxFixtureCorpusStopMarkerOverrideFlag:
         break
       case '--child-timeout-ms':
         childProcessTimeoutMs = parseNonNegativeInteger(requiredArgValue(argv, index, arg), arg)
@@ -196,7 +196,7 @@ export function assertBroadCorpusSweepNotStopped(paths: readonly string[], stopM
     return
   }
   try {
-    assertPublicCorpusRunNotStopped({
+    assertXlsxFixtureCorpusRunNotStopped({
       commandName: 'workpaper:xlsx-corpus directory sweep',
       stopMarkerPath,
     })

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { writeFootprintWorkerResult } from './public-workbook-corpus-worker-commands.ts'
+import { writeFootprintWorkerResult } from './xlsx-fixture-corpus-worker-commands.ts'
 
 const defaultVerifyMaxRssBytes = 1536 * 1024 * 1024
 

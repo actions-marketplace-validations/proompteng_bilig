@@ -1,7 +1,7 @@
 import type { WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import type { PublicWorkbookExternalReferenceSummary } from './public-workbook-corpus-types.ts'
+import type { XlsxFixtureExternalReferenceSummary } from './xlsx-fixture-corpus-types.ts'
 
-export function summarizeExternalWorkbookReferences(snapshot: WorkbookSnapshot): PublicWorkbookExternalReferenceSummary | undefined {
+export function summarizeExternalWorkbookReferences(snapshot: WorkbookSnapshot): XlsxFixtureExternalReferenceSummary | undefined {
   const dependencies = snapshot.workbook.metadata?.unsupportedFormulaDependencies ?? []
   const externalWorkbookReferences = snapshot.workbook.metadata?.externalWorkbookReferences ?? []
   if (dependencies.length === 0 && externalWorkbookReferences.length === 0) {

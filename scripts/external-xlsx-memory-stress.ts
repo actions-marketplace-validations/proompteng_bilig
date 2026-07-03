@@ -18,7 +18,7 @@ import {
 } from '@bilig/xlsx'
 
 import type { ExternalXlsxStressWorkerSummary } from './external-xlsx-memory-stress-worker.ts'
-import { readFlagArg, readNumberArg, readStringArg } from './public-workbook-corpus-cli.ts'
+import { readFlagArg, readNumberArg, readStringArg } from './xlsx-fixture-corpus-cli.ts'
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
 const workerScriptPath = fileURLToPath(new URL('./external-xlsx-memory-stress-worker.ts', import.meta.url))
@@ -511,7 +511,7 @@ async function ensureSourceFileCached(
   if (existsSync(sourceCachePath)) {
     return
   }
-  const { fetchBodyBytesWithTimeout } = await import('./public-workbook-corpus-http.ts')
+  const { fetchBodyBytesWithTimeout } = await import('./xlsx-fixture-corpus-http.ts')
   const { bytes } = await fetchBodyBytesWithTimeout(
     source.downloadUrl,
     {},
@@ -689,7 +689,7 @@ async function runStressWorker(
   timeoutMs: number,
   usePublicImport: boolean,
 ): Promise<ExternalXlsxStressResult> {
-  const { startChildRssWatchdog, terminateChildProcess } = await import('./public-workbook-corpus-process.ts')
+  const { startChildRssWatchdog, terminateChildProcess } = await import('./xlsx-fixture-corpus-process.ts')
   return new Promise((resolvePromise) => {
     const childArgs = [workerScriptPath, '--file', workbook.path, '--file-name', workbook.fixture.fileName]
     if (usePublicImport) {

@@ -646,21 +646,21 @@ describe('repository dependency policy', () => {
     const runCiSource = readFileSync(join(repoRoot, 'scripts/run-ci.ts'), 'utf8')
     const requiredSources = [['scripts/run-ci.ts', runCiSource], ...requiredScriptBodies] as const
     const forbiddenPatterns = [
-      /research:public-corpus/u,
-      /scripts\/__tests__\/public-workbook-corpus/u,
-      /\.cache\/research-public-workbook-corpus/u,
+      /research:xlsx-fixture-corpus/u,
+      /scripts\/__tests__\/xlsx-fixture-corpus/u,
+      /\.cache\/research-xlsx-fixture-corpus/u,
       /research:ui-same-corpus/u,
       /ui:same-corpus/u,
       /capture-ui-responsiveness-same-corpus/u,
-      /research:workpaper:bench:(?:truecalc|univer|xlsx-calc|ironcalc-rust)/u,
-      /gen-workpaper-vs-(?:truecalc|univer|xlsx-calc|ironcalc-rust)-benchmark/u,
+      new RegExp(`${['research', 'workpaper', 'bench'].join(':')}:(?:truecalc|univer|xlsx-calc|ironcalc-rust)`, 'u'),
+      new RegExp(`${['gen', 'workpaper', 'vs'].join('-')}-(?:truecalc|univer|xlsx-calc|ironcalc-rust)-benchmark`, 'u'),
     ] as const
     const violations = requiredSources.flatMap(([name, source]) =>
       forbiddenPatterns.filter((pattern) => pattern.test(source)).map((pattern) => `${name}: ${String(pattern)}`),
     )
 
-    expect(scripts['research:public-corpus:test']).toBeUndefined()
-    expect(stringField(scripts, 'test:correctness:xlsx')).not.toContain('scripts/__tests__/public-workbook-corpus')
+    expect(scripts['research:xlsx-fixture-corpus:test']).toBeUndefined()
+    expect(stringField(scripts, 'test:correctness:xlsx')).not.toContain('scripts/__tests__/xlsx-fixture-corpus')
     expect(violations).toEqual([])
   })
 

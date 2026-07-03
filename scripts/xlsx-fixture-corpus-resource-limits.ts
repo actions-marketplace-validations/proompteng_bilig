@@ -2,15 +2,15 @@ import { parseCellAddress, parseRangeAddress } from '../packages/formula/src/add
 import { collectFormulaDependencyMetadata } from '../packages/formula/src/binder-dependencies.js'
 import { parseFormula } from '../packages/formula/src/parser.js'
 import type { WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import { publicWorkbookResourceLimitClassifierEvidence } from './public-workbook-corpus-evidence.ts'
-import { formatByteSize } from './public-workbook-corpus-process.ts'
+import { xlsxFixtureResourceLimitClassifierEvidence } from './xlsx-fixture-corpus-evidence.ts'
+import { formatByteSize } from './xlsx-fixture-corpus-process.ts'
 import type {
-  PublicWorkbookArtifact,
-  PublicWorkbookCorpusCase,
-  PublicWorkbookExternalReferenceSummary,
-  PublicWorkbookFeatureCounts,
-} from './public-workbook-corpus-types.ts'
-import { emptyFeatureCounts, type WorkbookFootprint } from './public-workbook-corpus-workbook.ts'
+  XlsxFixtureArtifact,
+  XlsxFixtureCorpusCase,
+  XlsxFixtureExternalReferenceSummary,
+  XlsxFixtureFeatureCounts,
+} from './xlsx-fixture-corpus-types.ts'
+import { emptyFeatureCounts, type WorkbookFootprint } from './xlsx-fixture-corpus-workbook.ts'
 
 const preflightImportCellCountLimit = 200_000
 const preflightLargeSimpleImportCellCountLimit = 750_000
@@ -40,10 +40,7 @@ export interface FormulaOracleDependencyFootprint {
   readonly unparseableDependencyReferenceCount: number
 }
 
-export function importResourceLimitPreflight(
-  artifact: PublicWorkbookArtifact,
-  footprint: WorkbookFootprint,
-): ResourceLimitPreflight | null {
+export function importResourceLimitPreflight(artifact: XlsxFixtureArtifact, footprint: WorkbookFootprint): ResourceLimitPreflight | null {
   const reasons: string[] = []
   const usesLargeSimpleBudget = usesLargeSimpleXlsxImportBudget(footprint)
   const importCellCountLimit = usesLargeSimpleBudget ? preflightLargeSimpleImportCellCountLimit : preflightImportCellCountLimit
@@ -79,10 +76,10 @@ export function importResourceLimitPreflight(
     return null
   }
   return {
-    classification: 'xlsx.publicCorpus.resourceLimit:preflightWorkbookBudget',
+    classification: 'xlsx.xlsxFixtureCorpus.resourceLimit:preflightWorkbookBudget',
     evidence: [
       'rss-limit-phase=import-xlsx',
-      `Public corpus verification import preflight limit exceeded: ${reasons.join('; ')}`,
+      `XLSX fixture corpus verification import preflight limit exceeded: ${reasons.join('; ')}`,
       'The workbook was rejected before SheetJS import to avoid exceeding the worker RSS guard.',
     ],
   }
@@ -113,8 +110,8 @@ function usesLargeSimpleXlsxImportBudget(footprint: WorkbookFootprint): boolean 
 }
 
 export function roundTripResourceLimitPreflight(
-  artifact: PublicWorkbookArtifact,
-  featureCounts: PublicWorkbookFeatureCounts,
+  artifact: XlsxFixtureArtifact,
+  featureCounts: XlsxFixtureFeatureCounts,
 ): ResourceLimitPreflight | null {
   const reasons: string[] = []
   if (featureCounts.cellCount > preflightRoundTripCellCountLimit) {
@@ -131,7 +128,7 @@ export function roundTripResourceLimitPreflight(
     return null
   }
   return {
-    classification: `xlsx.publicCorpus.resourceLimit:preflightRoundTripBudget>${String(preflightRoundTripCellCountLimit)}cells`,
+    classification: `xlsx.xlsxFixtureCorpus.resourceLimit:preflightRoundTripBudget>${String(preflightRoundTripCellCountLimit)}cells`,
     evidence: [
       'rss-limit-phase=round-trip',
       `Round-trip projection skipped because workbook footprint exceeds verifier resource budget: ${reasons.join('; ')}`,
@@ -139,7 +136,7 @@ export function roundTripResourceLimitPreflight(
   }
 }
 
-export function structuralSmokeResourceLimitPreflight(featureCounts: PublicWorkbookFeatureCounts): ResourceLimitPreflight | null {
+export function structuralSmokeResourceLimitPreflight(featureCounts: XlsxFixtureFeatureCounts): ResourceLimitPreflight | null {
   const reasons: string[] = []
   if (featureCounts.cellCount > preflightStructuralSmokeCellCountLimit) {
     reasons.push(`cell-count ${String(featureCounts.cellCount)} > ${String(preflightStructuralSmokeCellCountLimit)}`)
@@ -151,7 +148,7 @@ export function structuralSmokeResourceLimitPreflight(featureCounts: PublicWorkb
     return null
   }
   return {
-    classification: `xlsx.publicCorpus.resourceLimit:preflightStructuralSmokeBudget>${String(preflightStructuralSmokeCellCountLimit)}cells`,
+    classification: `xlsx.xlsxFixtureCorpus.resourceLimit:preflightStructuralSmokeBudget>${String(preflightStructuralSmokeCellCountLimit)}cells`,
     evidence: [
       'rss-limit-phase=structural-smoke',
       `Structural smoke skipped because workbook footprint exceeds verifier resource budget: ${reasons.join('; ')}`,
@@ -185,7 +182,7 @@ export function formulaOracleResourceLimitPreflight(snapshot: WorkbookSnapshot):
     return null
   }
   return {
-    classification: `xlsx.publicCorpus.resourceLimit:preflightFormulaOracleBudget>${String(
+    classification: `xlsx.xlsxFixtureCorpus.resourceLimit:preflightFormulaOracleBudget>${String(
       preflightFormulaOracleDependencyCellLimit,
     )}dependencyCells`,
     evidence: [
@@ -202,7 +199,7 @@ export function formulaOracleFormulaCountResourceLimitPreflight(input: {
 }): ResourceLimitPreflight | null {
   if (input.formulaCellCount > preflightFormulaOracleFormulaCellLimit) {
     return {
-      classification: `xlsx.publicCorpus.resourceLimit:preflightFormulaOracleBudget>${String(
+      classification: `xlsx.xlsxFixtureCorpus.resourceLimit:preflightFormulaOracleBudget>${String(
         preflightFormulaOracleFormulaCellLimit,
       )}formulas`,
       evidence: [
@@ -293,11 +290,11 @@ function countFormulaDependencyCells(dependency: string): number | null {
 }
 
 export function unsupportedResourceLimitCase(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   evidence: readonly string[],
   footprint: WorkbookFootprint,
   maxCellCount: number,
-): PublicWorkbookCorpusCase {
+): XlsxFixtureCorpusCase {
   return {
     id: artifact.id,
     sourceId: artifact.sourceId,
@@ -320,34 +317,34 @@ export function unsupportedResourceLimitCase(
       structuralSmokePassed: null,
     },
     unsupportedFeatureClassifications: [
-      `xlsx.publicCorpus.resourceLimit:cellCount>${String(maxCellCount)}`,
+      `xlsx.xlsxFixtureCorpus.resourceLimit:cellCount>${String(maxCellCount)}`,
       ...externalWorkbookReferenceClassifications(footprint),
     ],
     evidence: [
       ...evidence,
-      publicWorkbookResourceLimitClassifierEvidence,
+      xlsxFixtureResourceLimitClassifierEvidence,
       `cells=${String(footprint.featureCounts.cellCount)}`,
       ...externalWorkbookReferenceEvidence(footprint),
-      `Public corpus verification cell-count limit exceeded: ${String(footprint.featureCounts.cellCount)} > ${String(maxCellCount)}`,
+      `XLSX fixture corpus verification cell-count limit exceeded: ${String(footprint.featureCounts.cellCount)} > ${String(maxCellCount)}`,
     ],
   }
 }
 
 export function unsupportedPreflightResourceLimitCase(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   evidence: readonly string[],
   footprint: WorkbookFootprint,
   resourceLimit: ResourceLimitPreflight,
-): PublicWorkbookCorpusCase {
+): XlsxFixtureCorpusCase {
   return unsupportedPreflightResourceLimitCaseForLimits(artifact, evidence, footprint, [resourceLimit])
 }
 
 export function unsupportedPreflightResourceLimitCaseForLimits(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   evidence: readonly string[],
   footprint: WorkbookFootprint,
   resourceLimits: readonly ResourceLimitPreflight[],
-): PublicWorkbookCorpusCase {
+): XlsxFixtureCorpusCase {
   if (resourceLimits.length === 0) {
     throw new Error('Expected at least one resource limit preflight')
   }
@@ -378,7 +375,7 @@ export function unsupportedPreflightResourceLimitCaseForLimits(
     ],
     evidence: [
       ...evidence,
-      publicWorkbookResourceLimitClassifierEvidence,
+      xlsxFixtureResourceLimitClassifierEvidence,
       `sheets=${String(footprint.featureCounts.sheetCount)}`,
       `cells=${String(footprint.featureCounts.cellCount)}`,
       `formulas=${String(footprint.featureCounts.formulaCellCount)}`,
@@ -388,7 +385,7 @@ export function unsupportedPreflightResourceLimitCaseForLimits(
   }
 }
 
-function externalWorkbookReferenceSummary(footprint: WorkbookFootprint): PublicWorkbookExternalReferenceSummary | undefined {
+function externalWorkbookReferenceSummary(footprint: WorkbookFootprint): XlsxFixtureExternalReferenceSummary | undefined {
   if (footprint.externalWorkbookReferences.length === 0) {
     return undefined
   }
@@ -400,7 +397,7 @@ function externalWorkbookReferenceSummary(footprint: WorkbookFootprint): PublicW
 }
 
 function externalWorkbookReferenceSummaryFields(footprint: WorkbookFootprint): {
-  readonly externalWorkbookReferences?: PublicWorkbookExternalReferenceSummary
+  readonly externalWorkbookReferences?: XlsxFixtureExternalReferenceSummary
 } {
   const summary = externalWorkbookReferenceSummary(footprint)
   return summary ? { externalWorkbookReferences: summary } : {}
@@ -425,12 +422,12 @@ function externalWorkbookReferenceEvidence(footprint: WorkbookFootprint): readon
 }
 
 export function unsupportedRssLimitCase(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   evidence: readonly string[],
   rssBytes: number,
   maxRssBytes: number,
   details: readonly string[],
-): PublicWorkbookCorpusCase {
+): XlsxFixtureCorpusCase {
   return {
     id: artifact.id,
     sourceId: artifact.sourceId,
@@ -451,11 +448,11 @@ export function unsupportedRssLimitCase(
       roundTripPassed: true,
       structuralSmokePassed: null,
     },
-    unsupportedFeatureClassifications: [`xlsx.publicCorpus.resourceLimit:rss>${String(Math.ceil(maxRssBytes / 1024 / 1024))}MiB`],
+    unsupportedFeatureClassifications: [`xlsx.xlsxFixtureCorpus.resourceLimit:rss>${String(Math.ceil(maxRssBytes / 1024 / 1024))}MiB`],
     evidence: [
       ...evidence,
-      publicWorkbookResourceLimitClassifierEvidence,
-      `Public corpus verification RSS limit exceeded: ${formatByteSize(rssBytes)} > ${formatByteSize(maxRssBytes)}`,
+      xlsxFixtureResourceLimitClassifierEvidence,
+      `XLSX fixture corpus verification RSS limit exceeded: ${formatByteSize(rssBytes)} > ${formatByteSize(maxRssBytes)}`,
       ...details,
     ],
   }

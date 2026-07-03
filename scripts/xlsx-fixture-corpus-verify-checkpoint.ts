@@ -1,65 +1,65 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-import { parsePublicWorkbookCorpusCase, parsePublicWorkbookCorpusScorecardJson } from './public-workbook-corpus-json.ts'
-import type { PublicWorkbookArtifact, PublicWorkbookCorpusCase, PublicWorkbookManifest } from './public-workbook-corpus-types.ts'
+import { parseXlsxFixtureCorpusCase, parseXlsxFixtureCorpusScorecardJson } from './xlsx-fixture-corpus-json.ts'
+import type { XlsxFixtureArtifact, XlsxFixtureCorpusCase, XlsxFixtureManifest } from './xlsx-fixture-corpus-types.ts'
 
-interface PublicWorkbookCorpusVerificationCheckpoint {
+interface XlsxFixtureCorpusVerificationCheckpoint {
   readonly schemaVersion: 1
-  readonly suite: 'public-workbook-corpus-verification-checkpoint'
+  readonly suite: 'xlsx-fixture-corpus-verification-checkpoint'
   readonly generatedAt: string
-  readonly cases: readonly PublicWorkbookCorpusCase[]
+  readonly cases: readonly XlsxFixtureCorpusCase[]
 }
 
-export function indexReusablePublicWorkbookCorpusCases(args: {
-  readonly manifest: PublicWorkbookManifest
-  readonly cases: readonly PublicWorkbookCorpusCase[]
+export function indexReusableXlsxFixtureCorpusCases(args: {
+  readonly manifest: XlsxFixtureManifest
+  readonly cases: readonly XlsxFixtureCorpusCase[]
   readonly structuralSmokeSampleLimit: number
-}): ReadonlyMap<string, PublicWorkbookCorpusCase> {
+}): ReadonlyMap<string, XlsxFixtureCorpusCase> {
   const candidatesById = new Map(args.cases.map((entry) => [entry.id, entry]))
-  const reusableById = new Map<string, PublicWorkbookCorpusCase>()
+  const reusableById = new Map<string, XlsxFixtureCorpusCase>()
   args.manifest.artifacts.forEach((artifact, index) => {
     const candidate = candidatesById.get(artifact.id)
-    if (candidate && isReusablePublicWorkbookCorpusCase(artifact, candidate, index < args.structuralSmokeSampleLimit)) {
+    if (candidate && isReusableXlsxFixtureCorpusCase(artifact, candidate, index < args.structuralSmokeSampleLimit)) {
       reusableById.set(artifact.id, candidate)
     }
   })
   return reusableById
 }
 
-export function readReusablePublicWorkbookCorpusCases(paths: readonly string[]): PublicWorkbookCorpusCase[] {
-  const cases: PublicWorkbookCorpusCase[] = []
+export function readReusableXlsxFixtureCorpusCases(paths: readonly string[]): XlsxFixtureCorpusCase[] {
+  const cases: XlsxFixtureCorpusCase[] = []
   for (const path of paths) {
     if (!existsSync(path)) {
       continue
     }
     const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'))
     if (isVerificationCheckpoint(parsed)) {
-      cases.push(...parsed.cases.map((entry) => normalizeReusablePublicWorkbookCorpusCase(parsePublicWorkbookCorpusCase(entry))))
+      cases.push(...parsed.cases.map((entry) => normalizeReusableXlsxFixtureCorpusCase(parseXlsxFixtureCorpusCase(entry))))
       continue
     }
-    if (isPublicWorkbookCorpusScorecardPayload(parsed)) {
+    if (isXlsxFixtureCorpusScorecardPayload(parsed)) {
       const scorecardCases = Reflect.get(parsed, 'cases')
       if (!Array.isArray(scorecardCases)) {
-        throw new Error('Public workbook corpus scorecard is missing cases')
+        throw new Error('XLSX fixture corpus scorecard is missing cases')
       }
-      cases.push(...scorecardCases.map((entry) => normalizeReusablePublicWorkbookCorpusCase(parsePublicWorkbookCorpusCase(entry))))
+      cases.push(...scorecardCases.map((entry) => normalizeReusableXlsxFixtureCorpusCase(parseXlsxFixtureCorpusCase(entry))))
       continue
     }
-    cases.push(...parsePublicWorkbookCorpusScorecardJson(parsed).cases.map((entry) => normalizeReusablePublicWorkbookCorpusCase(entry)))
+    cases.push(...parseXlsxFixtureCorpusScorecardJson(parsed).cases.map((entry) => normalizeReusableXlsxFixtureCorpusCase(entry)))
   }
   return cases
 }
 
-export function writePublicWorkbookCorpusVerificationCheckpoint(args: {
+export function writeXlsxFixtureCorpusVerificationCheckpoint(args: {
   readonly path: string
-  readonly manifest: PublicWorkbookManifest
-  readonly casesById: ReadonlyMap<string, PublicWorkbookCorpusCase>
+  readonly manifest: XlsxFixtureManifest
+  readonly casesById: ReadonlyMap<string, XlsxFixtureCorpusCase>
   readonly generatedAt?: string
 }): void {
-  const checkpoint: PublicWorkbookCorpusVerificationCheckpoint = {
+  const checkpoint: XlsxFixtureCorpusVerificationCheckpoint = {
     schemaVersion: 1,
-    suite: 'public-workbook-corpus-verification-checkpoint',
+    suite: 'xlsx-fixture-corpus-verification-checkpoint',
     generatedAt: args.generatedAt ?? new Date().toISOString(),
     cases: args.manifest.artifacts.flatMap((artifact) => {
       const entry = args.casesById.get(artifact.id)
@@ -70,22 +70,22 @@ export function writePublicWorkbookCorpusVerificationCheckpoint(args: {
   writeFileSync(args.path, `${JSON.stringify(checkpoint, null, 2)}\n`)
 }
 
-export function upsertPublicWorkbookCorpusVerificationCheckpoint(args: {
+export function upsertXlsxFixtureCorpusVerificationCheckpoint(args: {
   readonly path: string
-  readonly manifest: PublicWorkbookManifest
-  readonly verifiedCase: PublicWorkbookCorpusCase
+  readonly manifest: XlsxFixtureManifest
+  readonly verifiedCase: XlsxFixtureCorpusCase
   readonly generatedAt?: string
 }): void {
   const artifact = args.manifest.artifacts.find((entry) => entry.id === args.verifiedCase.id)
   if (!artifact) {
-    throw new Error(`Cannot checkpoint public workbook case ${args.verifiedCase.id} because it is not in the manifest`)
+    throw new Error(`Cannot checkpoint XLSX fixture case ${args.verifiedCase.id} because it is not in the manifest`)
   }
   if (!caseMatchesArtifact(artifact, args.verifiedCase)) {
-    throw new Error(`Cannot checkpoint public workbook case ${args.verifiedCase.id} because it does not match the manifest artifact`)
+    throw new Error(`Cannot checkpoint XLSX fixture case ${args.verifiedCase.id} because it does not match the manifest artifact`)
   }
-  const casesById = new Map(readReusablePublicWorkbookCorpusCases([args.path]).map((entry) => [entry.id, entry]))
+  const casesById = new Map(readReusableXlsxFixtureCorpusCases([args.path]).map((entry) => [entry.id, entry]))
   casesById.set(args.verifiedCase.id, args.verifiedCase)
-  writePublicWorkbookCorpusVerificationCheckpoint({
+  writeXlsxFixtureCorpusVerificationCheckpoint({
     path: args.path,
     manifest: args.manifest,
     casesById,
@@ -93,9 +93,9 @@ export function upsertPublicWorkbookCorpusVerificationCheckpoint(args: {
   })
 }
 
-function isReusablePublicWorkbookCorpusCase(
-  artifact: PublicWorkbookArtifact,
-  candidate: PublicWorkbookCorpusCase,
+function isReusableXlsxFixtureCorpusCase(
+  artifact: XlsxFixtureArtifact,
+  candidate: XlsxFixtureCorpusCase,
   structuralSmokeRequired: boolean,
 ): boolean {
   return (
@@ -105,7 +105,7 @@ function isReusablePublicWorkbookCorpusCase(
   )
 }
 
-function caseMatchesArtifact(artifact: PublicWorkbookArtifact, candidate: PublicWorkbookCorpusCase): boolean {
+function caseMatchesArtifact(artifact: XlsxFixtureArtifact, candidate: XlsxFixtureCorpusCase): boolean {
   return (
     candidate.id === artifact.id &&
     candidate.sourceId === artifact.sourceId &&
@@ -116,7 +116,7 @@ function caseMatchesArtifact(artifact: PublicWorkbookArtifact, candidate: Public
   )
 }
 
-function normalizeReusablePublicWorkbookCorpusCase(candidate: PublicWorkbookCorpusCase): PublicWorkbookCorpusCase {
+function normalizeReusableXlsxFixtureCorpusCase(candidate: XlsxFixtureCorpusCase): XlsxFixtureCorpusCase {
   const legacyRssLimitMiB = legacyRssLimitMiBFromEvidence(candidate.evidence)
   if (candidate.status !== 'error' || legacyRssLimitMiB === undefined) {
     return candidate
@@ -133,10 +133,10 @@ function normalizeReusablePublicWorkbookCorpusCase(candidate: PublicWorkbookCorp
       roundTripPassed: true,
       structuralSmokePassed: null,
     },
-    unsupportedFeatureClassifications: [`xlsx.publicCorpus.resourceLimit:rss>${String(legacyRssLimitMiB)}MiB`],
+    unsupportedFeatureClassifications: [`xlsx.xlsxFixtureCorpus.resourceLimit:rss>${String(legacyRssLimitMiB)}MiB`],
     evidence: candidate.evidence.map((line) =>
       line.startsWith('Verification subprocess exceeded RSS limit:')
-        ? line.replace('Verification subprocess exceeded RSS limit:', 'Public corpus verification RSS limit exceeded:')
+        ? line.replace('Verification subprocess exceeded RSS limit:', 'XLSX fixture corpus verification RSS limit exceeded:')
         : line,
     ),
   }
@@ -157,21 +157,21 @@ function legacyRssLimitMiBFromEvidence(evidence: readonly string[]): number | un
   return undefined
 }
 
-function isVerificationCheckpoint(value: unknown): value is PublicWorkbookCorpusVerificationCheckpoint {
+function isVerificationCheckpoint(value: unknown): value is XlsxFixtureCorpusVerificationCheckpoint {
   return (
     typeof value === 'object' &&
     value !== null &&
     Reflect.get(value, 'schemaVersion') === 1 &&
-    Reflect.get(value, 'suite') === 'public-workbook-corpus-verification-checkpoint' &&
+    Reflect.get(value, 'suite') === 'xlsx-fixture-corpus-verification-checkpoint' &&
     Array.isArray(Reflect.get(value, 'cases'))
   )
 }
 
-function isPublicWorkbookCorpusScorecardPayload(value: unknown): boolean {
+function isXlsxFixtureCorpusScorecardPayload(value: unknown): boolean {
   return (
     typeof value === 'object' &&
     value !== null &&
     Reflect.get(value, 'schemaVersion') === 1 &&
-    Reflect.get(value, 'suite') === 'public-workbook-corpus'
+    Reflect.get(value, 'suite') === 'xlsx-fixture-corpus'
   )
 }

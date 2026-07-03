@@ -1,5 +1,5 @@
 import type { LargeSimpleXlsxImportStats } from '../packages/excel-import/src/xlsx-large-simple-import.js'
-import { formatByteSize } from './public-workbook-corpus-process.ts'
+import { formatByteSize } from './xlsx-fixture-corpus-process.ts'
 
 export function largeSimpleImportPhaseTelemetryEvidence(stats: LargeSimpleXlsxImportStats): string[] {
   return stats.phaseTelemetry.map((entry) =>

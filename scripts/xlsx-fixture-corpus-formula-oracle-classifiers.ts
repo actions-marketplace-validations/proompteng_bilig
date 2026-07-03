@@ -3,10 +3,10 @@ import { evaluateAst } from '../packages/formula/src/js-evaluator.js'
 import { parseFormula } from '../packages/formula/src/parser.js'
 import { ValueTag } from '../packages/protocol/src/enums.js'
 import type { CellValue, LiteralInput, WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import { cellValuesMatchOracle, formatCellValue } from './public-workbook-corpus-workbook.ts'
+import { cellValuesMatchOracle, formatCellValue } from './xlsx-fixture-corpus-workbook.ts'
 
 export const localeDecimalCommaFormulaOracleUnsupportedClassification =
-  'xlsx.publicCorpus.formulaOracle:localeDecimalCommaTextCoercionUnsupported'
+  'xlsx.xlsxFixtureCorpus.formulaOracle:localeDecimalCommaTextCoercionUnsupported'
 
 export interface FormulaOracleMismatchDetail {
   readonly sheetName: string

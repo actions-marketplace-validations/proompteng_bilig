@@ -5,28 +5,25 @@ import {
 import type { LargeSimpleXlsxImportStats } from '../packages/excel-import/src/xlsx-large-simple-import.js'
 import { readXlsxZipEntriesLazyFromByteSource, type XlsxZipByteSource, type XlsxZipEntries } from '@bilig/xlsx/zip-reader'
 import type { WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import {
-  publicWorkbookResourceLimitClassifierEvidence,
-  hasResourceLimitUnsupportedClassifications,
-} from './public-workbook-corpus-evidence.ts'
-import type { PublicWorkbookCorpusWorkerOptions } from './public-workbook-corpus-footprint.ts'
-import { largeSimpleImportPhaseTelemetryEvidence } from './public-workbook-corpus-large-simple-evidence.ts'
+import { xlsxFixtureResourceLimitClassifierEvidence, hasResourceLimitUnsupportedClassifications } from './xlsx-fixture-corpus-evidence.ts'
+import type { XlsxFixtureCorpusWorkerOptions } from './xlsx-fixture-corpus-footprint.ts'
+import { largeSimpleImportPhaseTelemetryEvidence } from './xlsx-fixture-corpus-large-simple-evidence.ts'
 import {
   formulaOracleFormulaCountResourceLimitPreflight,
   type ResourceLimitPreflight,
   roundTripResourceLimitPreflight,
   structuralSmokeResourceLimitPreflight,
   unsupportedResourceLimitCase,
-} from './public-workbook-corpus-resource-limits.ts'
-import { timeVerificationPhase, type startVerificationRuntimeMetrics } from './public-workbook-corpus-verification-metrics.ts'
-import { isZipWorkbookSource } from './public-workbook-corpus-xlsx-byte-source.ts'
+} from './xlsx-fixture-corpus-resource-limits.ts'
+import { timeVerificationPhase, type startVerificationRuntimeMetrics } from './xlsx-fixture-corpus-verification-metrics.ts'
+import { isZipWorkbookSource } from './xlsx-fixture-corpus-xlsx-byte-source.ts'
 import type {
-  PublicWorkbookArtifact,
-  PublicWorkbookCorpusCase,
-  PublicWorkbookFeatureCounts,
-  PublicWorkbookValidationSummary,
-} from './public-workbook-corpus-types.ts'
-import type { WorkbookFootprint } from './public-workbook-corpus-workbook.ts'
+  XlsxFixtureArtifact,
+  XlsxFixtureCorpusCase,
+  XlsxFixtureFeatureCounts,
+  XlsxFixtureValidationSummary,
+} from './xlsx-fixture-corpus-types.ts'
+import type { WorkbookFootprint } from './xlsx-fixture-corpus-workbook.ts'
 
 declare const Bun:
   | {
@@ -37,12 +34,12 @@ declare const Bun:
 export type LargeSimpleUnsupportedFeatureClassifier = (
   snapshot: WorkbookSnapshot,
   warnings: readonly string[],
-  featureCounts: PublicWorkbookFeatureCounts,
+  featureCounts: XlsxFixtureFeatureCounts,
   options: { readonly extraClassifications?: readonly string[] },
 ) => string[]
 
 export function shouldUseCompactLargeSimpleVerification(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   footprint: WorkbookFootprint,
   runStructuralSmoke: boolean,
 ): boolean {
@@ -53,7 +50,7 @@ export function shouldUseCompactLargeSimpleVerification(
 }
 
 export function verifyLargeSimpleWorkbookCompactPreflight(args: {
-  readonly artifact: PublicWorkbookArtifact
+  readonly artifact: XlsxFixtureArtifact
   readonly source: XlsxZipByteSource
   readonly baseEvidence: readonly string[]
   readonly classifyUnsupportedFeatures: LargeSimpleUnsupportedFeatureClassifier
@@ -61,8 +58,8 @@ export function verifyLargeSimpleWorkbookCompactPreflight(args: {
   readonly minByteLength: number
   readonly runStructuralSmoke: boolean
   readonly runtimeMetrics: ReturnType<typeof startVerificationRuntimeMetrics>
-  readonly workerOptions: PublicWorkbookCorpusWorkerOptions
-}): PublicWorkbookCorpusCase | null {
+  readonly workerOptions: XlsxFixtureCorpusWorkerOptions
+}): XlsxFixtureCorpusCase | null {
   if (args.source.byteLength < args.minByteLength) {
     return null
   }
@@ -112,15 +109,15 @@ export function verifyLargeSimpleWorkbookCompactPreflight(args: {
 }
 
 export async function verifyLargeSimpleWorkbookCompact(args: {
-  readonly artifact: PublicWorkbookArtifact
+  readonly artifact: XlsxFixtureArtifact
   readonly source: XlsxZipByteSource
   readonly footprint: WorkbookFootprint
   readonly baseEvidence: readonly string[]
   readonly classifyUnsupportedFeatures: LargeSimpleUnsupportedFeatureClassifier
   readonly runStructuralSmoke: boolean
   readonly runtimeMetrics: ReturnType<typeof startVerificationRuntimeMetrics>
-  readonly workerOptions: PublicWorkbookCorpusWorkerOptions
-}): Promise<PublicWorkbookCorpusCase | null> {
+  readonly workerOptions: XlsxFixtureCorpusWorkerOptions
+}): Promise<XlsxFixtureCorpusCase | null> {
   const inspected = await timeVerificationPhase(args.runtimeMetrics, args.workerOptions, 'import-xlsx', () => {
     const zip = readLargeSimpleVerifierZipEntries(args.source)
     return zip
@@ -181,8 +178,8 @@ export function borrowXlsxZipByteSource(source: XlsxZipByteSource): XlsxZipByteS
 }
 
 function shouldUseCompactLargeSimpleFeatureCounts(
-  artifact: PublicWorkbookArtifact,
-  counts: PublicWorkbookFeatureCounts,
+  artifact: XlsxFixtureArtifact,
+  counts: XlsxFixtureFeatureCounts,
   runStructuralSmoke: boolean,
 ): boolean {
   const formulaOracleResourceLimit = formulaOracleFormulaCountResourceLimitPreflight(counts)
@@ -197,15 +194,15 @@ function shouldUseCompactLargeSimpleFeatureCounts(
 }
 
 function buildLargeSimpleCompactCase(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   inspected: LargeSimpleXlsxHeadlessInspectResult,
-  featureCounts: PublicWorkbookFeatureCounts,
+  featureCounts: XlsxFixtureFeatureCounts,
   baseEvidence: readonly string[],
   runStructuralSmoke: boolean,
   classifyUnsupportedFeatures: LargeSimpleUnsupportedFeatureClassifier,
   extraResourceLimits: readonly ResourceLimitPreflight[] = [],
-): PublicWorkbookCorpusCase {
-  const metadata: PublicWorkbookCorpusCase['workbookMetadata'] = {
+): XlsxFixtureCorpusCase {
+  const metadata: XlsxFixtureCorpusCase['workbookMetadata'] = {
     workbookName: inspected.workbookName,
     sheetNames: inspected.sheetNames,
     dimensions: inspected.stats.dimensions,
@@ -239,7 +236,7 @@ function buildLargeSimpleCompactCase(
     featureCounts,
     { extraClassifications: phaseResourceLimitClassifications },
   )
-  const validation: PublicWorkbookValidationSummary = {
+  const validation: XlsxFixtureValidationSummary = {
     importPassed: true,
     formulaOraclePassed: true,
     formulaOracleComparisons: 0,
@@ -268,15 +265,15 @@ function buildLargeSimpleCompactCase(
       `formulas=${String(featureCounts.formulaCellCount)}`,
       ...largeSimpleImportPhaseTelemetryEvidence(inspected.stats),
       ...(hasResourceLimitUnsupportedClassifications(unsupportedFeatureClassifications)
-        ? [publicWorkbookResourceLimitClassifierEvidence, ...phaseResourceLimitEvidence]
+        ? [xlsxFixtureResourceLimitClassifierEvidence, ...phaseResourceLimitEvidence]
         : []),
     ],
   }
 }
 
-function largeSimpleFullSnapshotResourceLimit(featureCounts: PublicWorkbookFeatureCounts, maxCellCount: number): ResourceLimitPreflight {
+function largeSimpleFullSnapshotResourceLimit(featureCounts: XlsxFixtureFeatureCounts, maxCellCount: number): ResourceLimitPreflight {
   return {
-    classification: `xlsx.publicCorpus.resourceLimit:cellCount>${String(maxCellCount)}`,
+    classification: `xlsx.xlsxFixtureCorpus.resourceLimit:cellCount>${String(maxCellCount)}`,
     evidence: [
       'rss-limit-phase=import-xlsx',
       `Full public snapshot materialization skipped because workbook has ${String(
@@ -301,7 +298,7 @@ function minimalSnapshotFromLargeSimpleInspect(inspected: LargeSimpleXlsxHeadles
 
 function footprintFromLargeSimpleInspect(
   inspected: LargeSimpleXlsxHeadlessInspectResult,
-  featureCounts: PublicWorkbookFeatureCounts,
+  featureCounts: XlsxFixtureFeatureCounts,
 ): WorkbookFootprint {
   return {
     featureCounts,
@@ -315,7 +312,7 @@ function footprintFromLargeSimpleInspect(
   }
 }
 
-function featureCountsFromLargeSimpleStats(stats: LargeSimpleXlsxImportStats): PublicWorkbookFeatureCounts {
+function featureCountsFromLargeSimpleStats(stats: LargeSimpleXlsxImportStats): XlsxFixtureFeatureCounts {
   return {
     sheetCount: stats.sheetCount,
     cellCount: stats.cellCount,
@@ -335,9 +332,9 @@ function featureCountsFromLargeSimpleStats(stats: LargeSimpleXlsxImportStats): P
 }
 
 function mergeFeatureCounts(
-  importedFeatureCounts: PublicWorkbookFeatureCounts,
-  footprintFeatureCounts: PublicWorkbookFeatureCounts,
-): PublicWorkbookFeatureCounts {
+  importedFeatureCounts: XlsxFixtureFeatureCounts,
+  footprintFeatureCounts: XlsxFixtureFeatureCounts,
+): XlsxFixtureFeatureCounts {
   return {
     sheetCount: Math.max(importedFeatureCounts.sheetCount, footprintFeatureCounts.sheetCount),
     cellCount: Math.max(importedFeatureCounts.cellCount, footprintFeatureCounts.cellCount),

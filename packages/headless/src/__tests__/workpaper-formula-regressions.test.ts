@@ -667,7 +667,7 @@ describe('Workpaper formula regressions', () => {
     expectNumber(cellValue(workbook, 'Dates', 8, 1), 46_029)
   })
 
-  it('recalculates public-corpus date and time text arithmetic', () => {
+  it('recalculates xlsx-fixture-corpus date and time text arithmetic', () => {
     const workbook = WorkPaper.buildFromSheets(
       {
         SourceTable: [

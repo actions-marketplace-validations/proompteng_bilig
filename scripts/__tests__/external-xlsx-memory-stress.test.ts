@@ -23,7 +23,7 @@ import {
   shouldSummarizeFileBackedHeadlessInspect,
   summarizeExternalXlsxImportedWorkbook,
 } from '../external-xlsx-memory-stress-worker.ts'
-import { asRecord } from '../public-workbook-corpus-json.ts'
+import { asRecord } from '../xlsx-fixture-corpus-json.ts'
 
 describe('external XLSX memory stress plan', () => {
   it('tracks public Microsoft and Power BI workbooks including 100 MiB+ stress files', () => {
@@ -55,7 +55,7 @@ describe('external XLSX memory stress plan', () => {
     expect(plan.sources.some((source) => source.downloadUrl.includes('raw.githubusercontent.com'))).toBe(true)
   })
 
-  it('rejects plans that do not include giant public workbook stress targets', () => {
+  it('rejects plans that do not include giant XLSX fixture stress targets', () => {
     const validPlan = buildExternalXlsxStressPlan({ cacheDir: '/repo/.cache/external-xlsx-stress' })
     const invalidPlan: ExternalXlsxStressPlan = {
       ...validPlan,
@@ -68,7 +68,7 @@ describe('external XLSX memory stress plan', () => {
     )
   })
 
-  it('rejects plans that do not include visible-cell-heavy public workbook stress targets', () => {
+  it('rejects plans that do not include visible-cell-heavy XLSX fixture stress targets', () => {
     const validPlan = buildExternalXlsxStressPlan({ cacheDir: '/repo/.cache/external-xlsx-stress' })
     const invalidPlan: ExternalXlsxStressPlan = {
       ...validPlan,

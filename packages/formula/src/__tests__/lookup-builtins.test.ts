@@ -375,7 +375,7 @@ describe('lookup builtins', () => {
 
     const lookupValues = cellRange([num(1), num(2), num(3)], 3, 1)
     const resultValues = cellRange([num(10), num(20), num(30)], 3, 1)
-    const publicCorpusThresholds = cellRange(
+    const xlsxFixtureCorpusThresholds = cellRange(
       [
         num(0),
         num(0.199),
@@ -397,7 +397,7 @@ describe('lookup builtins', () => {
       16,
       1,
     )
-    const publicCorpusScores = cellRange(
+    const xlsxFixtureCorpusScores = cellRange(
       [num(1), num(2), num(3), num(4), num(5), num(6), num(7), num(8), num(9), num(10), num(11), num(12), num(13), num(14), num(15)],
       15,
       1,
@@ -412,8 +412,8 @@ describe('lookup builtins', () => {
         axisRange([text('AGY'), text('AUD'), text('PRT')], 'cols', 3, 1),
       ),
     ).toEqual(text('AUD'))
-    expect(LOOKUP(num(0.6666666666666666), publicCorpusThresholds, publicCorpusScores)).toEqual(num(4))
-    expect(LOOKUP(num(2048), publicCorpusThresholds, publicCorpusScores)).toEqual(err(ErrorCode.NA))
+    expect(LOOKUP(num(0.6666666666666666), xlsxFixtureCorpusThresholds, xlsxFixtureCorpusScores)).toEqual(num(4))
+    expect(LOOKUP(num(2048), xlsxFixtureCorpusThresholds, xlsxFixtureCorpusScores)).toEqual(err(ErrorCode.NA))
     expect(
       LOOKUP(text('not-found'), cellRange([text('a'), text('b'), text('c')], 3, 1), cellRange([num(1), num(2), num(3)], 3, 1)),
     ).toEqual(err(ErrorCode.NA))

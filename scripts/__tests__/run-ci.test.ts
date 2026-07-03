@@ -65,14 +65,14 @@ describe('run-ci', () => {
     expect(source).toContain("withEnv(directPackageScript('correctness formula', 'test:correctness:formula'), vitestChunkEnv('3'))")
     expect(source).not.toContain(
       [
-        "withEnv(\n  directPackageScript('correctness public workbook corpus', 'test",
+        "withEnv(\n  directPackageScript('correctness XLSX fixture corpus', 'test",
         'correctness',
         "corpus'),\n  vitestChunkEnv('10'),\n)",
       ].join(':'),
     )
-    expect(source).not.toContain('research:public-corpus:resume-financial:check')
-    expect(source).not.toContain('research:public-corpus:test')
-    expect(source).not.toContain('public workbook corpus completion audit check')
+    expect(source).not.toContain('research:xlsx-fixture-corpus:resume-financial:check')
+    expect(source).not.toContain('research:xlsx-fixture-corpus:test')
+    expect(source).not.toContain('XLSX fixture corpus completion audit check')
     expect(source).not.toContain(['bilig', 'dominance', 'scorecard check'].join(' '))
     expect(source).not.toContain(['bilig', 'dominance', 'audit check'].join(' '))
     expect(source).not.toContain('auditability scorecard check')
@@ -84,7 +84,7 @@ describe('run-ci', () => {
     expect(source).not.toContain('scripts/gen-formula-dominance-snapshot.ts')
     expect(source).toContain('formula compatibility snapshot check')
     expect(source).toContain("directPackageScript('xlsx import synthetic memory gate', 'xlsx-import:memory-gate:synthetic')")
-    expect(source).not.toContain("directPackageScript('public workbook corpus memory gate', 'research:public-corpus:memory-gate')")
+    expect(source).not.toContain("directPackageScript('XLSX fixture corpus memory gate', 'research:xlsx-fixture-corpus:memory-gate')")
     expect(source).not.toContain('UI same-corpus XLSX fixture check')
     expect(source).not.toContain('scripts/capture-ui-responsiveness-same-corpus.ts')
     expect(source).not.toContain('WorkPaper TrueCalc scalar benchmark check')
@@ -100,7 +100,7 @@ describe('run-ci', () => {
     )
     expect(source).not.toContain("pnpm('protocol check'")
     expect(source).not.toContain("pnpm('wasm build'")
-    expect(source).not.toContain("pnpm('correctness public workbook corpus'")
+    expect(source).not.toContain("pnpm('correctness XLSX fixture corpus'")
     expect(source).not.toContain(['test', 'correctness', 'corpus'].join(':'))
     expect(source).not.toContain("await runStage('generated-source checks'")
     expect(source).not.toContain("await runStage('static package build prerequisites'")
@@ -122,12 +122,12 @@ describe('run-ci', () => {
     expect(scripts['automation:check']).toBeUndefined()
     expect(scripts['security:posture:check']).toBeUndefined()
     expect(packageJson).toContain('"xlsx-import:memory-gate:synthetic": "bun scripts/xlsx-import-memory-gate.ts --synthetic-only"')
-    expect(packageJson).not.toContain('"research:public-corpus:')
-    expect(packageJson).not.toContain('"research:public-corpus:memory-gate:synthetic"')
+    expect(packageJson).not.toContain('"research:xlsx-fixture-corpus:')
+    expect(packageJson).not.toContain('"research:xlsx-fixture-corpus:memory-gate:synthetic"')
     expect(scripts[['test', 'correctness', 'corpus'].join(':')]).toBeUndefined()
     expect(scripts['test:correctness:xlsx']).toContain('packages/excel-fixtures/src/__tests__/oracle-harness.test.ts')
-    expect(scripts['test:correctness:xlsx']).not.toContain('scripts/__tests__/public-workbook-corpus')
-    expect(scripts['research:public-corpus:test']).toBeUndefined()
+    expect(scripts['test:correctness:xlsx']).not.toContain('scripts/__tests__/xlsx-fixture-corpus')
+    expect(scripts['research:xlsx-fixture-corpus:test']).toBeUndefined()
     expect(scripts[['ui', 'same-corpus', 'fixture', 'generate'].join(':')]).toBeUndefined()
     expect(scripts[['ui', 'same-corpus', 'fixture', 'check'].join(':')]).toBeUndefined()
     expect(scripts['research:ui-same-corpus:fixture:generate']).toBeUndefined()
@@ -136,7 +136,10 @@ describe('run-ci', () => {
     expect(scripts['workpaper:bench:xlsx-calc:check']).toBeUndefined()
     expect(scripts['workpaper:bench:ironcalc-rust:check']).toBeUndefined()
     expect(scripts['workpaper:bench:univer:check']).toBeUndefined()
-    expect(scripts['research:workpaper:bench:truecalc:check']).toContain('scripts/gen-workpaper-vs-truecalc-benchmark.ts --check')
+    expect(scripts[['research', 'workpaper', 'bench', 'truecalc', 'check'].join(':')]).toBeUndefined()
+    expect(scripts[['research', 'workpaper', 'bench', 'xlsx-calc', 'check'].join(':')]).toBeUndefined()
+    expect(scripts[['research', 'workpaper', 'bench', 'ironcalc-rust', 'check'].join(':')]).toBeUndefined()
+    expect(scripts[['research', 'workpaper', 'bench', 'univer', 'check'].join(':')]).toBeUndefined()
   })
 
   it('guards broad pre-push lint through the same resource gate', () => {

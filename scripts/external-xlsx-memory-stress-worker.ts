@@ -12,8 +12,8 @@ import type {
   tryInspectLargeSimpleXlsxHeadlessAsync,
 } from '../packages/excel-import/src/xlsx-large-simple-headless-inspect.js'
 import { readXlsxZipEntriesLazyFromByteSource } from '@bilig/xlsx/zip-reader'
-import { readFlagArg, readStringArg } from './public-workbook-corpus-cli.ts'
-import { FileBackedXlsxZipByteSource } from './public-workbook-corpus-xlsx-byte-source.ts'
+import { readFlagArg, readStringArg } from './xlsx-fixture-corpus-cli.ts'
+import { FileBackedXlsxZipByteSource } from './xlsx-fixture-corpus-xlsx-byte-source.ts'
 
 interface PublicXlsxImportModule {
   readonly importXlsx: (bytes: Uint8Array, fileName: string) => ImportedWorkbook

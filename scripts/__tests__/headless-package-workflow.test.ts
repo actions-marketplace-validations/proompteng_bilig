@@ -181,7 +181,7 @@ describe('headless package workflow', () => {
     expect(source).toContain('node scripts/wait-for-github-ci-green.mjs')
     expect(source).toContain('--workflow github-ci')
     expect(source).toContain('--sha "$(git rev-parse HEAD)"')
-    expect(source).not.toContain('pnpm research:workpaper:bench:ironcalc-rust:check')
+    expect(source).not.toContain(['pnpm research', 'workpaper', 'bench', 'ironcalc-rust', 'check'].join(':'))
     expect(source).not.toContain(['pnpm headless', 'performance:check'].join(':'))
     expect(source).toContain('sudo apt-get install -y --no-install-recommends librsvg2-bin')
     expect(source).toContain('rsvg-convert --version')
@@ -254,12 +254,5 @@ describe('headless package workflow', () => {
     const mcpRegistryPublishIndex = source.indexOf('Publish MCP Registry entry')
     expect(npmPublishIndex).toBeLessThan(mcpbUploadIndex)
     expect(mcpbUploadIndex).toBeLessThan(mcpRegistryPublishIndex)
-  })
-
-  it('does not force IronCalc benchmark regeneration for runtime package version-only releases', () => {
-    const source = readFileSync(resolve(repoRoot, 'scripts/gen-workpaper-vs-ironcalc-rust-benchmark.ts'), 'utf8')
-
-    expect(source).toContain("assertEngineVersion(rawArtifact, 'ironCalcRust', IRONCALC_RUST_CRATE_VERSION)")
-    expect(source).not.toContain("assertEngineVersion(rawArtifact, 'workpaper'")
   })
 })

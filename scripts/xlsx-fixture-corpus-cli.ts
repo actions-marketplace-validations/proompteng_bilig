@@ -111,32 +111,34 @@ function readBooleanArgValue(name: string, raw: string): boolean {
 export function readDebugOnlyFlagArg(name: string, envVar: string, reason: string): boolean {
   const enabled = readFlagArg(name)
   if (enabled && !parseStrictBooleanEnvFlag(process.env[envVar], envVar, false)) {
-    throw new Error(`${name} is disabled for public corpus CLI runs because ${reason}. Set ${envVar}=1 only for focused debugging.`)
+    throw new Error(`${name} is disabled for XLSX fixture corpus CLI runs because ${reason}. Set ${envVar}=1 only for focused debugging.`)
   }
   return enabled
 }
 
-export const publicCorpusStopMarkerOverrideFlag = '--allow-active-stop-marker'
-export const publicCorpusStopMarkerOverrideEnvVar = 'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE'
+export const xlsxFixtureCorpusStopMarkerOverrideFlag = '--allow-active-stop-marker'
+export const xlsxFixtureCorpusStopMarkerOverrideEnvVar = 'BILIG_ALLOW_PUBLIC_CORPUS_STOP_MARKER_OVERRIDE'
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
 
-export function assertPublicCorpusRunNotStopped(args: { readonly commandName: string; readonly stopMarkerPath: string }): void {
+export function assertXlsxFixtureCorpusRunNotStopped(args: { readonly commandName: string; readonly stopMarkerPath: string }): void {
   if (!existsSync(args.stopMarkerPath)) {
     return
   }
-  if (readFlagArg(publicCorpusStopMarkerOverrideFlag)) {
-    if (parseStrictBooleanEnvFlag(process.env[publicCorpusStopMarkerOverrideEnvVar], publicCorpusStopMarkerOverrideEnvVar, false)) {
+  if (readFlagArg(xlsxFixtureCorpusStopMarkerOverrideFlag)) {
+    if (
+      parseStrictBooleanEnvFlag(process.env[xlsxFixtureCorpusStopMarkerOverrideEnvVar], xlsxFixtureCorpusStopMarkerOverrideEnvVar, false)
+    ) {
       return
     }
   }
   throw new Error(
-    `${args.commandName} is disabled while the public corpus stop marker is active: ${formatPublicCorpusStopMarkerPathForMessage(
+    `${args.commandName} is disabled while the XLSX fixture corpus stop marker is active: ${formatXlsxFixtureCorpusStopMarkerPathForMessage(
       args.stopMarkerPath,
-    )}. The marker protects the interactive host from broad workbook corpus runs. Resume only after the user explicitly asks, then pass ${publicCorpusStopMarkerOverrideFlag} with ${publicCorpusStopMarkerOverrideEnvVar}=1.`,
+    )}. The marker protects the interactive host from broad workbook corpus runs. Resume only after the user explicitly asks, then pass ${xlsxFixtureCorpusStopMarkerOverrideFlag} with ${xlsxFixtureCorpusStopMarkerOverrideEnvVar}=1.`,
   )
 }
 
-export function formatPublicCorpusStopMarkerPathForMessage(path: string, displayRootDir = rootDir): string {
+export function formatXlsxFixtureCorpusStopMarkerPathForMessage(path: string, displayRootDir = rootDir): string {
   const relativePath = relative(displayRootDir, path)
   if (!relativePath || relativePath.startsWith('..') || isAbsolute(relativePath)) {
     return path
@@ -151,7 +153,7 @@ export function readVerifyConcurrencyArg(defaultVerifyConcurrency: number): numb
     !parseStrictBooleanEnvFlag(process.env['BILIG_ALLOW_PARALLEL_PUBLIC_CORPUS_VERIFY'], 'BILIG_ALLOW_PARALLEL_PUBLIC_CORPUS_VERIFY', false)
   ) {
     throw new Error(
-      `--verify-concurrency greater than 1 is disabled for public corpus CLI runs because each worker can consume substantial memory. Set BILIG_ALLOW_PARALLEL_PUBLIC_CORPUS_VERIFY=1 only on a host sized for parallel verification.`,
+      `--verify-concurrency greater than 1 is disabled for XLSX fixture corpus CLI runs because each worker can consume substantial memory. Set BILIG_ALLOW_PARALLEL_PUBLIC_CORPUS_VERIFY=1 only on a host sized for parallel verification.`,
     )
   }
   return verifyConcurrency
@@ -164,7 +166,7 @@ export function readFetchConcurrencyArg(defaultFetchConcurrency: number): number
     !parseStrictBooleanEnvFlag(process.env['BILIG_ALLOW_PARALLEL_PUBLIC_CORPUS_FETCH'], 'BILIG_ALLOW_PARALLEL_PUBLIC_CORPUS_FETCH', false)
   ) {
     throw new Error(
-      `--fetch-concurrency greater than 1 is disabled for public corpus CLI runs because each fetch can spawn workbook fingerprinting workers and retain downloaded workbook bytes. Set BILIG_ALLOW_PARALLEL_PUBLIC_CORPUS_FETCH=1 only on a host sized for parallel fetch/fingerprint runs.`,
+      `--fetch-concurrency greater than 1 is disabled for XLSX fixture corpus CLI runs because each fetch can spawn workbook fingerprinting workers and retain downloaded workbook bytes. Set BILIG_ALLOW_PARALLEL_PUBLIC_CORPUS_FETCH=1 only on a host sized for parallel fetch/fingerprint runs.`,
     )
   }
   return fetchConcurrency
@@ -174,13 +176,13 @@ const maxInteractiveVerificationBatchLimit = 20
 const largeVerifyMissingLimitEnvVar = 'BILIG_ALLOW_LARGE_PUBLIC_CORPUS_VERIFY_MISSING'
 
 export function readVerifyMissingLimitArg(defaultLimit: number, dryRun: boolean): number {
-  return readPublicCorpusVerificationBatchLimitArg(defaultLimit, dryRun, {
+  return readXlsxFixtureCorpusVerificationBatchLimitArg(defaultLimit, dryRun, {
     commandName: 'verify-missing',
     envVar: largeVerifyMissingLimitEnvVar,
   })
 }
 
-export function readPublicCorpusVerificationBatchLimitArg(
+export function readXlsxFixtureCorpusVerificationBatchLimitArg(
   defaultLimit: number,
   dryRun: boolean,
   args: { readonly commandName: string; readonly envVar: string },
@@ -190,7 +192,7 @@ export function readPublicCorpusVerificationBatchLimitArg(
     throw new Error(
       `--limit above ${String(
         maxInteractiveVerificationBatchLimit,
-      )} is disabled for public corpus ${args.commandName} runs because it can start many workbook verification workers. Set ${args.envVar}=1 only when intentionally resuming a large corpus verification tranche.`,
+      )} is disabled for XLSX fixture corpus ${args.commandName} runs because it can start many workbook verification workers. Set ${args.envVar}=1 only when intentionally resuming a large corpus verification tranche.`,
     )
   }
   return limit

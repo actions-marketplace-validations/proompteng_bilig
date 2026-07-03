@@ -1,29 +1,29 @@
 import type { CellValue } from '../packages/protocol/src/types.js'
 
-export type PublicWorkbookSourceKind = 'direct-url' | 'ckan-resource' | 'github-contents'
-export type PublicWorkbookCaseStatus = 'passed' | 'failed' | 'error' | 'unsupported'
+export type XlsxFixtureSourceKind = 'direct-url' | 'ckan-resource' | 'github-contents'
+export type XlsxFixtureCaseStatus = 'passed' | 'failed' | 'error' | 'unsupported'
 
-export interface PublicWorkbookLicenseEvidence {
+export interface XlsxFixtureLicenseEvidence {
   readonly spdxId: string | null
   readonly title: string
   readonly evidenceUrl: string | null
 }
 
-export interface PublicWorkbookSource {
+export interface XlsxFixtureSource {
   readonly id: string
-  readonly kind: PublicWorkbookSourceKind
+  readonly kind: XlsxFixtureSourceKind
   readonly sourceUrl: string
   readonly downloadUrl: string
   readonly fileName: string
   readonly discoveredAt: string
-  readonly license: PublicWorkbookLicenseEvidence
+  readonly license: XlsxFixtureLicenseEvidence
   readonly topicEvidence?: readonly string[]
   readonly portal?: string
   readonly datasetId?: string
   readonly resourceId?: string
 }
 
-export interface PublicWorkbookArtifact {
+export interface XlsxFixtureArtifact {
   readonly id: string
   readonly sourceId: string
   readonly sourceUrl: string
@@ -34,25 +34,25 @@ export interface PublicWorkbookArtifact {
   readonly byteSize: number
   readonly workbookFingerprint: string
   readonly fetchedAt: string
-  readonly license: PublicWorkbookLicenseEvidence
+  readonly license: XlsxFixtureLicenseEvidence
   readonly topicEvidence?: readonly string[]
 }
 
-export interface PublicWorkbookManifest {
+export interface XlsxFixtureManifest {
   readonly schemaVersion: 1
-  readonly corpus: 'public-workbook-corpus'
+  readonly corpus: 'xlsx-fixture-corpus'
   readonly targetWorkbookCount: number
   readonly generatedAt: string
-  readonly sources: readonly PublicWorkbookSource[]
-  readonly artifacts: readonly PublicWorkbookArtifact[]
-  readonly fetchState?: PublicWorkbookFetchState
+  readonly sources: readonly XlsxFixtureSource[]
+  readonly artifacts: readonly XlsxFixtureArtifact[]
+  readonly fetchState?: XlsxFixtureFetchState
 }
 
-export interface PublicWorkbookFetchState {
+export interface XlsxFixtureFetchState {
   readonly exhaustedSourceIds: readonly string[]
 }
 
-export interface PublicWorkbookFeatureCounts {
+export interface XlsxFixtureFeatureCounts {
   readonly sheetCount: number
   readonly cellCount: number
   readonly formulaCellCount: number
@@ -69,7 +69,7 @@ export interface PublicWorkbookFeatureCounts {
   readonly warningCount: number
 }
 
-export type PublicWorkbookVerificationPhase =
+export type XlsxFixtureVerificationPhase =
   | 'read-cache'
   | 'inspect-footprint'
   | 'import-xlsx'
@@ -77,12 +77,12 @@ export type PublicWorkbookVerificationPhase =
   | 'round-trip'
   | 'structural-smoke'
 
-export interface PublicWorkbookVerificationPhaseTiming {
-  readonly phase: PublicWorkbookVerificationPhase
+export interface XlsxFixtureVerificationPhaseTiming {
+  readonly phase: XlsxFixtureVerificationPhase
   readonly elapsedMs: number
 }
 
-export interface PublicWorkbookValidationSummary {
+export interface XlsxFixtureValidationSummary {
   readonly importPassed: boolean
   readonly formulaOraclePassed: boolean
   readonly formulaOracleComparisons: number
@@ -91,27 +91,27 @@ export interface PublicWorkbookValidationSummary {
   readonly structuralSmokePassed: boolean | null
 }
 
-export interface PublicWorkbookExternalReferenceSummary {
+export interface XlsxFixtureExternalReferenceSummary {
   readonly linkedWorkbookCount: number
   readonly formulaDependencyCount: number
   readonly cachedValueDependencyCount: number
 }
 
-export interface PublicWorkbookCorpusCase {
+export interface XlsxFixtureCorpusCase {
   readonly id: string
   readonly sourceId: string
   readonly sourceUrl: string
   readonly fileName: string
   readonly sha256: string
   readonly byteSize: number
-  readonly license: PublicWorkbookLicenseEvidence
-  readonly status: PublicWorkbookCaseStatus
+  readonly license: XlsxFixtureLicenseEvidence
+  readonly status: XlsxFixtureCaseStatus
   readonly passed: boolean
   readonly elapsedMs?: number
   readonly peakRssBytes?: number | null
-  readonly phaseTimings?: readonly PublicWorkbookVerificationPhaseTiming[]
-  readonly externalWorkbookReferences?: PublicWorkbookExternalReferenceSummary
-  readonly featureCounts: PublicWorkbookFeatureCounts
+  readonly phaseTimings?: readonly XlsxFixtureVerificationPhaseTiming[]
+  readonly externalWorkbookReferences?: XlsxFixtureExternalReferenceSummary
+  readonly featureCounts: XlsxFixtureFeatureCounts
   readonly workbookMetadata: {
     readonly workbookName: string
     readonly sheetNames: readonly string[]
@@ -128,14 +128,14 @@ export interface PublicWorkbookCorpusCase {
       } | null
     }[]
   }
-  readonly validation: PublicWorkbookValidationSummary
+  readonly validation: XlsxFixtureValidationSummary
   readonly unsupportedFeatureClassifications: readonly string[]
   readonly evidence: readonly string[]
 }
 
-export interface PublicWorkbookCorpusScorecard {
+export interface XlsxFixtureCorpusScorecard {
   readonly schemaVersion: 1
-  readonly suite: 'public-workbook-corpus'
+  readonly suite: 'xlsx-fixture-corpus'
   readonly generatedAt: string
   readonly summary: {
     readonly targetWorkbookCount: number
@@ -152,7 +152,7 @@ export interface PublicWorkbookCorpusScorecard {
     readonly allCachedWorkbooksPassed: boolean
     readonly remainingToTarget: number
   }
-  readonly cases: readonly PublicWorkbookCorpusCase[]
+  readonly cases: readonly XlsxFixtureCorpusCase[]
 }
 
 export interface FormulaOracle {
@@ -167,7 +167,7 @@ export interface FormulaOracleValidationResult {
 }
 
 export interface BuildScorecardArgs {
-  readonly manifest: PublicWorkbookManifest
+  readonly manifest: XlsxFixtureManifest
   readonly cacheDir: string
   readonly generatedAt?: string
   readonly manifestPath?: string
@@ -178,18 +178,18 @@ export interface BuildScorecardArgs {
   readonly verifyMaxRssBytes?: number
   readonly verifyRssCheckIntervalMs?: number
   readonly verifyMaxCellCount?: number
-  readonly reusableCases?: readonly PublicWorkbookCorpusCase[]
-  readonly onCaseVerified?: (progress: PublicWorkbookCorpusVerificationProgress) => void
+  readonly reusableCases?: readonly XlsxFixtureCorpusCase[]
+  readonly onCaseVerified?: (progress: XlsxFixtureCorpusVerificationProgress) => void
 }
 
-export interface PublicWorkbookCorpusVerificationProgress {
+export interface XlsxFixtureCorpusVerificationProgress {
   readonly completedCount: number
   readonly totalCount: number
-  readonly latestCase: PublicWorkbookCorpusCase
+  readonly latestCase: XlsxFixtureCorpusCase
 }
 
 export interface DiscoverCkanArgs {
-  readonly manifest: PublicWorkbookManifest
+  readonly manifest: XlsxFixtureManifest
   readonly portalBases: readonly string[]
   readonly query: string
   readonly limit: number
@@ -199,7 +199,7 @@ export interface DiscoverCkanArgs {
 }
 
 export interface FetchCorpusArgs {
-  readonly manifest: PublicWorkbookManifest
+  readonly manifest: XlsxFixtureManifest
   readonly cacheDir: string
   readonly limit: number
   readonly fetchedAt?: string
@@ -212,13 +212,13 @@ export interface FetchCorpusArgs {
   readonly fingerprintRssCheckIntervalMs?: number
   readonly isolatedFingerprinting?: boolean
   readonly onArtifactsCommitted?: (
-    manifest: PublicWorkbookManifest,
-    progress: PublicWorkbookCorpusFetchCheckpointProgress,
+    manifest: XlsxFixtureManifest,
+    progress: XlsxFixtureCorpusFetchCheckpointProgress,
   ) => void | Promise<void>
   readonly sourceIds?: readonly string[]
 }
 
-export interface PublicWorkbookCorpusFetchCheckpointProgress {
+export interface XlsxFixtureCorpusFetchCheckpointProgress {
   readonly artifactCount: number
   readonly exhaustedSourceCount: number
   readonly committedArtifactCount: number
@@ -226,10 +226,10 @@ export interface PublicWorkbookCorpusFetchCheckpointProgress {
   readonly failedSourceCount: number
   readonly duplicateHashSourceCount: number
   readonly duplicateFingerprintSourceCount: number
-  readonly failedSourceSamples: readonly PublicWorkbookCorpusFetchFailureSample[]
+  readonly failedSourceSamples: readonly XlsxFixtureCorpusFetchFailureSample[]
 }
 
-export interface PublicWorkbookCorpusFetchFailureSample {
+export interface XlsxFixtureCorpusFetchFailureSample {
   readonly sourceId: string
   readonly fileName: string
   readonly error: string
@@ -248,7 +248,7 @@ export interface CkanPageResult {
 }
 
 export interface WorkbookDownloadResult {
-  readonly source: PublicWorkbookSource
+  readonly source: XlsxFixtureSource
   readonly bytes: Uint8Array | null
   readonly sha256: string | null
   readonly workbookFingerprint: string | null

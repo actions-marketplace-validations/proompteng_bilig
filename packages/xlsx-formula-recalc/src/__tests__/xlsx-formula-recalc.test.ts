@@ -250,7 +250,7 @@ describe('xlsx-formula-recalc', () => {
     }
   })
 
-  it('recalculates public-corpus style ratio row chains through the native kernel', async () => {
+  it('recalculates xlsx-fixture-corpus style ratio row chains through the native kernel', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-ratio-chain-'))
     try {
       const sourcePath = join(tempDir, 'public-ratio-chain.xlsx')
@@ -278,7 +278,7 @@ describe('xlsx-formula-recalc', () => {
     }
   })
 
-  it('recalculates public-corpus direct scalar formulas through the native kernel', async () => {
+  it('recalculates xlsx-fixture-corpus direct scalar formulas through the native kernel', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-direct-scalar-'))
     try {
       const sourcePath = join(tempDir, 'public-direct-scalar.xlsx')
@@ -304,7 +304,7 @@ describe('xlsx-formula-recalc', () => {
     }
   })
 
-  it('recalculates public-corpus inline ratio row chains through the native kernel', async () => {
+  it('recalculates xlsx-fixture-corpus inline ratio row chains through the native kernel', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'xlsx-native-inline-ratio-chain-'))
     try {
       const sourcePath = join(tempDir, 'public-inline-ratio-chain.xlsx')

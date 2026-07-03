@@ -2,15 +2,15 @@ import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-import { asRecord } from './public-workbook-corpus-json.ts'
-import { startChildRssWatchdog, terminateChildProcess } from './public-workbook-corpus-process.ts'
-import type { WorkbookFootprint } from './public-workbook-corpus-workbook.ts'
+import { asRecord } from './xlsx-fixture-corpus-json.ts'
+import { startChildRssWatchdog, terminateChildProcess } from './xlsx-fixture-corpus-process.ts'
+import type { WorkbookFootprint } from './xlsx-fixture-corpus-workbook.ts'
 import type { WorkbookExternalWorkbookReferenceSnapshot } from '../packages/protocol/src/types.js'
 
 const noop = (): void => undefined
 const tsxExecutablePath = fileURLToPath(new URL('../node_modules/.bin/tsx', import.meta.url))
 
-export interface PublicWorkbookCorpusWorkerOptions {
+export interface XlsxFixtureCorpusWorkerOptions {
   readonly timeoutMs: number
   readonly maxRssBytes: number
   readonly rssCheckIntervalMs: number
@@ -27,7 +27,7 @@ export function inspectWorkbookFootprintIsolated(args: {
   readonly filePath?: string
   readonly fileName: string
   readonly scriptPath: string
-  readonly options: PublicWorkbookCorpusWorkerOptions
+  readonly options: XlsxFixtureCorpusWorkerOptions
 }): Promise<WorkbookFootprint | null> {
   return inspectWorkbookFootprintIsolatedWithMetrics(args).then((result) => result.footprint)
 }
@@ -37,7 +37,7 @@ export function inspectWorkbookFootprintIsolatedWithMetrics(args: {
   readonly filePath?: string
   readonly fileName: string
   readonly scriptPath: string
-  readonly options: PublicWorkbookCorpusWorkerOptions
+  readonly options: XlsxFixtureCorpusWorkerOptions
 }): Promise<IsolatedWorkbookFootprintResult> {
   return new Promise<IsolatedWorkbookFootprintResult>((resolvePromise) => {
     const childArgs = [

@@ -98,31 +98,10 @@ It should end with checks like these:
 
 ## Measured Lane
 
-There is a local `xlsx-calc` research comparison, but it is deliberately narrow.
-It covers four workbook-wide recalculation workloads: aggregate, exact-match
-lookup, approximate lookup, and formula-chain recalculation.
-
-Current local artifact after generation:
-`.cache/research-workpaper-benchmarks/workpaper-vs-xlsx-calc.json`
-
-The artifact records:
-
-- `xlsx-calc` version: `0.9.2`
-- comparable workloads: `4`
-- WorkPaper mean wins: `4/4`
-- WorkPaper p95 wins: `4/4`
-- WorkPaper mean-and-p95 wins: `4/4`
-- coverage note: this is a limited SheetJS-style workbook-wide comparison, not
-  a claim about every spreadsheet workload
-
-Run the local check with:
-
-```sh
-pnpm research:workpaper:bench:xlsx-calc:check
-```
-
-That benchmark does not mean "Bilig replaces Excel." It only says that this
-particular Node recalculation lane can be measured locally and is easy to rerun.
+Historical `xlsx-calc` timing comparisons are intentionally excluded from the
+default quality story. The product gate here is deterministic workbook
+recalculation behavior, not a checked-in competitor scorecard or `.cache`
+research artifact.
 
 ## What I Would Test
 

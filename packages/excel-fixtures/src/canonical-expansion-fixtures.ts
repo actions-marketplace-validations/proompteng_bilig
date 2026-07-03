@@ -224,7 +224,7 @@ export const canonicalExpansionFixtures: readonly ExcelFixtureCase[] = [
       input('C15', 15),
     ],
     [output('A1', numberExpected(4))],
-    'Public workbook corpus case Biomass-spreadsheet-CEND0313.xlsx stores the same mismatched LOOKUP vector shape with cached result 4 for this threshold slot.',
+    'XLSX fixture corpus case Biomass-spreadsheet-CEND0313.xlsx stores the same mismatched LOOKUP vector shape with cached result 4 for this threshold slot.',
   ),
   fixture(
     'lookup-reference',

@@ -3,8 +3,8 @@ import { TextDecoder } from 'node:util'
 import { createInflateRaw } from 'node:zlib'
 
 import { forEachInflatedXlsxZipEntryChunk, type XlsxZipEntries } from '@bilig/xlsx/zip-reader'
-import { WorksheetDataValidationSupportScanner } from './public-workbook-corpus-xlsx-data-validation-footprint.ts'
-import type { WorkbookFootprint } from './public-workbook-corpus-workbook.ts'
+import { WorksheetDataValidationSupportScanner } from './xlsx-fixture-corpus-xlsx-data-validation-footprint.ts'
+import type { WorkbookFootprint } from './xlsx-fixture-corpus-workbook.ts'
 
 export interface WorksheetFootprint {
   cellCount: number

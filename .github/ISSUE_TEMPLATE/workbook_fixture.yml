@@ -1,5 +1,5 @@
 name: Workbook fixture submission
-description: Share a reduced public workbook, formula workload, or service workflow Bilig should support.
+description: Share a reduced XLSX fixture, formula workload, or service workflow Bilig should support.
 title: '[fixture]: '
 labels: ['needs reduced fixture']
 body:

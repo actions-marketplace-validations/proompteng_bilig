@@ -201,7 +201,9 @@ describe('WorkPaper XLSX corpus verifier', () => {
       })
 
       expect(result.status).toBe(2)
-      expect(result.stderr).toContain('workpaper:xlsx-corpus directory sweep is disabled while the public corpus stop marker is active')
+      expect(result.stderr).toContain(
+        'workpaper:xlsx-corpus directory sweep is disabled while the XLSX fixture corpus stop marker is active',
+      )
       expect(result.stderr).toContain('--allow-active-stop-marker')
     })
   })
@@ -379,7 +381,7 @@ describe('WorkPaper XLSX corpus verifier', () => {
     })
   })
 
-  it('uses the public corpus tolerance for tiny floating-point residuals', () => {
+  it('uses the XLSX fixture corpus tolerance for tiny floating-point residuals', () => {
     withTempCorpus((corpusDir) => {
       writeWorkbook(
         join(corpusDir, 'tiny-residual.xlsx'),

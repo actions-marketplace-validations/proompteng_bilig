@@ -8,7 +8,7 @@
 
 Today `SpreadsheetEngine` is both:
 
-- the public workbook runtime API that the rest of the application needs
+- the XLSX fixture runtime API that the rest of the application needs
 - the implementation home for too many unrelated concerns
 
 That shape is now the main maintainability risk in core runtime work. The file is still almost 6k lines and owns:

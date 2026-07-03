@@ -182,7 +182,7 @@ This package is released as part of the aligned bilig library package set.
 - feat(xlsx): evaluate direct scalar formulas natively (8c35f905)
 - feat(xlsx): evaluate sum ranges natively (55c4fed0)
 - feat(xlsx): evaluate row conditionals natively (cc54d056)
-- feat(xlsx): add native recalc public corpus gate (8e421a5b)
+- feat(xlsx): add native recalc XLSX fixture corpus gate (8e421a5b)
 - feat(xlsx): support native cross-sheet scalar refs (704c4430)
 - feat(xlsx): evaluate exact vlookup natively (2034336b)
 - feat(xlsx): support indirect native vlookup (61a3a531)
@@ -424,7 +424,7 @@ This package is released as part of the aligned bilig library package set.
 - docs(agent): add proof transcripts (5f19d493)
 - docs(agent): expand proof discovery surfaces (1700b124)
 - docs(growth): sharpen workbook fixture intake (5b56eb34)
-- docs(growth): publish public workbook corpus report (2208d89a)
+- docs(growth): publish XLSX fixture corpus report (2208d89a)
 - chore(release): runtime packages v0.158.0 (3d7569af)
 - style(release): format generated changelog (07b28e76)
 
@@ -456,7 +456,7 @@ This package is released as part of the aligned bilig library package set.
 - docs(agent): add proof transcripts (5f19d493)
 - docs(agent): expand proof discovery surfaces (1700b124)
 - docs(growth): sharpen workbook fixture intake (5b56eb34)
-- docs(growth): publish public workbook corpus report (2208d89a)
+- docs(growth): publish XLSX fixture corpus report (2208d89a)
 
 ## 0.157.0
 

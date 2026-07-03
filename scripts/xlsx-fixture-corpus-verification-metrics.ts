@@ -1,13 +1,13 @@
-import type { PublicWorkbookCorpusWorkerOptions } from './public-workbook-corpus-footprint.ts'
+import type { XlsxFixtureCorpusWorkerOptions } from './xlsx-fixture-corpus-footprint.ts'
 import type {
-  PublicWorkbookCorpusCase,
-  PublicWorkbookVerificationPhase,
-  PublicWorkbookVerificationPhaseTiming,
-} from './public-workbook-corpus-types.ts'
+  XlsxFixtureCorpusCase,
+  XlsxFixtureVerificationPhase,
+  XlsxFixtureVerificationPhaseTiming,
+} from './xlsx-fixture-corpus-types.ts'
 
 interface VerificationRuntimeMetrics {
   readonly startedAt: number
-  readonly phaseTimings: PublicWorkbookVerificationPhaseTiming[]
+  readonly phaseTimings: XlsxFixtureVerificationPhaseTiming[]
 }
 
 export function startVerificationRuntimeMetrics(): VerificationRuntimeMetrics {
@@ -19,8 +19,8 @@ export function startVerificationRuntimeMetrics(): VerificationRuntimeMetrics {
 
 export async function timeVerificationPhase<T>(
   metrics: VerificationRuntimeMetrics,
-  workerOptions: PublicWorkbookCorpusWorkerOptions,
-  phase: PublicWorkbookVerificationPhase,
+  workerOptions: XlsxFixtureCorpusWorkerOptions,
+  phase: XlsxFixtureVerificationPhase,
   fn: () => T | Promise<T>,
 ): Promise<T> {
   workerOptions.onPhase?.(phase)
@@ -33,10 +33,10 @@ export async function timeVerificationPhase<T>(
 }
 
 export function withVerificationRuntimeMetrics(
-  corpusCase: PublicWorkbookCorpusCase,
+  corpusCase: XlsxFixtureCorpusCase,
   metrics: VerificationRuntimeMetrics,
   peakRssBytes?: number,
-): PublicWorkbookCorpusCase {
+): XlsxFixtureCorpusCase {
   return withPeakRssBytes(
     {
       ...corpusCase,
@@ -47,9 +47,9 @@ export function withVerificationRuntimeMetrics(
   )
 }
 
-export function withPeakRssBytes(corpusCase: PublicWorkbookCorpusCase, peakRssBytes: number): PublicWorkbookCorpusCase
-export function withPeakRssBytes(corpusCase: PublicWorkbookCorpusCase, peakRssBytes?: number): PublicWorkbookCorpusCase
-export function withPeakRssBytes(corpusCase: PublicWorkbookCorpusCase, peakRssBytes?: number): PublicWorkbookCorpusCase {
+export function withPeakRssBytes(corpusCase: XlsxFixtureCorpusCase, peakRssBytes: number): XlsxFixtureCorpusCase
+export function withPeakRssBytes(corpusCase: XlsxFixtureCorpusCase, peakRssBytes?: number): XlsxFixtureCorpusCase
+export function withPeakRssBytes(corpusCase: XlsxFixtureCorpusCase, peakRssBytes?: number): XlsxFixtureCorpusCase {
   if (peakRssBytes === undefined || peakRssBytes <= 0) {
     return corpusCase
   }

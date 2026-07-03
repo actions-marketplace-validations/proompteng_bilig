@@ -101,7 +101,7 @@ Start by reading the existing fixture shape before adding a new case:
 - `packages/core/src/__tests__/formula-runtime-correctness.test.ts` covers the
   production runtime path for fixtures that should run through the engine.
 - `packages/headless/fixtures/xlsx-corpus/` holds checked-in XLSX cached-result
-  reductions for public workbook compatibility regressions.
+  reductions for XLSX fixture compatibility regressions.
 
 A minimal formula-parity contribution should:
 

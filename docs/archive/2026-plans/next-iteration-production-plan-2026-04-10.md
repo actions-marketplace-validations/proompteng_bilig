@@ -693,7 +693,7 @@ This tranche is largely landed. Durable thread tables, thread-centric routes, re
 
 Concrete migration shape:
 
-1. Expose only `/v2/documents/:documentId/chat/threads/*` as the public workbook-agent surface.
+1. Expose only `/v2/documents/:documentId/chat/threads/*` as the XLSX fixture-agent surface.
 2. Keep SSE for active-turn deltas, but continue serving the initial snapshot from durable thread state rather than from in-memory-only session state.
 3. The browser now centers on a selected durable thread id, with any live session handle treated as transient.
 4. Remove the old session-route semantics entirely once the thread-centric surface is live.
@@ -799,7 +799,7 @@ Performance, correctness, and resilience gates are green for workbook + collabor
 
 ### Recommended API shape
 
-Use durable thread-centric routes as the only supported public workbook-agent surface:
+Use durable thread-centric routes as the only supported XLSX fixture-agent surface:
 
 - `POST /v2/documents/:documentId/chat/threads`
 - `POST /v2/documents/:documentId/chat/threads/:threadId/turns`

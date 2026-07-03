@@ -51,7 +51,7 @@ body:
       description: Where did the expected result come from?
       options:
         - reduced workbook with Excel cached value
-        - public workbook corpus
+        - XLSX fixture corpus
         - manually checked in Excel
         - manually checked in another spreadsheet engine
         - other

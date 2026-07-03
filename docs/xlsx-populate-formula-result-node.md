@@ -203,8 +203,8 @@ input and read the dependent value back before returning.
 
 ## Test with a reduced workbook
 
-If an existing `xlsx-populate` pipeline has a real formula case, reduce it to a
-public workbook fixture and run:
+If an existing `xlsx-populate` pipeline has a real formula case, reduce it to an
+XLSX fixture and run:
 
 ```sh
 curl -fsSLo formula-clinic-report.ts \

@@ -140,7 +140,7 @@ export const formulaCompatibilityRegistry: readonly FormulaCompatibilityEntry[] 
   entry('arithmetic:power-basic', 'arithmetic', '=A1^A2', 'implemented-wasm-production'),
   entry('arithmetic:power-negative-odd-root', 'arithmetic', '=A1^(1/A2)', 'implemented-wasm-production', {
     notes:
-      'Microsoft Excel-saved public workbook caches preserve real odd-root results for negative bases raised with the exponentiation operator.',
+      'Microsoft Excel-saved XLSX fixture caches preserve real odd-root results for negative bases raised with the exponentiation operator.',
   }),
   entry('arithmetic:percent-operator', 'arithmetic', '=A1*10%', 'implemented-wasm-production', {
     notes: 'Postfix percent is in the canonical formula corpus and tracked as part of the arithmetic lane.',
@@ -359,7 +359,7 @@ export const formulaCompatibilityRegistry: readonly FormulaCompatibilityEntry[] 
     'implemented-wasm-production',
     {
       notes:
-        'Public workbook corpus case Biomass-spreadsheet-CEND0313.xlsx caches this mismatched LOOKUP vector shape as the fourth result slot rather than #VALUE!.',
+        'XLSX fixture corpus case Biomass-spreadsheet-CEND0313.xlsx caches this mismatched LOOKUP vector shape as the fourth result slot rather than #VALUE!.',
     },
   ),
   entry(

@@ -1,7 +1,7 @@
-import { emptyFeatureCounts } from './public-workbook-corpus-workbook.ts'
-import type { PublicWorkbookArtifact, PublicWorkbookCorpusCase } from './public-workbook-corpus-types.ts'
+import { emptyFeatureCounts } from './xlsx-fixture-corpus-workbook.ts'
+import type { XlsxFixtureArtifact, XlsxFixtureCorpusCase } from './xlsx-fixture-corpus-types.ts'
 
-export function artifactBaseEvidence(artifact: PublicWorkbookArtifact): string[] {
+export function artifactBaseEvidence(artifact: XlsxFixtureArtifact): string[] {
   return [
     `source=${artifact.sourceUrl}`,
     `license=${artifact.license.title}`,
@@ -11,11 +11,11 @@ export function artifactBaseEvidence(artifact: PublicWorkbookArtifact): string[]
 }
 
 export function failedCase(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   status: 'failed' | 'error',
   evidence: readonly string[],
   errors: readonly string[],
-): PublicWorkbookCorpusCase {
+): XlsxFixtureCorpusCase {
   return {
     id: artifact.id,
     sourceId: artifact.sourceId,

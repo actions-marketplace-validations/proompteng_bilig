@@ -18,28 +18,28 @@ import { detachImportedXlsxSourceBytes } from '../packages/excel-import/src/xlsx
 import type { XlsxZipByteSource } from '@bilig/xlsx/zip-reader'
 import { ValueTag } from '../packages/protocol/src/enums.js'
 import type { CellValue, LiteralInput, WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import { validatePublicWorkbookManifest } from './public-workbook-corpus-json.ts'
+import { validateXlsxFixtureManifest } from './xlsx-fixture-corpus-json.ts'
 import {
   classifyUnsupportedLocaleDecimalCommaFormulaOracle,
   localeDecimalCommaFormulaOracleUnsupportedClassification,
   type FormulaOracleMismatchDetail,
-} from './public-workbook-corpus-formula-oracle-classifiers.ts'
+} from './xlsx-fixture-corpus-formula-oracle-classifiers.ts'
 import {
   hasImportWarningUnsupportedClassifications,
   hasFormulaOracleCacheUnsupportedClassifications,
   hasPivotUnsupportedClassifications,
   hasResourceLimitUnsupportedClassifications,
-  publicWorkbookImportWarningClassifierEvidence,
-  publicWorkbookFormulaOracleCacheClassifierEvidence,
-  publicWorkbookPivotClassifierEvidence,
-  publicWorkbookResourceLimitClassifierEvidence,
-} from './public-workbook-corpus-evidence.ts'
+  xlsxFixtureImportWarningClassifierEvidence,
+  xlsxFixtureFormulaOracleCacheClassifierEvidence,
+  xlsxFixturePivotClassifierEvidence,
+  xlsxFixtureResourceLimitClassifierEvidence,
+} from './xlsx-fixture-corpus-evidence.ts'
 import {
   shouldUseCompactLargeSimpleVerification,
   verifyLargeSimpleWorkbookCompact,
   verifyLargeSimpleWorkbookCompactPreflight,
-} from './public-workbook-corpus-large-simple-compact.ts'
-import { inspectWorkbookFootprintIsolated, type PublicWorkbookCorpusWorkerOptions } from './public-workbook-corpus-footprint.ts'
+} from './xlsx-fixture-corpus-large-simple-compact.ts'
+import { inspectWorkbookFootprintIsolated, type XlsxFixtureCorpusWorkerOptions } from './xlsx-fixture-corpus-footprint.ts'
 import {
   importResourceLimitPreflight,
   formulaOracleFormulaCountResourceLimitPreflight,
@@ -49,18 +49,18 @@ import {
   structuralSmokeResourceLimitPreflight,
   unsupportedPreflightResourceLimitCase,
   unsupportedResourceLimitCase,
-} from './public-workbook-corpus-resource-limits.ts'
-import { buildPublicWorkbookCorpusScorecardFromCases } from './public-workbook-corpus-scorecard.ts'
-import { indexReusablePublicWorkbookCorpusCases } from './public-workbook-corpus-verify-checkpoint.ts'
-import { artifactBaseEvidence, failedCase } from './public-workbook-corpus-verify-cases.ts'
-import { verifyCachedWorkbookArtifactIsolated } from './public-workbook-corpus-verify-isolated.ts'
-import { summarizeExternalWorkbookReferences, unsupportedWorkbookMetadataEvidence } from './public-workbook-corpus-external-links.ts'
+} from './xlsx-fixture-corpus-resource-limits.ts'
+import { buildXlsxFixtureCorpusScorecardFromCases } from './xlsx-fixture-corpus-scorecard.ts'
+import { indexReusableXlsxFixtureCorpusCases } from './xlsx-fixture-corpus-verify-checkpoint.ts'
+import { artifactBaseEvidence, failedCase } from './xlsx-fixture-corpus-verify-cases.ts'
+import { verifyCachedWorkbookArtifactIsolated } from './xlsx-fixture-corpus-verify-isolated.ts'
+import { summarizeExternalWorkbookReferences, unsupportedWorkbookMetadataEvidence } from './xlsx-fixture-corpus-external-links.ts'
 import {
   startVerificationRuntimeMetrics,
   timeVerificationPhase,
   withVerificationRuntimeMetrics,
-} from './public-workbook-corpus-verification-metrics.ts'
-import { FileBackedXlsxZipByteSource, sha256XlsxZipByteSourceHex } from './public-workbook-corpus-xlsx-byte-source.ts'
+} from './xlsx-fixture-corpus-verification-metrics.ts'
+import { FileBackedXlsxZipByteSource, sha256XlsxZipByteSourceHex } from './xlsx-fixture-corpus-xlsx-byte-source.ts'
 import {
   cellValuesMatchOracle,
   countImportedWorkbookFeatures,
@@ -71,20 +71,20 @@ import {
   inspectWorkbookFootprint,
   isUnsupportedCycleOracleMismatch,
   sha256HexSync,
-} from './public-workbook-corpus-workbook.ts'
+} from './xlsx-fixture-corpus-workbook.ts'
 import type {
   BuildScorecardArgs,
   FormulaOracle,
   FormulaOracleValidationResult,
-  PublicWorkbookArtifact,
-  PublicWorkbookCaseStatus,
-  PublicWorkbookCorpusCase,
-  PublicWorkbookCorpusScorecard,
-  PublicWorkbookFeatureCounts,
-  PublicWorkbookValidationSummary,
-} from './public-workbook-corpus-types.ts'
+  XlsxFixtureArtifact,
+  XlsxFixtureCaseStatus,
+  XlsxFixtureCorpusCase,
+  XlsxFixtureCorpusScorecard,
+  XlsxFixtureFeatureCounts,
+  XlsxFixtureValidationSummary,
+} from './xlsx-fixture-corpus-types.ts'
 
-export { verifyCachedWorkbookArtifactIsolated } from './public-workbook-corpus-verify-isolated.ts'
+export { verifyCachedWorkbookArtifactIsolated } from './xlsx-fixture-corpus-verify-isolated.ts'
 
 declare const Bun:
   | {
@@ -92,9 +92,7 @@ declare const Bun:
     }
   | undefined
 
-const publicWorkbookCorpusFootprintWorkerScriptPath = fileURLToPath(
-  new URL('./public-workbook-corpus-footprint-worker.ts', import.meta.url),
-)
+const xlsxFixtureCorpusFootprintWorkerScriptPath = fileURLToPath(new URL('./xlsx-fixture-corpus-footprint-worker.ts', import.meta.url))
 
 export const defaultVerifyTimeoutMs = 180_000
 export const defaultVerifyConcurrency = 1
@@ -107,10 +105,10 @@ const externalWorkbookRoundTripSkipEvidence =
 const macroRoundTripSkipEvidence = 'Round-trip projection skipped because macro execution is intentionally declined during XLSM import.'
 export const rawPivotPartUnsupportedClassification = 'xlsx.pivots.rawPartNotSemanticallyImported'
 export const externalPivotCacheUnsupportedClassification = 'xlsx.pivots.externalCacheNotSemanticallyImported'
-export const staleFormulaCacheUnsupportedClassification = 'xlsx.publicCorpus.formulaOracleCache:independentRecalcMatched'
+export const staleFormulaCacheUnsupportedClassification = 'xlsx.xlsxFixtureCorpus.formulaOracleCache:independentRecalcMatched'
 export { localeDecimalCommaFormulaOracleUnsupportedClassification }
 export const externalLinkTransitiveFormulaUnsupportedClassification = 'xlsx.externalLinks.transitiveFormulaDependenciesUnsupported'
-export const nativeFormulaOracleUnavailableUnsupportedClassification = 'xlsx.publicCorpus.formulaOracle:nativeXmlCacheUnavailable'
+export const nativeFormulaOracleUnavailableUnsupportedClassification = 'xlsx.xlsxFixtureCorpus.formulaOracle:nativeXmlCacheUnavailable'
 
 interface DetailedFormulaOracleValidationResult extends FormulaOracleValidationResult {
   readonly mismatchDetails: readonly FormulaOracleMismatchDetail[]
@@ -125,8 +123,8 @@ interface UnsupportedFormulaOracleCacheClassification {
   readonly evidence: readonly string[]
 }
 
-export async function buildPublicWorkbookCorpusScorecard(args: BuildScorecardArgs): Promise<PublicWorkbookCorpusScorecard> {
-  validatePublicWorkbookManifest(args.manifest)
+export async function buildXlsxFixtureCorpusScorecard(args: BuildScorecardArgs): Promise<XlsxFixtureCorpusScorecard> {
+  validateXlsxFixtureManifest(args.manifest)
   const structuralSmokeSampleLimit = args.structuralSmokeSampleLimit ?? 50
   const verifyConcurrency = Math.max(1, Math.trunc(args.verifyConcurrency ?? defaultVerifyConcurrency))
   const verificationManifestPath = args.manifestPath
@@ -135,13 +133,13 @@ export async function buildPublicWorkbookCorpusScorecard(args: BuildScorecardArg
   const verifyMaxRssBytes = capVerifyMaxRssBytes(Math.max(1, Math.trunc(args.verifyMaxRssBytes ?? defaultVerifyMaxRssBytes)))
   const verifyMaxCellCount = Math.max(1, Math.trunc(args.verifyMaxCellCount ?? defaultVerifyMaxCellCount))
   const verifyRssCheckIntervalMs = Math.max(100, Math.trunc(args.verifyRssCheckIntervalMs ?? 250))
-  const reusableCasesById = indexReusablePublicWorkbookCorpusCases({
+  const reusableCasesById = indexReusableXlsxFixtureCorpusCases({
     manifest: args.manifest,
     cases: args.reusableCases ?? [],
     structuralSmokeSampleLimit,
   })
   let completedCount = 0
-  const reportVerifiedCase = (verifiedCase: PublicWorkbookCorpusCase): PublicWorkbookCorpusCase => {
+  const reportVerifiedCase = (verifiedCase: XlsxFixtureCorpusCase): XlsxFixtureCorpusCase => {
     completedCount += 1
     args.onCaseVerified?.({
       completedCount,
@@ -175,7 +173,7 @@ export async function buildPublicWorkbookCorpusScorecard(args: BuildScorecardArg
           })
     return verifiedCasePromise.then(reportVerifiedCase)
   })
-  return buildPublicWorkbookCorpusScorecardFromCases({
+  return buildXlsxFixtureCorpusScorecardFromCases({
     manifest: args.manifest,
     generatedAt: args.generatedAt,
     cases,
@@ -183,14 +181,14 @@ export async function buildPublicWorkbookCorpusScorecard(args: BuildScorecardArg
 }
 
 export async function verifyCachedWorkbookArtifact(
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   cacheDir: string,
   runStructuralSmoke: boolean,
   maxCellCount: number,
-  workerOptions: PublicWorkbookCorpusWorkerOptions,
-): Promise<PublicWorkbookCorpusCase> {
+  workerOptions: XlsxFixtureCorpusWorkerOptions,
+): Promise<XlsxFixtureCorpusCase> {
   const runtimeMetrics = startVerificationRuntimeMetrics()
-  const finishCase = (corpusCase: PublicWorkbookCorpusCase): PublicWorkbookCorpusCase =>
+  const finishCase = (corpusCase: XlsxFixtureCorpusCase): XlsxFixtureCorpusCase =>
     withVerificationRuntimeMetrics(corpusCase, runtimeMetrics)
   const cachePath = join(cacheDir, artifact.cachePath)
   const baseEvidence = artifactBaseEvidence(artifact)
@@ -227,7 +225,7 @@ export async function verifyCachedWorkbookArtifact(
             bytes: new Uint8Array(),
             filePath: cachePath,
             fileName: artifact.fileName,
-            scriptPath: publicWorkbookCorpusFootprintWorkerScriptPath,
+            scriptPath: xlsxFixtureCorpusFootprintWorkerScriptPath,
             options: workerOptions,
           })
         : inspectWorkbookFootprint(readAllSourceBytes(source), artifact.fileName),
@@ -390,7 +388,7 @@ export async function verifyCachedWorkbookArtifact(
       unsupportedExternalLinkFormulaOracle.unsupported ||
       unsupportedLocaleDecimalCommaFormulaOracle.unsupported ||
       formulaOracleValidation.mismatches.length === 0
-    const validation: PublicWorkbookValidationSummary = {
+    const validation: XlsxFixtureValidationSummary = {
       importPassed: true,
       formulaOraclePassed,
       formulaOracleComparisons: formulaOracleValidation.comparisons,
@@ -403,7 +401,7 @@ export async function verifyCachedWorkbookArtifact(
       validation.formulaOraclePassed &&
       validation.roundTripPassed &&
       (validation.structuralSmokePassed === null || validation.structuralSmokePassed)
-    const status: PublicWorkbookCaseStatus = passed ? (unsupportedFeatureClassifications.length > 0 ? 'unsupported' : 'passed') : 'failed'
+    const status: XlsxFixtureCaseStatus = passed ? (unsupportedFeatureClassifications.length > 0 ? 'unsupported' : 'passed') : 'failed'
     return finishCase({
       id: artifact.id,
       sourceId: artifact.sourceId,
@@ -427,14 +425,14 @@ export async function verifyCachedWorkbookArtifact(
         ...(featureCounts.pivotCount > 0 ? [`pivots=${String(featureCounts.pivotCount)}`] : []),
         ...unsupportedWorkbookEvidence,
         ...(hasImportWarningUnsupportedClassifications(unsupportedFeatureClassifications)
-          ? [publicWorkbookImportWarningClassifierEvidence]
+          ? [xlsxFixtureImportWarningClassifierEvidence]
           : []),
-        ...(hasPivotUnsupportedClassifications(unsupportedFeatureClassifications) ? [publicWorkbookPivotClassifierEvidence] : []),
+        ...(hasPivotUnsupportedClassifications(unsupportedFeatureClassifications) ? [xlsxFixturePivotClassifierEvidence] : []),
         ...(hasResourceLimitUnsupportedClassifications(unsupportedFeatureClassifications)
-          ? [publicWorkbookResourceLimitClassifierEvidence, ...phaseResourceLimitEvidence]
+          ? [xlsxFixtureResourceLimitClassifierEvidence, ...phaseResourceLimitEvidence]
           : []),
         ...(hasFormulaOracleCacheUnsupportedClassifications(unsupportedFeatureClassifications)
-          ? [publicWorkbookFormulaOracleCacheClassifierEvidence, ...unsupportedFormulaOracleCache.evidence]
+          ? [xlsxFixtureFormulaOracleCacheClassifierEvidence, ...unsupportedFormulaOracleCache.evidence]
           : []),
         ...unsupportedNativeFormulaOracle.evidence,
         ...unsupportedExternalLinkFormulaOracle.evidence,
@@ -455,7 +453,7 @@ export function capVerifyMaxRssBytes(value: number): number {
   const normalizedValue = Math.max(1, Math.trunc(value))
   if (normalizedValue > defaultVerifyMaxRssBytes) {
     throw new Error(
-      `Public workbook corpus verification RSS limits above ${String(Math.ceil(defaultVerifyMaxRssBytes / 1024 / 1024))} MiB are disabled because workbook workers can hang interactive hosts.`,
+      `XLSX fixture corpus verification RSS limits above ${String(Math.ceil(defaultVerifyMaxRssBytes / 1024 / 1024))} MiB are disabled because workbook workers can hang interactive hosts.`,
     )
   }
   return normalizedValue
@@ -477,7 +475,7 @@ async function validateFormulaOracles(
           classifications: [nativeFormulaOracleUnavailableUnsupportedClassification],
           evidence: [
             'formula-oracle-native-cache-reader=unsupported',
-            'SheetJS formula oracle fallback is disabled for public corpus verification.',
+            'SheetJS formula oracle fallback is disabled for XLSX fixture corpus verification.',
           ],
         },
       }
@@ -597,7 +595,7 @@ function roundTripValidationSkipEvidence(warnings: readonly string[]): string | 
   return null
 }
 
-function validationEvidence(validation: PublicWorkbookValidationSummary): string[] {
+function validationEvidence(validation: XlsxFixtureValidationSummary): string[] {
   const evidence: string[] = []
   if (!validation.formulaOraclePassed) {
     evidence.push(...validation.formulaOracleMismatches.slice(0, 25))
@@ -621,7 +619,7 @@ async function compareFormulaOracles(
   const { SpreadsheetEngine } = await import('../packages/core/src/engine.js')
   const engine = new SpreadsheetEngine({
     workbookName: snapshot.workbook.name,
-    replicaId: `public-corpus-${stableId(snapshot.workbook.name)}`,
+    replicaId: `xlsx-fixture-corpus-${stableId(snapshot.workbook.name)}`,
   })
   await engine.ready()
   engine.importSnapshot(snapshot)
@@ -730,7 +728,7 @@ export async function roundTripsSupportedSemantics(
   try {
     const [{ exportXlsx }, { roundTripSemanticsDigest }] = await Promise.all([
       import('../packages/excel-import/src/index.js'),
-      import('./public-workbook-corpus-roundtrip.ts'),
+      import('./xlsx-fixture-corpus-roundtrip.ts'),
     ])
     const workbookName = snapshot.workbook.name
     const expectedDigest = roundTripSemanticsDigest(snapshot)
@@ -868,9 +866,9 @@ function isPackageArtifactMetadataKey(key: string): boolean {
 }
 
 export function mergeImportedAndFootprintFeatureCounts(
-  importedFeatureCounts: PublicWorkbookFeatureCounts,
-  footprintFeatureCounts: PublicWorkbookFeatureCounts,
-): PublicWorkbookFeatureCounts {
+  importedFeatureCounts: XlsxFixtureFeatureCounts,
+  footprintFeatureCounts: XlsxFixtureFeatureCounts,
+): XlsxFixtureFeatureCounts {
   return {
     sheetCount: Math.max(importedFeatureCounts.sheetCount, footprintFeatureCounts.sheetCount),
     cellCount: Math.max(importedFeatureCounts.cellCount, footprintFeatureCounts.cellCount),
@@ -892,7 +890,7 @@ export function mergeImportedAndFootprintFeatureCounts(
 export function classifyUnsupportedFeatures(
   snapshot: WorkbookSnapshot,
   warnings: readonly string[],
-  featureCounts: PublicWorkbookFeatureCounts = countWorkbookFeatures(snapshot, warnings),
+  featureCounts: XlsxFixtureFeatureCounts = countWorkbookFeatures(snapshot, warnings),
   options: { readonly supportedImportWarnings?: readonly string[]; readonly extraClassifications?: readonly string[] } = {},
 ): string[] {
   const classifications = new Set<string>()

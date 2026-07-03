@@ -3,10 +3,10 @@ import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { parsePublicWorkbookCorpusCase } from './public-workbook-corpus-json.ts'
-import { compactRepoLocalPaths } from './public-workbook-corpus-output.ts'
-import { formatByteSize, startChildRssWatchdog, terminateChildProcess } from './public-workbook-corpus-process.ts'
-import { inspectWorkbookFootprintIsolatedWithMetrics } from './public-workbook-corpus-footprint.ts'
+import { parseXlsxFixtureCorpusCase } from './xlsx-fixture-corpus-json.ts'
+import { compactRepoLocalPaths } from './xlsx-fixture-corpus-output.ts'
+import { formatByteSize, startChildRssWatchdog, terminateChildProcess } from './xlsx-fixture-corpus-process.ts'
+import { inspectWorkbookFootprintIsolatedWithMetrics } from './xlsx-fixture-corpus-footprint.ts'
 import {
   formulaOracleFormulaCountResourceLimitPreflight,
   importResourceLimitPreflight,
@@ -17,31 +17,29 @@ import {
   unsupportedResourceLimitCase,
   unsupportedRssLimitCase,
   type ResourceLimitPreflight,
-} from './public-workbook-corpus-resource-limits.ts'
+} from './xlsx-fixture-corpus-resource-limits.ts'
 import {
   startVerificationRuntimeMetrics,
   withPeakRssBytes,
   withVerificationRuntimeMetrics,
-} from './public-workbook-corpus-verification-metrics.ts'
-import { artifactBaseEvidence, failedCase } from './public-workbook-corpus-verify-cases.ts'
-import type { PublicWorkbookArtifact, PublicWorkbookCorpusCase, PublicWorkbookFeatureCounts } from './public-workbook-corpus-types.ts'
-import type { WorkbookFootprint } from './public-workbook-corpus-workbook.ts'
+} from './xlsx-fixture-corpus-verification-metrics.ts'
+import { artifactBaseEvidence, failedCase } from './xlsx-fixture-corpus-verify-cases.ts'
+import type { XlsxFixtureArtifact, XlsxFixtureCorpusCase, XlsxFixtureFeatureCounts } from './xlsx-fixture-corpus-types.ts'
+import type { WorkbookFootprint } from './xlsx-fixture-corpus-workbook.ts'
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const publicWorkbookCorpusFootprintWorkerScriptPath = fileURLToPath(
-  new URL('./public-workbook-corpus-footprint-worker.ts', import.meta.url),
-)
-const publicWorkbookCorpusVerifyWorkerScriptPath = fileURLToPath(new URL('./public-workbook-corpus-verify-worker.ts', import.meta.url))
+const xlsxFixtureCorpusFootprintWorkerScriptPath = fileURLToPath(new URL('./xlsx-fixture-corpus-footprint-worker.ts', import.meta.url))
+const xlsxFixtureCorpusVerifyWorkerScriptPath = fileURLToPath(new URL('./xlsx-fixture-corpus-verify-worker.ts', import.meta.url))
 const memorySensitiveFootprintPreflightMaxRssBytes = 256 * 1024 * 1024
 const noop = (): void => undefined
 
-export const verificationWorkerPhasePrefix = 'bilig-public-workbook-verify-phase='
+export const verificationWorkerPhasePrefix = 'bilig-xlsx-fixture-verify-phase='
 export const disableBunSmolVerificationWorkerEnvVar = 'BILIG_PUBLIC_WORKBOOK_VERIFY_DISABLE_BUN_SMOL'
 
 type RuntimeVersions = Readonly<Record<string, string | undefined>>
 
 interface VerifyCachedWorkbookArtifactIsolatedArgs {
-  readonly artifact: PublicWorkbookArtifact
+  readonly artifact: XlsxFixtureArtifact
   readonly cacheDir: string
   readonly manifestPath: string
   readonly runStructuralSmoke: boolean
@@ -95,7 +93,7 @@ export function buildVerificationWorkerProcessArgs(
   return shouldUseBunSmolForVerificationWorker(args) ? ['--smol', ...workerArgs] : [...workerArgs]
 }
 
-export function verifyCachedWorkbookArtifactIsolated(args: VerifyCachedWorkbookArtifactIsolatedArgs): Promise<PublicWorkbookCorpusCase> {
+export function verifyCachedWorkbookArtifactIsolated(args: VerifyCachedWorkbookArtifactIsolatedArgs): Promise<XlsxFixtureCorpusCase> {
   const baseEvidence = artifactBaseEvidence(args.artifact)
   const runtimeMetrics = startVerificationRuntimeMetrics()
   if (shouldUseResourceLimitedFootprintPreflight(args.maxRssBytes) && existsSync(join(args.cacheDir, args.artifact.cachePath))) {
@@ -111,10 +109,10 @@ function verifyCachedWorkbookArtifactInWorker(
   args: VerifyCachedWorkbookArtifactIsolatedArgs,
   baseEvidence: readonly string[],
   runtimeMetrics: ReturnType<typeof startVerificationRuntimeMetrics>,
-): Promise<PublicWorkbookCorpusCase> {
-  return new Promise<PublicWorkbookCorpusCase>((resolvePromise) => {
+): Promise<XlsxFixtureCorpusCase> {
+  return new Promise<XlsxFixtureCorpusCase>((resolvePromise) => {
     const workerArgs = [
-      publicWorkbookCorpusVerifyWorkerScriptPath,
+      xlsxFixtureCorpusVerifyWorkerScriptPath,
       'verify-artifact-worker',
       '--manifest',
       args.manifestPath,
@@ -228,7 +226,7 @@ function verifyCachedWorkbookArtifactInWorker(
       }
       try {
         const parsed: unknown = JSON.parse(stdout)
-        finish(withPeakRssBytes(parsePublicWorkbookCorpusCase(parsed), peakRssBytes))
+        finish(withPeakRssBytes(parseXlsxFixtureCorpusCase(parsed), peakRssBytes))
       } catch (error) {
         const details = compactVerificationWorkerOutput(stderr || stdout)
         finish(
@@ -251,12 +249,12 @@ export function shouldUseResourceLimitedFootprintPreflight(maxRssBytes: number):
 }
 
 export function buildResourceLimitedFootprintVerificationCase(args: {
-  readonly artifact: PublicWorkbookArtifact
+  readonly artifact: XlsxFixtureArtifact
   readonly footprint: WorkbookFootprint
   readonly baseEvidence: readonly string[]
   readonly runStructuralSmoke: boolean
   readonly maxCellCount: number
-}): PublicWorkbookCorpusCase | null {
+}): XlsxFixtureCorpusCase | null {
   if (args.footprint.featureCounts.cellCount > args.maxCellCount) {
     return unsupportedResourceLimitCase(args.artifact, args.baseEvidence, args.footprint, args.maxCellCount)
   }
@@ -280,7 +278,7 @@ export function buildResourceLimitedFootprintVerificationCase(args: {
 
 async function tryVerifyResourceLimitedFootprintIsolated(
   args: {
-    readonly artifact: PublicWorkbookArtifact
+    readonly artifact: XlsxFixtureArtifact
     readonly cacheDir: string
     readonly runStructuralSmoke: boolean
     readonly timeoutMs: number
@@ -290,7 +288,7 @@ async function tryVerifyResourceLimitedFootprintIsolated(
   },
   baseEvidence: readonly string[],
   runtimeMetrics: ReturnType<typeof startVerificationRuntimeMetrics>,
-): Promise<PublicWorkbookCorpusCase | null> {
+): Promise<XlsxFixtureCorpusCase | null> {
   const cachePath = join(args.cacheDir, args.artifact.cachePath)
   if (!existsSync(cachePath)) {
     return null
@@ -300,7 +298,7 @@ async function tryVerifyResourceLimitedFootprintIsolated(
     bytes: new Uint8Array(0),
     filePath: cachePath,
     fileName: args.artifact.fileName,
-    scriptPath: publicWorkbookCorpusFootprintWorkerScriptPath,
+    scriptPath: xlsxFixtureCorpusFootprintWorkerScriptPath,
     options: {
       timeoutMs: args.timeoutMs,
       maxRssBytes: args.maxRssBytes,
@@ -333,8 +331,8 @@ async function tryVerifyResourceLimitedFootprintIsolated(
 }
 
 function largeSimpleFootprintCompactResourceLimits(
-  artifact: PublicWorkbookArtifact,
-  featureCounts: PublicWorkbookFeatureCounts,
+  artifact: XlsxFixtureArtifact,
+  featureCounts: XlsxFixtureFeatureCounts,
   runStructuralSmoke: boolean,
 ): readonly ResourceLimitPreflight[] | null {
   const formulaOracleResourceLimit = formulaOracleFormulaCountResourceLimitPreflight(featureCounts)

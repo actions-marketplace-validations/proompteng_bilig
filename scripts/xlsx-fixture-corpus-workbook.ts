@@ -14,20 +14,20 @@ import { decodeCellAddress, encodeCellAddress } from '../packages/excel-import/s
 import { decodeXmlText, normalizeWorksheetText } from '../packages/excel-import/src/xlsx-large-simple-worksheet-stream-text.js'
 import { ErrorCode, ValueTag } from '../packages/protocol/src/enums.js'
 import type { CellValue, WorkbookExternalWorkbookReferenceSnapshot, WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import type { FormulaOracle, PublicWorkbookCorpusCase, PublicWorkbookFeatureCounts } from './public-workbook-corpus-types.ts'
+import type { FormulaOracle, XlsxFixtureCorpusCase, XlsxFixtureFeatureCounts } from './xlsx-fixture-corpus-types.ts'
 import {
   inspectXlsxWorkbookFootprintLowMemory,
   inspectXlsxWorkbookFootprintLowMemoryAsync,
   isZipWorkbook,
-} from './public-workbook-corpus-xlsx-footprint.ts'
+} from './xlsx-fixture-corpus-xlsx-footprint.ts'
 import {
   tryInspectLargeSimpleXlsxHeadless,
   type LargeSimpleXlsxHeadlessInspectResult,
 } from '../packages/excel-import/src/xlsx-large-simple-headless-inspect.js'
 
 export interface WorkbookFootprint {
-  readonly featureCounts: PublicWorkbookFeatureCounts
-  readonly workbookMetadata: PublicWorkbookCorpusCase['workbookMetadata']
+  readonly featureCounts: XlsxFixtureFeatureCounts
+  readonly workbookMetadata: XlsxFixtureCorpusCase['workbookMetadata']
   readonly externalWorkbookReferences: readonly WorkbookExternalWorkbookReferenceSnapshot[]
   readonly largeSimpleXlsxImport?: {
     readonly eligible: boolean
@@ -35,14 +35,14 @@ export interface WorkbookFootprint {
   }
 }
 
-type WorkbookSheetUsedRange = NonNullable<PublicWorkbookCorpusCase['workbookMetadata']['dimensions'][number]['usedRange']>
+type WorkbookSheetUsedRange = NonNullable<XlsxFixtureCorpusCase['workbookMetadata']['dimensions'][number]['usedRange']>
 
 const largeSimpleHeadlessFingerprintCellThreshold = 100_000
 const formulaOracleWorksheetChunkSize = 16 * 1024
 const maxFormulaOracleCellXmlBufferLength = 8 * 1024 * 1024
 const xmlCellStartPattern = /<(?:[A-Za-z_][\w.-]*:)?c\b/u
 
-export function countWorkbookFeatures(snapshot: WorkbookSnapshot, warnings: readonly string[]): PublicWorkbookFeatureCounts {
+export function countWorkbookFeatures(snapshot: WorkbookSnapshot, warnings: readonly string[]): XlsxFixtureFeatureCounts {
   return {
     sheetCount: snapshot.sheets.length,
     cellCount: snapshot.sheets.reduce((sum, sheet) => sum + sheet.cells.length, 0),
@@ -61,7 +61,7 @@ export function countWorkbookFeatures(snapshot: WorkbookSnapshot, warnings: read
   }
 }
 
-export function countImportedWorkbookFeatures(imported: ImportedWorkbook): PublicWorkbookFeatureCounts {
+export function countImportedWorkbookFeatures(imported: ImportedWorkbook): XlsxFixtureFeatureCounts {
   const stats = imported.stats
   if (!stats) {
     return countWorkbookFeatures(imported.snapshot, imported.warnings)
@@ -85,7 +85,7 @@ export function countImportedWorkbookFeatures(imported: ImportedWorkbook): Publi
   }
 }
 
-export function workbookMetadata(snapshot: WorkbookSnapshot): PublicWorkbookCorpusCase['workbookMetadata'] {
+export function workbookMetadata(snapshot: WorkbookSnapshot): XlsxFixtureCorpusCase['workbookMetadata'] {
   return {
     workbookName: snapshot.workbook.name,
     sheetNames: snapshot.sheets.toSorted((left, right) => left.order - right.order).map((sheet) => sheet.name),
@@ -113,7 +113,7 @@ export function workbookMetadata(snapshot: WorkbookSnapshot): PublicWorkbookCorp
   }
 }
 
-export function importedWorkbookMetadata(imported: ImportedWorkbook): PublicWorkbookCorpusCase['workbookMetadata'] {
+export function importedWorkbookMetadata(imported: ImportedWorkbook): XlsxFixtureCorpusCase['workbookMetadata'] {
   const stats = imported.stats
   if (!stats) {
     return workbookMetadata(imported.snapshot)
@@ -131,7 +131,7 @@ export function importedWorkbookMetadata(imported: ImportedWorkbook): PublicWork
   }
 }
 
-export function emptyFeatureCounts(): PublicWorkbookFeatureCounts {
+export function emptyFeatureCounts(): XlsxFixtureFeatureCounts {
   return {
     sheetCount: 0,
     cellCount: 0,
@@ -156,7 +156,7 @@ export function inspectWorkbookFootprint(bytes: Uint8Array, fileName: string): W
   }
   throw new Error(
     [
-      `Public workbook corpus footprinting is native XLSX/XLSM only: ${fileName}`,
+      `XLSX fixture corpus footprinting is native XLSX/XLSM only: ${fileName}`,
       'SheetJS fallback is disabled for corpus verification.',
     ].join('; '),
   )
@@ -247,7 +247,7 @@ export function fingerprintLargeSimpleDataOnlyWorkbookSource(source: XlsxZipByte
     return null
   }
   const counts = countLargeSimpleHeadlessFingerprintFeatures(inspected)
-  const metadata: PublicWorkbookCorpusCase['workbookMetadata'] = {
+  const metadata: XlsxFixtureCorpusCase['workbookMetadata'] = {
     workbookName: inspected.workbookName,
     sheetNames: inspected.sheetNames,
     dimensions: inspected.stats.dimensions,
@@ -262,7 +262,7 @@ function byteSourceFromBytes(bytes: Uint8Array): XlsxZipByteSource {
   }
 }
 
-function countLargeSimpleHeadlessFingerprintFeatures(inspected: LargeSimpleXlsxHeadlessInspectResult): PublicWorkbookFeatureCounts {
+function countLargeSimpleHeadlessFingerprintFeatures(inspected: LargeSimpleXlsxHeadlessInspectResult): XlsxFixtureFeatureCounts {
   return {
     sheetCount: inspected.stats.sheetCount,
     cellCount: inspected.stats.cellCount,

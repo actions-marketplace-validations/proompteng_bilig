@@ -7,8 +7,8 @@ import { join, resolve } from 'node:path'
 
 import { strToU8, zipSync } from 'fflate'
 
-import { readFlagArg, readMegabytesArg, readNumberArg, readStringArg } from './public-workbook-corpus-cli.ts'
-import { formatByteSize, startChildRssWatchdog, terminateChildProcess } from './public-workbook-corpus-process.ts'
+import { readFlagArg, readMegabytesArg, readNumberArg, readStringArg } from './xlsx-fixture-corpus-cli.ts'
+import { formatByteSize, startChildRssWatchdog, terminateChildProcess } from './xlsx-fixture-corpus-process.ts'
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
 const mib = 1024 * 1024

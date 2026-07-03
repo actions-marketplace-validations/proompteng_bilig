@@ -11,7 +11,7 @@ contact_links:
     about: Run invoice, budget, MRR, quote, and capacity examples before proposing a new workflow.
   - name: Submit a workbook fixture
     url: https://proompteng.github.io/bilig/submit-workbook-fixture.html
-    about: Share a reduced public workbook or automation case that should become a test, example, or corpus fixture.
+    about: Share a reduced XLSX fixture or automation case that should become a test, example, or corpus fixture.
   - name: Fixture discussion
     url: https://github.com/proompteng/bilig/discussions/414
     about: Discuss reduced workbook cases before turning them into public fixtures.

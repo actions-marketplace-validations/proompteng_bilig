@@ -1,18 +1,18 @@
 import type {
-  PublicWorkbookArtifact,
-  PublicWorkbookCaseStatus,
-  PublicWorkbookCorpusCase,
-  PublicWorkbookCorpusScorecard,
-  PublicWorkbookFeatureCounts,
-  PublicWorkbookExternalReferenceSummary,
-  PublicWorkbookLicenseEvidence,
-  PublicWorkbookManifest,
-  PublicWorkbookSource,
-  PublicWorkbookSourceKind,
-  PublicWorkbookValidationSummary,
-  PublicWorkbookVerificationPhase,
-  PublicWorkbookVerificationPhaseTiming,
-} from './public-workbook-corpus-types.ts'
+  XlsxFixtureArtifact,
+  XlsxFixtureCaseStatus,
+  XlsxFixtureCorpusCase,
+  XlsxFixtureCorpusScorecard,
+  XlsxFixtureFeatureCounts,
+  XlsxFixtureExternalReferenceSummary,
+  XlsxFixtureLicenseEvidence,
+  XlsxFixtureManifest,
+  XlsxFixtureSource,
+  XlsxFixtureSourceKind,
+  XlsxFixtureValidationSummary,
+  XlsxFixtureVerificationPhase,
+  XlsxFixtureVerificationPhaseTiming,
+} from './xlsx-fixture-corpus-types.ts'
 
 const allowedLicenseTokens = [
   'cc0',
@@ -32,16 +32,16 @@ const allowedLicenseTokens = [
   'mpl-2.0',
 ]
 
-export const defaultPublicWorkbookTargetCount = 10_000
+export const defaultXlsxFixtureTargetCount = 10_000
 
-export function createEmptyPublicWorkbookManifest(
+export function createEmptyXlsxFixtureManifest(
   generatedAt = new Date().toISOString(),
-  targetWorkbookCount = defaultPublicWorkbookTargetCount,
-): PublicWorkbookManifest {
+  targetWorkbookCount = defaultXlsxFixtureTargetCount,
+): XlsxFixtureManifest {
   validateTargetWorkbookCount(targetWorkbookCount)
   return {
     schemaVersion: 1,
-    corpus: 'public-workbook-corpus',
+    corpus: 'xlsx-fixture-corpus',
     targetWorkbookCount,
     generatedAt,
     sources: [],
@@ -49,32 +49,32 @@ export function createEmptyPublicWorkbookManifest(
   }
 }
 
-export function validatePublicWorkbookManifest(manifest: PublicWorkbookManifest): void {
-  if (manifest.schemaVersion !== 1 || manifest.corpus !== 'public-workbook-corpus') {
-    throw new Error('Unexpected public workbook corpus manifest header')
+export function validateXlsxFixtureManifest(manifest: XlsxFixtureManifest): void {
+  if (manifest.schemaVersion !== 1 || manifest.corpus !== 'xlsx-fixture-corpus') {
+    throw new Error('Unexpected XLSX fixture corpus manifest header')
   }
   validateTargetWorkbookCount(manifest.targetWorkbookCount)
   const sourceIds = new Set<string>()
   for (const source of manifest.sources) {
     if (sourceIds.has(source.id)) {
-      throw new Error(`Duplicate public workbook source id: ${source.id}`)
+      throw new Error(`Duplicate XLSX fixture source id: ${source.id}`)
     }
     sourceIds.add(source.id)
     if (!hasUsableLicenseEvidence(source.license)) {
-      throw new Error(`Public workbook source ${source.id} is missing usable license evidence`)
+      throw new Error(`XLSX fixture source ${source.id} is missing usable license evidence`)
     }
     if (!isSpreadsheetUrl(source.downloadUrl) && !isSpreadsheetFileName(source.fileName)) {
-      throw new Error(`Public workbook source ${source.id} is not a spreadsheet candidate`)
+      throw new Error(`XLSX fixture source ${source.id} is not a spreadsheet candidate`)
     }
   }
   const exhaustedSourceIds = new Set<string>()
   for (const sourceId of manifest.fetchState?.exhaustedSourceIds ?? []) {
     if (exhaustedSourceIds.has(sourceId)) {
-      throw new Error(`Duplicate exhausted public workbook source id: ${sourceId}`)
+      throw new Error(`Duplicate exhausted XLSX fixture source id: ${sourceId}`)
     }
     exhaustedSourceIds.add(sourceId)
     if (!sourceIds.has(sourceId)) {
-      throw new Error(`Exhausted public workbook source ${sourceId} is not in the manifest`)
+      throw new Error(`Exhausted XLSX fixture source ${sourceId} is not in the manifest`)
     }
   }
   const artifactIds = new Set<string>()
@@ -82,51 +82,51 @@ export function validatePublicWorkbookManifest(manifest: PublicWorkbookManifest)
   const fingerprints = new Set<string>()
   for (const artifact of manifest.artifacts) {
     if (artifactIds.has(artifact.id)) {
-      throw new Error(`Duplicate public workbook artifact id: ${artifact.id}`)
+      throw new Error(`Duplicate XLSX fixture artifact id: ${artifact.id}`)
     }
     artifactIds.add(artifact.id)
     if (!sourceIds.has(artifact.sourceId)) {
-      throw new Error(`Public workbook artifact ${artifact.id} references unknown source ${artifact.sourceId}`)
+      throw new Error(`XLSX fixture artifact ${artifact.id} references unknown source ${artifact.sourceId}`)
     }
     if (!/^[0-9a-f]{64}$/u.test(artifact.sha256)) {
-      throw new Error(`Public workbook artifact ${artifact.id} has an invalid sha256`)
+      throw new Error(`XLSX fixture artifact ${artifact.id} has an invalid sha256`)
     }
     if (hashes.has(artifact.sha256)) {
-      throw new Error(`Duplicate public workbook artifact sha256: ${artifact.sha256}`)
+      throw new Error(`Duplicate XLSX fixture artifact sha256: ${artifact.sha256}`)
     }
     hashes.add(artifact.sha256)
     if (fingerprints.has(artifact.workbookFingerprint)) {
-      throw new Error(`Duplicate public workbook structure fingerprint: ${artifact.workbookFingerprint}`)
+      throw new Error(`Duplicate XLSX fixture structure fingerprint: ${artifact.workbookFingerprint}`)
     }
     fingerprints.add(artifact.workbookFingerprint)
     if (!hasUsableLicenseEvidence(artifact.license)) {
-      throw new Error(`Public workbook artifact ${artifact.id} is missing usable license evidence`)
+      throw new Error(`XLSX fixture artifact ${artifact.id} is missing usable license evidence`)
     }
   }
 }
 
-export function parsePublicWorkbookManifestJson(value: unknown): PublicWorkbookManifest {
+export function parseXlsxFixtureManifestJson(value: unknown): XlsxFixtureManifest {
   const record = asRecord(value)
-  const fetchState = parsePublicWorkbookFetchState(record['fetchState'])
-  const manifest: PublicWorkbookManifest = {
+  const fetchState = parseXlsxFixtureFetchState(record['fetchState'])
+  const manifest: XlsxFixtureManifest = {
     schemaVersion: readExpectedNumber(record, 'schemaVersion', 1),
-    corpus: readExpectedString(record, 'corpus', 'public-workbook-corpus'),
+    corpus: readExpectedString(record, 'corpus', 'xlsx-fixture-corpus'),
     targetWorkbookCount: readTargetWorkbookCount(record, 'targetWorkbookCount'),
     generatedAt: readRequiredString(record, 'generatedAt'),
-    sources: readRequiredArray(record, 'sources').map(parsePublicWorkbookSource),
-    artifacts: readRequiredArray(record, 'artifacts').map(parsePublicWorkbookArtifact),
+    sources: readRequiredArray(record, 'sources').map(parseXlsxFixtureSource),
+    artifacts: readRequiredArray(record, 'artifacts').map(parseXlsxFixtureArtifact),
     ...(fetchState ? { fetchState } : {}),
   }
-  validatePublicWorkbookManifest(manifest)
+  validateXlsxFixtureManifest(manifest)
   return manifest
 }
 
-export function parsePublicWorkbookCorpusScorecardJson(value: unknown): PublicWorkbookCorpusScorecard {
+export function parseXlsxFixtureCorpusScorecardJson(value: unknown): XlsxFixtureCorpusScorecard {
   const record = asRecord(value)
   const summary = asRecord(record['summary'])
-  const scorecard: PublicWorkbookCorpusScorecard = {
+  const scorecard: XlsxFixtureCorpusScorecard = {
     schemaVersion: readExpectedNumber(record, 'schemaVersion', 1),
-    suite: readExpectedString(record, 'suite', 'public-workbook-corpus'),
+    suite: readExpectedString(record, 'suite', 'xlsx-fixture-corpus'),
     generatedAt: readRequiredString(record, 'generatedAt'),
     summary: {
       targetWorkbookCount: readTargetWorkbookCount(summary, 'targetWorkbookCount'),
@@ -143,18 +143,18 @@ export function parsePublicWorkbookCorpusScorecardJson(value: unknown): PublicWo
       allCachedWorkbooksPassed: readRequiredBoolean(summary, 'allCachedWorkbooksPassed'),
       remainingToTarget: readRequiredInteger(summary, 'remainingToTarget'),
     },
-    cases: readRequiredArray(record, 'cases').map(parsePublicWorkbookCorpusCase),
+    cases: readRequiredArray(record, 'cases').map(parseXlsxFixtureCorpusCase),
   }
-  validatePublicWorkbookCorpusScorecard(scorecard)
+  validateXlsxFixtureCorpusScorecard(scorecard)
   return scorecard
 }
 
-export function parsePublicWorkbookCorpusCase(value: unknown): PublicWorkbookCorpusCase {
+export function parseXlsxFixtureCorpusCase(value: unknown): XlsxFixtureCorpusCase {
   const record = asRecord(value)
   const elapsedMs = readOptionalNonNegativeInteger(record, 'elapsedMs')
   const peakRssBytes = readOptionalNonNegativeIntegerOrNull(record, 'peakRssBytes')
-  const phaseTimings = parseOptionalPublicWorkbookVerificationPhaseTimings(record['phaseTimings'])
-  const externalWorkbookReferences = parseOptionalPublicWorkbookExternalReferenceSummary(record['externalWorkbookReferences'])
+  const phaseTimings = parseOptionalXlsxFixtureVerificationPhaseTimings(record['phaseTimings'])
+  const externalWorkbookReferences = parseOptionalXlsxFixtureExternalReferenceSummary(record['externalWorkbookReferences'])
   return {
     id: readRequiredString(record, 'id'),
     sourceId: readRequiredString(record, 'sourceId'),
@@ -162,22 +162,22 @@ export function parsePublicWorkbookCorpusCase(value: unknown): PublicWorkbookCor
     fileName: readRequiredString(record, 'fileName'),
     sha256: readRequiredString(record, 'sha256'),
     byteSize: readRequiredInteger(record, 'byteSize'),
-    license: parsePublicWorkbookLicenseEvidence(record['license']),
-    status: parsePublicWorkbookCaseStatus(readRequiredString(record, 'status')),
+    license: parseXlsxFixtureLicenseEvidence(record['license']),
+    status: parseXlsxFixtureCaseStatus(readRequiredString(record, 'status')),
     passed: readRequiredBoolean(record, 'passed'),
     ...(elapsedMs !== undefined ? { elapsedMs } : {}),
     ...(peakRssBytes !== undefined ? { peakRssBytes } : {}),
     ...(phaseTimings !== undefined ? { phaseTimings } : {}),
     ...(externalWorkbookReferences !== undefined ? { externalWorkbookReferences } : {}),
-    featureCounts: parsePublicWorkbookFeatureCounts(record['featureCounts']),
-    workbookMetadata: parsePublicWorkbookMetadata(record['workbookMetadata']),
-    validation: parsePublicWorkbookValidationSummary(record['validation']),
+    featureCounts: parseXlsxFixtureFeatureCounts(record['featureCounts']),
+    workbookMetadata: parseXlsxFixtureMetadata(record['workbookMetadata']),
+    validation: parseXlsxFixtureValidationSummary(record['validation']),
     unsupportedFeatureClassifications: readStringArray(record, 'unsupportedFeatureClassifications'),
     evidence: readStringArray(record, 'evidence'),
   }
 }
 
-export function hasUsableLicenseEvidence(license: PublicWorkbookLicenseEvidence): boolean {
+export function hasUsableLicenseEvidence(license: XlsxFixtureLicenseEvidence): boolean {
   const title = license.title.trim().toLowerCase()
   const spdx = license.spdxId?.trim().toLowerCase() ?? ''
   const evidenceUrl = license.evidenceUrl?.trim() ?? ''
@@ -232,53 +232,53 @@ export function readArray(value: Record<string, unknown>, key: string): unknown[
   return Array.isArray(fieldValue) ? fieldValue : []
 }
 
-function validatePublicWorkbookCorpusScorecard(scorecard: PublicWorkbookCorpusScorecard): void {
-  if (scorecard.schemaVersion !== 1 || scorecard.suite !== 'public-workbook-corpus') {
-    throw new Error('Unexpected public workbook corpus scorecard header')
+function validateXlsxFixtureCorpusScorecard(scorecard: XlsxFixtureCorpusScorecard): void {
+  if (scorecard.schemaVersion !== 1 || scorecard.suite !== 'xlsx-fixture-corpus') {
+    throw new Error('Unexpected XLSX fixture corpus scorecard header')
   }
   validateTargetWorkbookCount(scorecard.summary.targetWorkbookCount)
   if (scorecard.cases.length !== scorecard.summary.cachedWorkbookCount) {
-    throw new Error('Public workbook corpus scorecard case count does not match cached workbook count')
+    throw new Error('XLSX fixture corpus scorecard case count does not match cached workbook count')
   }
   if (scorecard.summary.remainingToTarget !== Math.max(0, scorecard.summary.targetWorkbookCount - scorecard.summary.cachedWorkbookCount)) {
-    throw new Error('Public workbook corpus scorecard remaining target count is stale')
+    throw new Error('XLSX fixture corpus scorecard remaining target count is stale')
   }
   const passedWorkbookCount = scorecard.cases.filter((entry) => entry.status === 'passed').length
   const failedWorkbookCount = scorecard.cases.filter((entry) => entry.status === 'failed').length
   const errorWorkbookCount = scorecard.cases.filter((entry) => entry.status === 'error').length
   const unsupportedWorkbookCount = scorecard.cases.filter((entry) => entry.status === 'unsupported').length
   if (scorecard.summary.passedWorkbookCount !== passedWorkbookCount) {
-    throw new Error('Public workbook corpus scorecard passed workbook count is stale')
+    throw new Error('XLSX fixture corpus scorecard passed workbook count is stale')
   }
   if (scorecard.summary.failedWorkbookCount !== failedWorkbookCount) {
-    throw new Error('Public workbook corpus scorecard failed workbook count is stale')
+    throw new Error('XLSX fixture corpus scorecard failed workbook count is stale')
   }
   if (scorecard.summary.errorWorkbookCount !== errorWorkbookCount) {
-    throw new Error('Public workbook corpus scorecard error workbook count is stale')
+    throw new Error('XLSX fixture corpus scorecard error workbook count is stale')
   }
   if (scorecard.summary.unsupportedWorkbookCount !== unsupportedWorkbookCount) {
-    throw new Error('Public workbook corpus scorecard unsupported workbook count is stale')
+    throw new Error('XLSX fixture corpus scorecard unsupported workbook count is stale')
   }
   const importedWorkbookCount = scorecard.cases.filter((entry) => entry.validation.importPassed).length
   if (scorecard.summary.importedWorkbookCount !== importedWorkbookCount) {
-    throw new Error('Public workbook corpus scorecard imported workbook count is stale')
+    throw new Error('XLSX fixture corpus scorecard imported workbook count is stale')
   }
   const formulaOracleComparisonCount = scorecard.cases.reduce((sum, entry) => sum + entry.validation.formulaOracleComparisons, 0)
   if (scorecard.summary.formulaOracleComparisonCount !== formulaOracleComparisonCount) {
-    throw new Error('Public workbook corpus scorecard formula oracle comparison count is stale')
+    throw new Error('XLSX fixture corpus scorecard formula oracle comparison count is stale')
   }
   if (scorecard.summary.formulaOracleMatchCount !== countFormulaOracleMatches(scorecard.cases)) {
-    throw new Error('Public workbook corpus scorecard formula oracle match count is stale')
+    throw new Error('XLSX fixture corpus scorecard formula oracle match count is stale')
   }
   if (scorecard.summary.allCachedWorkbooksPassed !== scorecard.cases.every((entry) => entry.passed)) {
-    throw new Error('Public workbook corpus scorecard pass summary is stale')
+    throw new Error('XLSX fixture corpus scorecard pass summary is stale')
   }
   if (!scorecard.summary.allCachedWorkbooksPassed) {
-    throw new Error('Public workbook corpus scorecard has cached workbooks that did not pass')
+    throw new Error('XLSX fixture corpus scorecard has cached workbooks that did not pass')
   }
 }
 
-function parsePublicWorkbookFetchState(value: unknown): PublicWorkbookManifest['fetchState'] | undefined {
+function parseXlsxFixtureFetchState(value: unknown): XlsxFixtureManifest['fetchState'] | undefined {
   if (value === undefined) {
     return undefined
   }
@@ -288,19 +288,19 @@ function parsePublicWorkbookFetchState(value: unknown): PublicWorkbookManifest['
   }
 }
 
-function parsePublicWorkbookSource(value: unknown): PublicWorkbookSource {
+function parseXlsxFixtureSource(value: unknown): XlsxFixtureSource {
   const record = asRecord(value)
   const portal = readOptionalString(record, 'portal')
   const datasetId = readOptionalString(record, 'datasetId')
   const resourceId = readOptionalString(record, 'resourceId')
   return {
     id: readRequiredString(record, 'id'),
-    kind: parsePublicWorkbookSourceKind(readRequiredString(record, 'kind')),
+    kind: parseXlsxFixtureSourceKind(readRequiredString(record, 'kind')),
     sourceUrl: readRequiredString(record, 'sourceUrl'),
     downloadUrl: readRequiredString(record, 'downloadUrl'),
     fileName: readRequiredString(record, 'fileName'),
     discoveredAt: readRequiredString(record, 'discoveredAt'),
-    license: parsePublicWorkbookLicenseEvidence(record['license']),
+    license: parseXlsxFixtureLicenseEvidence(record['license']),
     ...(readOptionalStringArray(record, 'topicEvidence') ? { topicEvidence: readOptionalStringArray(record, 'topicEvidence') } : {}),
     ...(portal ? { portal } : {}),
     ...(datasetId ? { datasetId } : {}),
@@ -308,7 +308,7 @@ function parsePublicWorkbookSource(value: unknown): PublicWorkbookSource {
   }
 }
 
-export function parsePublicWorkbookArtifact(value: unknown): PublicWorkbookArtifact {
+export function parseXlsxFixtureArtifact(value: unknown): XlsxFixtureArtifact {
   const record = asRecord(value)
   return {
     id: readRequiredString(record, 'id'),
@@ -321,12 +321,12 @@ export function parsePublicWorkbookArtifact(value: unknown): PublicWorkbookArtif
     byteSize: readRequiredInteger(record, 'byteSize'),
     workbookFingerprint: readRequiredString(record, 'workbookFingerprint'),
     fetchedAt: readRequiredString(record, 'fetchedAt'),
-    license: parsePublicWorkbookLicenseEvidence(record['license']),
+    license: parseXlsxFixtureLicenseEvidence(record['license']),
     ...(readOptionalStringArray(record, 'topicEvidence') ? { topicEvidence: readOptionalStringArray(record, 'topicEvidence') } : {}),
   }
 }
 
-function parsePublicWorkbookLicenseEvidence(value: unknown): PublicWorkbookLicenseEvidence {
+function parseXlsxFixtureLicenseEvidence(value: unknown): XlsxFixtureLicenseEvidence {
   const record = asRecord(value)
   return {
     spdxId: readNullableString(record, 'spdxId'),
@@ -335,7 +335,7 @@ function parsePublicWorkbookLicenseEvidence(value: unknown): PublicWorkbookLicen
   }
 }
 
-function parsePublicWorkbookFeatureCounts(value: unknown): PublicWorkbookFeatureCounts {
+function parseXlsxFixtureFeatureCounts(value: unknown): XlsxFixtureFeatureCounts {
   const record = asRecord(value)
   return {
     sheetCount: readRequiredInteger(record, 'sheetCount'),
@@ -355,20 +355,20 @@ function parsePublicWorkbookFeatureCounts(value: unknown): PublicWorkbookFeature
   }
 }
 
-function parseOptionalPublicWorkbookVerificationPhaseTimings(value: unknown): readonly PublicWorkbookVerificationPhaseTiming[] | undefined {
+function parseOptionalXlsxFixtureVerificationPhaseTimings(value: unknown): readonly XlsxFixtureVerificationPhaseTiming[] | undefined {
   if (value === undefined) {
     return undefined
   }
   return readRequiredArray({ phaseTimings: value }, 'phaseTimings').map((entry) => {
     const record = asRecord(entry)
     return {
-      phase: parsePublicWorkbookVerificationPhase(readRequiredString(record, 'phase')),
+      phase: parseXlsxFixtureVerificationPhase(readRequiredString(record, 'phase')),
       elapsedMs: readRequiredInteger(record, 'elapsedMs'),
     }
   })
 }
 
-function parseOptionalPublicWorkbookExternalReferenceSummary(value: unknown): PublicWorkbookExternalReferenceSummary | undefined {
+function parseOptionalXlsxFixtureExternalReferenceSummary(value: unknown): XlsxFixtureExternalReferenceSummary | undefined {
   if (value === undefined) {
     return undefined
   }
@@ -380,7 +380,7 @@ function parseOptionalPublicWorkbookExternalReferenceSummary(value: unknown): Pu
   }
 }
 
-function parsePublicWorkbookMetadata(value: unknown): PublicWorkbookCorpusCase['workbookMetadata'] {
+function parseXlsxFixtureMetadata(value: unknown): XlsxFixtureCorpusCase['workbookMetadata'] {
   const record = asRecord(value)
   return {
     workbookName: readRequiredString(record, 'workbookName'),
@@ -388,7 +388,7 @@ function parsePublicWorkbookMetadata(value: unknown): PublicWorkbookCorpusCase['
     dimensions: readRequiredArray(record, 'dimensions').map((dimension) => {
       const dimensionRecord = asRecord(dimension)
       const usedRange = parseOptionalUsedRange(dimensionRecord['usedRange'])
-      const parsedDimension: PublicWorkbookCorpusCase['workbookMetadata']['dimensions'][number] = {
+      const parsedDimension: XlsxFixtureCorpusCase['workbookMetadata']['dimensions'][number] = {
         sheetName: readRequiredSheetName(dimensionRecord, 'sheetName'),
         rowCount: readRequiredInteger(dimensionRecord, 'rowCount'),
         columnCount: readRequiredInteger(dimensionRecord, 'columnCount'),
@@ -402,9 +402,7 @@ function parsePublicWorkbookMetadata(value: unknown): PublicWorkbookCorpusCase['
   }
 }
 
-function parseOptionalUsedRange(
-  value: unknown,
-): PublicWorkbookCorpusCase['workbookMetadata']['dimensions'][number]['usedRange'] | undefined {
+function parseOptionalUsedRange(value: unknown): XlsxFixtureCorpusCase['workbookMetadata']['dimensions'][number]['usedRange'] | undefined {
   if (value === undefined) {
     return undefined
   }
@@ -420,7 +418,7 @@ function parseOptionalUsedRange(
   }
 }
 
-function parsePublicWorkbookValidationSummary(value: unknown): PublicWorkbookValidationSummary {
+function parseXlsxFixtureValidationSummary(value: unknown): XlsxFixtureValidationSummary {
   const record = asRecord(value)
   return {
     importPassed: readRequiredBoolean(record, 'importPassed'),
@@ -432,18 +430,18 @@ function parsePublicWorkbookValidationSummary(value: unknown): PublicWorkbookVal
   }
 }
 
-function parsePublicWorkbookSourceKind(value: string): PublicWorkbookSourceKind {
+function parseXlsxFixtureSourceKind(value: string): XlsxFixtureSourceKind {
   switch (value) {
     case 'direct-url':
     case 'ckan-resource':
     case 'github-contents':
       return value
     default:
-      throw new Error(`Unexpected public workbook source kind: ${value}`)
+      throw new Error(`Unexpected XLSX fixture source kind: ${value}`)
   }
 }
 
-function parsePublicWorkbookVerificationPhase(value: string): PublicWorkbookVerificationPhase {
+function parseXlsxFixtureVerificationPhase(value: string): XlsxFixtureVerificationPhase {
   switch (value) {
     case 'read-cache':
     case 'inspect-footprint':
@@ -453,11 +451,11 @@ function parsePublicWorkbookVerificationPhase(value: string): PublicWorkbookVeri
     case 'structural-smoke':
       return value
     default:
-      throw new Error(`Unexpected public workbook verification phase: ${value}`)
+      throw new Error(`Unexpected XLSX fixture verification phase: ${value}`)
   }
 }
 
-function parsePublicWorkbookCaseStatus(value: string): PublicWorkbookCaseStatus {
+function parseXlsxFixtureCaseStatus(value: string): XlsxFixtureCaseStatus {
   switch (value) {
     case 'passed':
     case 'failed':
@@ -465,11 +463,11 @@ function parsePublicWorkbookCaseStatus(value: string): PublicWorkbookCaseStatus 
     case 'unsupported':
       return value
     default:
-      throw new Error(`Unexpected public workbook case status: ${value}`)
+      throw new Error(`Unexpected XLSX fixture case status: ${value}`)
   }
 }
 
-function countFormulaOracleMatches(cases: readonly PublicWorkbookCorpusCase[]): number {
+function countFormulaOracleMatches(cases: readonly XlsxFixtureCorpusCase[]): number {
   return cases.reduce(
     (sum, entry) => sum + Math.max(0, entry.validation.formulaOracleComparisons - entry.validation.formulaOracleMismatches.length),
     0,
@@ -540,7 +538,7 @@ function readTargetWorkbookCount(value: Record<string, unknown>, key: string): n
 
 function validateTargetWorkbookCount(targetWorkbookCount: number): void {
   if (!Number.isInteger(targetWorkbookCount) || targetWorkbookCount <= 0) {
-    throw new Error('Public workbook corpus target workbook count must be a positive integer')
+    throw new Error('XLSX fixture corpus target workbook count must be a positive integer')
   }
 }
 

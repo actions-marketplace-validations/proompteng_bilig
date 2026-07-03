@@ -6,11 +6,11 @@ import { join, resolve } from 'node:path'
 
 import { strToU8, zipSync } from 'fflate'
 
-import { parsePublicWorkbookManifestJson } from './public-workbook-corpus-json.ts'
-import { readFlagArg, readStringArg } from './public-workbook-corpus-cli.ts'
-import { formatByteSize } from './public-workbook-corpus-process.ts'
-import type { PublicWorkbookArtifact, PublicWorkbookCorpusCase } from './public-workbook-corpus-types.ts'
-import { verifyCachedWorkbookArtifactIsolated } from './public-workbook-corpus-verify.ts'
+import { parseXlsxFixtureManifestJson } from './xlsx-fixture-corpus-json.ts'
+import { readFlagArg, readStringArg } from './xlsx-fixture-corpus-cli.ts'
+import { formatByteSize } from './xlsx-fixture-corpus-process.ts'
+import type { XlsxFixtureArtifact, XlsxFixtureCorpusCase } from './xlsx-fixture-corpus-types.ts'
+import { verifyCachedWorkbookArtifactIsolated } from './xlsx-fixture-corpus-verify.ts'
 
 interface MemoryGateTarget {
   readonly artifactId: string
@@ -32,7 +32,7 @@ interface MemoryGateResult {
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
 const mib = 1024 * 1024
 export const memoryGateRssBudgets = {
-  publicWorkbookMaxRssBytes: 112 * mib,
+  xlsxFixtureMaxRssBytes: 112 * mib,
   // Synthetic fixtures assert importer memory shape, not externally sourced
   // workbook budgets. The verifier still gets the strict resource limit below;
   // this budget only absorbs RSS sampling jitter after a successful worker exit.
@@ -46,7 +46,7 @@ export const memoryGateRssBudgets = {
 } as const
 const syntheticVerifyMaxRssBytes = 112 * mib
 const {
-  publicWorkbookMaxRssBytes,
+  xlsxFixtureMaxRssBytes,
   synthetic750kMaxRssBytes,
   syntheticRepeatedRowMetadataMaxRssBytes,
   syntheticRepeatedStringMaxRssBytes,
@@ -63,9 +63,9 @@ const verifyTimeoutMs = 180_000
 const verifyMaxCellCount = 1_500_000
 const rssCheckIntervalMs = 10
 const publicTargets: readonly MemoryGateTarget[] = [
-  { artifactId: 'workbook-f3c2a05d7d838a75', label: '0nContract_Register_Jan_2026.xlsx', maxRssBytes: publicWorkbookMaxRssBytes },
-  { artifactId: 'workbook-5db97e9230dbaf6b', label: 'noibyfarmsize_fr.xlsx', maxRssBytes: publicWorkbookMaxRssBytes },
-  { artifactId: 'workbook-ca98068307263914', label: 'sfgsme-efcpme-tables-2023-eng.xlsx', maxRssBytes: publicWorkbookMaxRssBytes },
+  { artifactId: 'workbook-f3c2a05d7d838a75', label: '0nContract_Register_Jan_2026.xlsx', maxRssBytes: xlsxFixtureMaxRssBytes },
+  { artifactId: 'workbook-5db97e9230dbaf6b', label: 'noibyfarmsize_fr.xlsx', maxRssBytes: xlsxFixtureMaxRssBytes },
+  { artifactId: 'workbook-ca98068307263914', label: 'sfgsme-efcpme-tables-2023-eng.xlsx', maxRssBytes: xlsxFixtureMaxRssBytes },
 ]
 
 async function main(): Promise<void> {
@@ -77,7 +77,7 @@ async function main(): Promise<void> {
   const results: MemoryGateResult[] = []
 
   if (!syntheticOnly) {
-    results.push(...(await runPublicWorkbookGates({ cacheDir, manifestPath, requirePublic })))
+    results.push(...(await runXlsxFixtureGates({ cacheDir, manifestPath, requirePublic })))
   }
   results.push(await runSynthetic750kGate(syntheticCacheDir))
   results.push(await runSyntheticRepeatedRowMetadataGate(syntheticCacheDir))
@@ -93,7 +93,7 @@ async function main(): Promise<void> {
       {
         mode: 'xlsx-import-memory-gate',
         targets: {
-          publicWorkbookMaxRssBytes,
+          xlsxFixtureMaxRssBytes,
           synthetic750kMaxRssBytes,
           syntheticRepeatedRowMetadataMaxRssBytes,
           syntheticRepeatedStringMaxRssBytes,
@@ -114,7 +114,7 @@ async function main(): Promise<void> {
   }
 }
 
-async function runPublicWorkbookGates(args: {
+async function runXlsxFixtureGates(args: {
   readonly cacheDir: string
   readonly manifestPath: string
   readonly requirePublic: boolean
@@ -125,7 +125,7 @@ async function runPublicWorkbookGates(args: {
     }
     return publicTargets.map((target) => skippedResult(target, `manifest not found: ${args.manifestPath}`))
   }
-  const manifest = parsePublicWorkbookManifestJson(JSON.parse(readFileSync(args.manifestPath, 'utf8')))
+  const manifest = parseXlsxFixtureManifestJson(JSON.parse(readFileSync(args.manifestPath, 'utf8')))
   const artifactsById = new Map(manifest.artifacts.map((artifact) => [artifact.id, artifact]))
   const results: MemoryGateResult[] = []
   for (const target of publicTargets) {
@@ -249,7 +249,7 @@ async function runSyntheticCachedExternalFormulaGate(cacheDir: string): Promise<
 
 async function runGateTarget(
   target: MemoryGateTarget,
-  artifact: PublicWorkbookArtifact,
+  artifact: XlsxFixtureArtifact,
   cacheDir: string,
   manifestPath: string,
 ): Promise<MemoryGateResult> {
@@ -268,7 +268,7 @@ async function runGateTarget(
   return memoryGateResult(target, verified, maxRssBytes)
 }
 
-function memoryGateResult(target: MemoryGateTarget, verified: PublicWorkbookCorpusCase, maxRssBytes: number): MemoryGateResult {
+function memoryGateResult(target: MemoryGateTarget, verified: XlsxFixtureCorpusCase, maxRssBytes: number): MemoryGateResult {
   const peakRssBytes = verified.peakRssBytes ?? null
   if (!verified.passed) {
     return {
@@ -331,7 +331,7 @@ function failedMissingPublicResult(target: MemoryGateTarget, reason: string): Me
   }
 }
 
-function writeSynthetic750kWorkbook(cacheDir: string): PublicWorkbookArtifact {
+function writeSynthetic750kWorkbook(cacheDir: string): XlsxFixtureArtifact {
   const rowCount = 150_000
   const columnCount = 5
   const rows: string[] = []
@@ -357,7 +357,7 @@ function writeSynthetic750kWorkbook(cacheDir: string): PublicWorkbookArtifact {
   })
 }
 
-function writeSyntheticRepeatedRowMetadataWorkbook(cacheDir: string): PublicWorkbookArtifact {
+function writeSyntheticRepeatedRowMetadataWorkbook(cacheDir: string): XlsxFixtureArtifact {
   const rowCount = 125_000
   const rows: string[] = []
   for (let row = 1; row <= rowCount; row += 1) {
@@ -380,7 +380,7 @@ function writeSyntheticRepeatedRowMetadataWorkbook(cacheDir: string): PublicWork
   })
 }
 
-function writeSyntheticRepeatedStringWorkbook(cacheDir: string): PublicWorkbookArtifact {
+function writeSyntheticRepeatedStringWorkbook(cacheDir: string): XlsxFixtureArtifact {
   const rowCount = 25_000
   const columnCount = 5
   const rows: string[] = []
@@ -406,7 +406,7 @@ function writeSyntheticRepeatedStringWorkbook(cacheDir: string): PublicWorkbookA
   })
 }
 
-function writeSyntheticDuplicateSharedStringWorkbook(cacheDir: string): PublicWorkbookArtifact {
+function writeSyntheticDuplicateSharedStringWorkbook(cacheDir: string): XlsxFixtureArtifact {
   const rowCount = 25_000
   const columnCount = 5
   const rows: string[] = []
@@ -442,7 +442,7 @@ function writeSyntheticDuplicateSharedStringWorkbook(cacheDir: string): PublicWo
   })
 }
 
-function writeSyntheticMixedRichSharedStringWorkbook(cacheDir: string): PublicWorkbookArtifact {
+function writeSyntheticMixedRichSharedStringWorkbook(cacheDir: string): XlsxFixtureArtifact {
   const rowCount = 25_000
   const columnCount = 5
   const rows: string[] = []
@@ -483,7 +483,7 @@ function writeSyntheticMixedRichSharedStringWorkbook(cacheDir: string): PublicWo
   })
 }
 
-function writeSyntheticFormulaHeavyWorkbook(cacheDir: string): PublicWorkbookArtifact {
+function writeSyntheticFormulaHeavyWorkbook(cacheDir: string): XlsxFixtureArtifact {
   const rowCount = 25_000
   const columnCount = 5
   const rows: string[] = []
@@ -509,7 +509,7 @@ function writeSyntheticFormulaHeavyWorkbook(cacheDir: string): PublicWorkbookArt
   })
 }
 
-function writeSyntheticCachedExternalFormulaWorkbook(cacheDir: string): PublicWorkbookArtifact {
+function writeSyntheticCachedExternalFormulaWorkbook(cacheDir: string): XlsxFixtureArtifact {
   const rowCount = 25_000
   const columnCount = 5
   const formula = "'[external.xlsx]Sheet1'!A1"
@@ -558,7 +558,7 @@ function writeSyntheticWorkbookArtifact(
     readonly sharedStringsXml?: string
     readonly extraEntries?: Readonly<Record<string, Uint8Array>>
   },
-): PublicWorkbookArtifact {
+): XlsxFixtureArtifact {
   const filesDir = join(cacheDir, 'files')
   mkdirSync(filesDir, { recursive: true })
   const sheets = input.sheets ?? [{ name: 'Data', path: 'xl/worksheets/sheet1.xml', worksheetXml: input.worksheetXml ?? '' }]
@@ -591,7 +591,7 @@ ${sheets
   const sha256 = createHash('sha256').update(bytes).digest('hex')
   const cachePath = `files/${sha256}.xlsx`
   writeFileSync(join(cacheDir, cachePath), bytes)
-  const artifact: PublicWorkbookArtifact = {
+  const artifact: XlsxFixtureArtifact = {
     id: input.id,
     sourceId: input.sourceId,
     sourceUrl: `https://example.invalid/${input.fileName}`,
@@ -643,7 +643,7 @@ function deterministicBytes(length: number): Uint8Array {
   return bytes
 }
 
-function writeSyntheticManifest(cacheDir: string, artifact: PublicWorkbookArtifact): void {
+function writeSyntheticManifest(cacheDir: string, artifact: XlsxFixtureArtifact): void {
   writeFileSync(
     join(cacheDir, 'manifest.json'),
     JSON.stringify(

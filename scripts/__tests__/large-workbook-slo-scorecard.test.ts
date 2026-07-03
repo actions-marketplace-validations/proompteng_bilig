@@ -10,16 +10,12 @@ describe('large workbook SLO scorecard', () => {
     expect(scorecard.summary.allSloBudgetsPassed).toBe(true)
     expect(scorecard.summary.headedBrowserFrameP95Evidence).toBe('playwright-contracts')
     expect(scorecard.summary.headedBrowserFrameP95ContractsPassed).toBe(true)
-    expect(scorecard.summary.externalGoogleSheetsEvidence).toBe('official-docs-comparison-artifact')
-    expect(scorecard.summary.externalMicrosoftExcelEvidence).toBe('official-docs-comparison-artifact')
-    expect(scorecard.summary.externalUiResponsivenessGoogleSheetsEvidence).toBe('official-docs-comparison-artifact')
-    expect(scorecard.summary.externalUiResponsivenessMicrosoftExcelEvidence).toBe('official-docs-comparison-artifact')
-    expect(scorecard.source.externalLargeWorkbookComparisonArtifact).toBe(
-      'packages/benchmarks/baselines/large-workbook-external-sheets-excel-comparison.json',
-    )
-    expect(scorecard.source.externalUiResponsivenessComparisonArtifact).toBe(
-      'packages/benchmarks/baselines/ui-responsiveness-external-sheets-excel-comparison.json',
-    )
+    expect(scorecard.summary).not.toHaveProperty('externalGoogleSheetsEvidence')
+    expect(scorecard.summary).not.toHaveProperty('externalMicrosoftExcelEvidence')
+    expect(scorecard.summary).not.toHaveProperty('externalUiResponsivenessGoogleSheetsEvidence')
+    expect(scorecard.summary).not.toHaveProperty('externalUiResponsivenessMicrosoftExcelEvidence')
+    expect(scorecard.source).not.toHaveProperty('externalLargeWorkbookComparisonArtifact')
+    expect(scorecard.source).not.toHaveProperty('externalUiResponsivenessComparisonArtifact')
     expect(scorecard.measurements.map((measurement) => measurement.id)).toEqual([
       'load100k',
       'load250k',
@@ -47,32 +43,8 @@ describe('large workbook SLO scorecard', () => {
       metric: 'frameMs.p95',
       budgetP95: 20,
     })
-    expect(scorecard.externalSheetsExcelComparison).toMatchObject({
-      artifact: 'packages/benchmarks/baselines/large-workbook-external-sheets-excel-comparison.json',
-      sourceBasis: 'official-public-docs-reviewed-2026-05-06',
-      officialGoogleSheetsSourceCount: 5,
-      officialMicrosoftExcelSourceCount: 2,
-      requiredDimensionsPassed: true,
-      findings: [],
-    })
-    expect(scorecard.externalSheetsExcelComparison.coveredFeatures).toEqual([
-      'external.googleSheetsLargeWorkbookDocs',
-      'external.microsoftExcelLargeWorkbookDocs',
-      'external.sheetsExcelLargeWorkbookScaleComparison',
-    ])
-    expect(scorecard.uiResponsivenessExternalSheetsExcelComparison).toMatchObject({
-      artifact: 'packages/benchmarks/baselines/ui-responsiveness-external-sheets-excel-comparison.json',
-      sourceBasis: 'official-public-docs-reviewed-2026-05-06',
-      officialGoogleSheetsSourceCount: 3,
-      officialMicrosoftExcelSourceCount: 4,
-      requiredDimensionsPassed: true,
-      findings: [],
-    })
-    expect(scorecard.uiResponsivenessExternalSheetsExcelComparison.coveredFeatures).toEqual([
-      'external.googleSheetsUiResponsivenessDocs',
-      'external.microsoftExcelUiResponsivenessDocs',
-      'external.sheetsExcelUiResponsivenessComparison',
-    ])
+    expect(scorecard).not.toHaveProperty(['external', 'Sheets', 'Excel', 'Comparison'].join(''))
+    expect(scorecard).not.toHaveProperty(['ui', 'Responsiveness', 'External', 'Sheets', 'Excel', 'Comparison'].join(''))
   })
 
   it('rejects reports that do not cover both 100k and 250k workbook sessions', () => {

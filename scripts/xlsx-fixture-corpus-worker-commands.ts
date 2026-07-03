@@ -5,13 +5,13 @@ import { buildWorkbookCompatibilityReportFromFile } from '@bilig/xlsx/workbook-c
 import { readXlsxZipEntriesLazyFromByteSource } from '@bilig/xlsx/zip-reader'
 import { tryInspectLargeSimpleXlsxHeadless } from '../packages/excel-import/src/xlsx-large-simple-headless-inspect.js'
 import type { LargeSimpleXlsxImportStats } from '../packages/excel-import/src/xlsx-large-simple-import.js'
-import { startSelfRssGuard } from './public-workbook-corpus-process.ts'
-import { inspectWorkbookFootprintForWorker, type WorkbookFootprint } from './public-workbook-corpus-workbook.ts'
-import type { PublicWorkbookFeatureCounts } from './public-workbook-corpus-types.ts'
-import { FileBackedXlsxZipByteSource, isZipWorkbookSource } from './public-workbook-corpus-xlsx-byte-source.ts'
-import { inspectXlsxWorkbookFootprintLowMemoryFromByteSource } from './public-workbook-corpus-xlsx-footprint.ts'
+import { startSelfRssGuard } from './xlsx-fixture-corpus-process.ts'
+import { inspectWorkbookFootprintForWorker, type WorkbookFootprint } from './xlsx-fixture-corpus-workbook.ts'
+import type { XlsxFixtureFeatureCounts } from './xlsx-fixture-corpus-types.ts'
+import { FileBackedXlsxZipByteSource, isZipWorkbookSource } from './xlsx-fixture-corpus-xlsx-byte-source.ts'
+import { inspectXlsxWorkbookFootprintLowMemoryFromByteSource } from './xlsx-fixture-corpus-xlsx-footprint.ts'
 
-const publicWorkbookCorpusWorkerMaterializedBytesFallbackLimit = 1_000_000
+const xlsxFixtureCorpusWorkerMaterializedBytesFallbackLimit = 1_000_000
 
 export async function writeFootprintWorkerResult(args: {
   readonly filePath: string
@@ -110,7 +110,7 @@ function featureCountsFromCompatibilityReport(workbook: {
   readonly pivotTableCount: number
   readonly chartCount: number
   readonly macroModuleCount: number
-}): PublicWorkbookFeatureCounts {
+}): XlsxFixtureFeatureCounts {
   return {
     sheetCount: workbook.sheetCount,
     cellCount: workbook.nonEmptyCellCount,
@@ -150,11 +150,11 @@ function featureCountsFromLargeSimpleStats(stats: LargeSimpleXlsxImportStats): W
 
 function assertMaterializedWorkbookFallbackWithinLimit(filePath: string, phase: string): void {
   const byteLength = statSync(filePath).size
-  if (byteLength <= publicWorkbookCorpusWorkerMaterializedBytesFallbackLimit) {
+  if (byteLength <= xlsxFixtureCorpusWorkerMaterializedBytesFallbackLimit) {
     return
   }
   throw new Error(
     `${phase} materialized bytes fallback is small-workbook only (${byteLength.toLocaleString('en-US')} bytes > ` +
-      `${publicWorkbookCorpusWorkerMaterializedBytesFallbackLimit.toLocaleString('en-US')} bytes). Use native file-backed XLSX scanners for large corpus workbooks.`,
+      `${xlsxFixtureCorpusWorkerMaterializedBytesFallbackLimit.toLocaleString('en-US')} bytes). Use native file-backed XLSX scanners for large corpus workbooks.`,
   )
 }

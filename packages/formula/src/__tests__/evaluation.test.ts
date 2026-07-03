@@ -266,7 +266,7 @@ describe('formula builtins and JS evaluator', () => {
     expect(evaluateAst(parseFormula('SUM(A2)'), context)).toEqual({ tag: ValueTag.Number, value: 0 })
   })
 
-  it('coerces public-corpus date and time text for arithmetic operators', () => {
+  it('coerces xlsx-fixture-corpus date and time text for arithmetic operators', () => {
     const valuesByAddress: Record<string, CellValue> = {
       A1: { tag: ValueTag.String, value: '22/07/2008', stringId: 1 },
       A2: { tag: ValueTag.String, value: '31/12/2019', stringId: 2 },

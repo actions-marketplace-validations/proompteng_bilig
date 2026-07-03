@@ -1,7 +1,7 @@
 ---
 title: Bilig formula bug clinic
 published: true
-description: Send a reduced public workbook, ExcelJS shared-formula, import, formula, or WorkPaper blocker so it can become a Bilig fixture, test, docs page, or example.
+description: Send a reduced XLSX fixture, ExcelJS shared-formula, import, formula, or WorkPaper blocker so it can become a Bilig fixture, test, docs page, or example.
 tags: typescript, node, exceljs, xlsx, formulas, open source
 canonical_url: https://proompteng.github.io/bilig/formula-bug-clinic.html
 cover_image: https://raw.githubusercontent.com/proompteng/bilig/main/docs/assets/github-social-preview.png
@@ -106,7 +106,7 @@ with neutral values while keeping the same formula shape.
 Good discussion summary:
 
 ```text
-Reduced public workbook attached or linked. The clinic report reads Summary!B7
+Reduced XLSX fixture attached or linked. The clinic report reads Summary!B7
 as "review" after the input edit, while Excel returns "approved" for the same
 fixture. The service should return "approved".
 ```

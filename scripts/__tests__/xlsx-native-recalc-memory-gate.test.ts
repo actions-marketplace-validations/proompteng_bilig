@@ -12,7 +12,7 @@ import {
   writeSyntheticNativeRecalcWorkbook,
   type NativeRecalcGateTarget,
 } from '../xlsx-native-recalc-memory-gate.ts'
-import { asRecord } from '../public-workbook-corpus-json.ts'
+import { asRecord } from '../xlsx-fixture-corpus-json.ts'
 
 const mib = 1024 * 1024
 

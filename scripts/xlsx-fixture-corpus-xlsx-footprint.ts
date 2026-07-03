@@ -18,8 +18,8 @@ import {
   inspectWorksheetZipEntryFromLazyZip,
   type WorksheetFootprint,
   worksheetDimension,
-} from './public-workbook-corpus-xlsx-worksheet-footprint.ts'
-import type { WorkbookFootprint } from './public-workbook-corpus-workbook.ts'
+} from './xlsx-fixture-corpus-xlsx-worksheet-footprint.ts'
+import type { WorkbookFootprint } from './xlsx-fixture-corpus-workbook.ts'
 
 interface ZipEntryInfo {
   readonly path: string
