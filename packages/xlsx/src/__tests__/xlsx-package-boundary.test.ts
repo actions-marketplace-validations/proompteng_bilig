@@ -19,6 +19,7 @@ import {
   readXlsxTargetCell,
   readXlsxWorkbookCells,
   readXlsxZipEntries,
+  readXlsxZipEntriesLazy,
   readXmlAttribute,
   replaceXlsxWorksheetCellXml,
   worksheetCellElementPattern,
@@ -106,6 +107,25 @@ describe('@bilig/xlsx package boundary', () => {
     }
 
     expect(writeSimpleXlsxWorkbook(workbook)).toEqual(writeSimpleXlsxWorkbook(workbook))
+  })
+
+  it('inflates lazy deflated ZIP entries without a static Node zlib dependency', () => {
+    const zipReaderSource = readFileSync(join(packageDir, 'src/zip-reader.ts'), 'utf8')
+    expect(zipReaderSource).not.toMatch(/^import\s+.*["']node:zlib["']/mu)
+
+    const zip = readXlsxZipEntriesLazy(
+      writeSimpleXlsxWorkbook({
+        sheets: [
+          {
+            name: 'Sheet1',
+            cells: [{ address: 'A1', row: 0, col: 0, value: 'browser-safe' }],
+          },
+        ],
+      }),
+    )
+
+    expect(textDecoder.decode(zip['xl/workbook.xml'])).toContain('<sheet name="Sheet1"')
+    expect(textDecoder.decode(zip['xl/worksheets/sheet1.xml'])).toContain('<t>browser-safe</t>')
   })
 
   it('exposes a file-backed XLSX byte source without materializing the package', () => {

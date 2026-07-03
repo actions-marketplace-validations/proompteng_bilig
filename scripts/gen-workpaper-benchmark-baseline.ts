@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { runWorkPaperBenchmarkSuite, type WorkPaperBenchmarkResult } from '../packages/benchmarks/src/benchmark-workpaper.ts'
-import { formatJsonForRepo } from './scorecard-format.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 
 interface WorkPaperBenchmarkBaselineDocument {
   schemaVersion: 1

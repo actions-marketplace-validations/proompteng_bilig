@@ -1,9 +1,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { CellValue as HyperFormulaCellValue, RawCellContent } from 'hyperformula'
 
-import { parseCellAddress } from '../packages/formula/src/addressing.js'
 import {
   externalPivotCachesWarning,
   externalWorkbookReferencesWarning,
@@ -16,8 +14,7 @@ import {
 import { importXlsxFromZipByteSource } from '../packages/excel-import/src/xlsx-byte-source-import.js'
 import { detachImportedXlsxSourceBytes } from '../packages/excel-import/src/xlsx-source-bytes.js'
 import type { XlsxZipByteSource } from '@bilig/xlsx/zip-reader'
-import { ValueTag } from '../packages/protocol/src/enums.js'
-import type { CellValue, LiteralInput, WorkbookSnapshot } from '../packages/protocol/src/types.js'
+import type { WorkbookSnapshot } from '../packages/protocol/src/types.js'
 import { validateXlsxFixtureManifest } from './xlsx-fixture-corpus-json.ts'
 import {
   classifyUnsupportedLocaleDecimalCommaFormulaOracle,
@@ -513,39 +510,9 @@ async function classifyUnsupportedFormulaOracleCache(
   snapshot: WorkbookSnapshot,
   validation: DetailedFormulaOracleValidationResult,
 ): Promise<UnsupportedFormulaOracleCacheClassification> {
-  if (validation.mismatchDetails.length === 0 || validation.mismatchDetails.length !== validation.mismatches.length) {
-    return emptyUnsupportedFormulaOracleCacheClassification()
-  }
-  const independentValues = await recalculateWorkbookWithHyperFormula(snapshot, validation.mismatchDetails)
-  if (!independentValues) {
-    return emptyUnsupportedFormulaOracleCacheClassification()
-  }
-  const independentlyConfirmedMismatches = validation.mismatchDetails.filter((mismatch) => {
-    const independent = independentValues.get(formulaOracleCellKey(mismatch.sheetName, mismatch.address))
-    return (
-      independent !== undefined &&
-      cellValuesMatchOracle(independent, mismatch.actual) &&
-      !cellValuesMatchOracle(independent, mismatch.expected)
-    )
-  })
-  if (independentlyConfirmedMismatches.length !== validation.mismatchDetails.length) {
-    return emptyUnsupportedFormulaOracleCacheClassification()
-  }
-  return {
-    unsupported: true,
-    classifications: [staleFormulaCacheUnsupportedClassification],
-    evidence: [
-      `Stale cached formula values detected by independent recalculation cross-check: ${String(independentlyConfirmedMismatches.length)} mismatches.`,
-      ...independentlyConfirmedMismatches
-        .slice(0, 25)
-        .map(
-          (mismatch) =>
-            `independent-recalc=${mismatch.sheetName}!${mismatch.address} cached ${formatCellValue(mismatch.expected)} recalculated ${formatCellValue(
-              mismatch.actual,
-            )}`,
-        ),
-    ],
-  }
+  void snapshot
+  void validation
+  return emptyUnsupportedFormulaOracleCacheClassification()
 }
 
 function classifyUnsupportedExternalLinkFormulaOracle(
@@ -637,79 +604,6 @@ async function compareFormulaOracles(
     }
   }
   return mismatches
-}
-
-async function recalculateWorkbookWithHyperFormula(
-  snapshot: WorkbookSnapshot,
-  mismatches: readonly FormulaOracleMismatchDetail[],
-): Promise<Map<string, CellValue> | null> {
-  let destroyHyperFormula: (() => void) | null = null
-  try {
-    const { HyperFormula } = await import('hyperformula')
-    const hyperFormula = HyperFormula.buildFromSheets(buildHyperFormulaSheets(snapshot), { licenseKey: 'gpl-v3' })
-    destroyHyperFormula = () => hyperFormula.destroy()
-    const independentValues = new Map<string, CellValue>()
-    for (const mismatch of mismatches) {
-      const sheetId = hyperFormula.getSheetId(mismatch.sheetName)
-      if (sheetId === undefined) {
-        return null
-      }
-      const address = parseCellAddress(mismatch.address, mismatch.sheetName)
-      const independentValue = cellValueFromHyperFormula(hyperFormula.getCellValue({ sheet: sheetId, row: address.row, col: address.col }))
-      if (!independentValue) {
-        return null
-      }
-      independentValues.set(formulaOracleCellKey(mismatch.sheetName, mismatch.address), independentValue)
-    }
-    return independentValues
-  } catch {
-    return null
-  } finally {
-    destroyHyperFormula?.()
-  }
-}
-
-function buildHyperFormulaSheets(snapshot: WorkbookSnapshot): Record<string, RawCellContent[][]> {
-  const sheets: Record<string, RawCellContent[][]> = {}
-  for (const sheet of snapshot.sheets) {
-    const rows: RawCellContent[][] = []
-    let maxRow = -1
-    let maxCol = -1
-    for (const cell of sheet.cells) {
-      const address = parseCellAddress(cell.address, sheet.name)
-      const row = rows[address.row] ?? []
-      row[address.col] = cell.formula !== undefined ? `=${cell.formula}` : rawCellContentFromLiteralInput(cell.value)
-      rows[address.row] = row
-      maxRow = Math.max(maxRow, address.row)
-      maxCol = Math.max(maxCol, address.col)
-    }
-    for (let rowIndex = 0; rowIndex <= maxRow; rowIndex += 1) {
-      const row = rows[rowIndex] ?? []
-      for (let colIndex = 0; colIndex <= maxCol; colIndex += 1) {
-        row[colIndex] ??= null
-      }
-      rows[rowIndex] = row
-    }
-    sheets[sheet.name] = rows
-  }
-  return sheets
-}
-
-function rawCellContentFromLiteralInput(value: LiteralInput | undefined): RawCellContent {
-  return value ?? null
-}
-
-function cellValueFromHyperFormula(value: HyperFormulaCellValue): CellValue | null {
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? { tag: ValueTag.Number, value } : null
-  }
-  if (typeof value === 'string') {
-    return { tag: ValueTag.String, value, stringId: 0 }
-  }
-  if (typeof value === 'boolean') {
-    return { tag: ValueTag.Boolean, value }
-  }
-  return value === null ? { tag: ValueTag.Empty } : null
 }
 
 function formulaOracleCellKey(sheetName: string, address: string): string {

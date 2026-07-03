@@ -18,7 +18,7 @@ The browser import path uses generated fixtures that are intentionally not tied 
 
 - `multi-sheet-operations`: dashboard, ledger, rollforward, and lookup sheets with cross-sheet formulas, dimensions, and merged title rows
 - `single-sheet-planning`: one-sheet monthly planning schedule with date serials, month formulas, totals, dimensions, and a merged title row
-- optional `BILIG_REFERENCE_WORKBOOK_XLSX`: any local workbook path supplied by the operator; expected sheets and sample cells are derived from the workbook contents instead of hardcoded names
+- generated import UI fixtures: tracked deterministic workbooks that cover sheets, formulas, dimensions, and normal import behavior without depending on an operator-local file
 
 The import unit tests cover the same generic behavior below the UI layer and assert that no file-specific dispatch is required.
 

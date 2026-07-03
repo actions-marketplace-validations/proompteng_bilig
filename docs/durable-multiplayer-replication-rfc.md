@@ -6,9 +6,9 @@ Archived historical RFC. The active production design has already moved to the m
 
 ## Current source of truth
 
-- [zero-bilig-production-implementation-plan-v2.md](/Users/gregkonush/github.com/bilig/docs/archive/2026-plans/zero-bilig-production-implementation-plan-v2.md)
-- [bilig_production_plan_2026-03-30.md](/Users/gregkonush/github.com/bilig/docs/archive/2026-plans/bilig_production_plan_2026-03-30.md)
-- [production-stability-remediation-2026-04-02.md](/Users/gregkonush/github.com/bilig/docs/archive/2026-plans/production-stability-remediation-2026-04-02.md)
+- [architecture.md](/Users/gregkonush/github.com/bilig/docs/architecture.md)
+- [browser-runtime.md](/Users/gregkonush/github.com/bilig/docs/browser-runtime.md)
+- [backend-sync-service.md](/Users/gregkonush/github.com/bilig/docs/backend-sync-service.md)
 
 ## Current production shape
 

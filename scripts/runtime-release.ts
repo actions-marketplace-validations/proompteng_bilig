@@ -30,9 +30,7 @@ export const RUNTIME_AFFECTING_PATH_PATTERNS = [
   'scripts/sync-runtime-release-metadata.ts',
   'scripts/check-package-publish.ts',
   'scripts/gen-formula-compatibility-snapshot.ts',
-  'scripts/gen-workpaper-hyperformula-audit.ts',
   'scripts/gen-workpaper-benchmark-baseline.ts',
-  'scripts/workpaper-external-smoke.ts',
   '.github/workflows/headless-package.yml',
 ] as const
 

@@ -441,13 +441,11 @@ describe('runtime release helpers', () => {
 
   it('isolates packed tarballs when scoped package names share unscoped npm filenames', () => {
     const publishSource = readFileSync(resolve(repoRoot, 'scripts/publish-runtime-package-set.ts'), 'utf8')
-    const smokeSource = readFileSync(resolve(repoRoot, 'scripts/workpaper-external-smoke.ts'), 'utf8')
 
     expect(publishSource).toContain('encodeURIComponent(runtimePackage.name)')
     expect(publishSource).toContain('listTarballsRecursive(targetDir)')
     expect(publishSource).toContain('const tarballsByPackage = indexTarballs(packDir)')
-    expect(smokeSource).toContain('encodeURIComponent(runtimePackage.name)')
-    expect(smokeSource).toContain('const packagePackDir = join(packDir, encodeURIComponent(runtimePackage.name))')
+    expect(existsSync(resolve(repoRoot, 'scripts', `${['workpaper', 'external', 'smoke'].join('-')}.ts`))).toBe(false)
   })
 
   it('keeps release-please manifest version in the runtime release sync path', () => {

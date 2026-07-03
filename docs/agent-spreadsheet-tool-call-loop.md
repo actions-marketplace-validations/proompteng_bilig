@@ -72,8 +72,8 @@ The agent SDK can change without rewriting the workbook logic.
 
 - runnable script:
   [`examples/headless-workpaper/agent-tool-call-loop.ts`](../examples/headless-workpaper/agent-tool-call-loop.ts)
-- external smoke check:
-  [`scripts/workpaper-external-smoke.ts`](../scripts/workpaper-external-smoke.ts)
+- MCP transcript check:
+  [`examples/headless-workpaper/mcp-stdio-transcript.ts`](../examples/headless-workpaper/mcp-stdio-transcript.ts)
 - package contract:
   [`packages/workpaper/README.md`](../packages/workpaper/README.md)
 - longer recipe:

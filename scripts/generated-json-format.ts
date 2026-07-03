@@ -2,7 +2,7 @@ type JsonPrimitive = null | string | number | boolean
 type JsonValue = JsonPrimitive | JsonObject | readonly JsonValue[]
 type JsonObject = { readonly [key: string]: JsonValue }
 
-// Matches the generated scorecard line width used before this helper stopped shelling out to oxfmt.
+// Matches the generated JSON line width used before this helper stopped shelling out to oxfmt.
 const jsonPrintWidth = 139
 
 export function formatJsonForRepo(args: { readonly rootDir: string; readonly serializedJson: string; readonly tempPrefix: string }): string

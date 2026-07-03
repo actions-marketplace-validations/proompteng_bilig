@@ -317,9 +317,9 @@ const generatedSourceChecks: readonly CiTask[] = [
   direct('agent API package build for generated-source imports', workspaceBin('tsc'), '-b', 'packages/agent-api/tsconfig.json'),
   bunScript('formula inventory check', 'scripts/gen-formula-inventory.ts', '--check'),
   bunScript('formula compatibility snapshot check', 'scripts/gen-formula-compatibility-snapshot.ts', '--check'),
-  bunScript('calculation semantics scorecard check', 'scripts/gen-calculation-semantics-scorecard.ts', '--check'),
-  bunScript('import/export fidelity scorecard check', 'scripts/gen-import-export-fidelity-scorecard.ts', '--check'),
-  bunScript('large workbook SLO scorecard check', 'scripts/gen-large-workbook-slo-scorecard.ts', '--check'),
+  bunScript('calculation semantics contract check', 'scripts/gen-calculation-semantics-contract.ts', '--check'),
+  bunScript('import/export fidelity contract check', 'scripts/gen-import-export-fidelity-contract.ts', '--check'),
+  bunScript('large workbook SLO budget check', 'scripts/gen-large-workbook-slo-budget.ts', '--check'),
   {
     label: 'WorkPaper XLSX corpus fixture check',
     steps: [

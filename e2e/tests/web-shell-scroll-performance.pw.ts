@@ -14,7 +14,6 @@ import {
   performHorizontalGridBrowse,
   performVerticalGridBrowse,
   PRODUCT_HEADER_HEIGHT,
-  remoteSyncEnabled,
   resetGridScroll,
   settleWorkbookScrollPerf,
   stopWorkbookScrollPerf,
@@ -25,7 +24,6 @@ import {
 
 type ScrollPerfReport = NonNullable<Awaited<ReturnType<typeof stopWorkbookScrollPerf>>>
 type ScrollPerfCounters = ScrollPerfReport['counters']
-const remoteSyncTest = remoteSyncEnabled ? test : test.skip.bind(test)
 
 function readCounter(counters: ScrollPerfCounters, key: keyof ScrollPerfCounters): number {
   return counters[key] ?? 0
@@ -656,7 +654,9 @@ test.describe('@browser-perf web app scroll performance', () => {
     await expect(formulaInput).toHaveValue('7777777')
   })
 
-  remoteSyncTest('keeps shell surfaces quiet and coalesces visible collaborator patch churn while browsing', async ({ page }, testInfo) => {
+  test('@browser-sync keeps shell surfaces quiet and coalesces visible collaborator patch churn while browsing', async ({
+    page,
+  }, testInfo) => {
     const documentId = createTestDocumentId('playwright-zero-scroll-patches')
     const mirrorPage = await page.context().newPage()
     const viewport = page.viewportSize()

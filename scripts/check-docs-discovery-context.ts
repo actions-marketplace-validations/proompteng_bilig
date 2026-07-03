@@ -50,7 +50,6 @@ export interface DocsDiscoveryContext {
   readonly pullRequestTemplate: string
   readonly headlessSpreadsheetEngineComparison: string
   readonly sheetjsExceljsAlternativeFormulaWorkbookApi: string
-  readonly hyperformulaAlternativeHeadlessWorkpaper: string
   readonly workbookCompatibilityReport: string
   readonly workbookCompatibilityReportTranscript: string
   readonly workbookCompatibilityReportJson: string
@@ -136,7 +135,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     pullRequestTemplate,
     headlessSpreadsheetEngineComparison,
     sheetjsExceljsAlternativeFormulaWorkbookApi,
-    hyperformulaAlternativeHeadlessWorkpaper,
     workbookCompatibilityReport,
     workbookCompatibilityReportTranscript,
     workbookCompatibilityReportJson,
@@ -212,7 +210,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     readFile(join(repoRoot, '.github', 'PULL_REQUEST_TEMPLATE.md'), 'utf8'),
     readFile(join(docsRoot, 'headless-spreadsheet-engine-comparison.md'), 'utf8'),
     readFile(join(docsRoot, 'sheetjs-exceljs-alternative-formula-workbook-api.md'), 'utf8'),
-    readFile(join(docsRoot, 'hyperformula-alternative-headless-workpaper.md'), 'utf8'),
     readFile(join(docsRoot, 'workbook-compatibility-report.md'), 'utf8'),
     readFile(join(docsRoot, 'workbook-compatibility-report-transcript.md'), 'utf8'),
     readFile(join(docsRoot, 'workbook-compatibility-report.json'), 'utf8'),
@@ -296,7 +293,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     pullRequestTemplate,
     headlessSpreadsheetEngineComparison,
     sheetjsExceljsAlternativeFormulaWorkbookApi,
-    hyperformulaAlternativeHeadlessWorkpaper,
     workbookCompatibilityReport,
     workbookCompatibilityReportTranscript,
     workbookCompatibilityReportJson,

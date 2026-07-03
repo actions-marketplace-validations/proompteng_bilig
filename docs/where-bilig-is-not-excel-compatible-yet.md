@@ -17,7 +17,7 @@ Status: public compatibility boundary for `@bilig/headless`
 structural edits, persistence, validation, and auditable compatibility fixtures.
 
 This page names the main compatibility boundaries so people can evaluate the
-project without reading a pile of internal scorecard JSON first.
+project without reading generated contract JSON first.
 
 ## Current Evidence Snapshot
 
@@ -29,10 +29,10 @@ reports:
   [`packages/formula/src/__tests__/fixtures/formula-compatibility-snapshot.json`](../packages/formula/src/__tests__/fixtures/formula-compatibility-snapshot.json)
 - formula semantics coverage has `431` canonical fixtures and `12` workbook
   semantics fixtures, with no missing committed fixture ids in
-  [`packages/benchmarks/baselines/calculation-semantics-scorecard.json`](../packages/benchmarks/baselines/calculation-semantics-scorecard.json)
+  [`packages/benchmarks/baselines/calculation-semantics-contract.json`](../packages/benchmarks/baselines/calculation-semantics-contract.json)
 - import/export fidelity passes required CSV/XLSX cases, reports no unsupported
   import/export features, and explicitly declines native macro execution in
-  [`packages/benchmarks/baselines/import-export-fidelity-scorecard.json`](../packages/benchmarks/baselines/import-export-fidelity-scorecard.json)
+  [`packages/benchmarks/baselines/import-export-fidelity-contract.json`](../packages/benchmarks/baselines/import-export-fidelity-contract.json)
 - the headless product claim is API behavior: WorkPaper edit/readback,
   recalculation, persistence, restore, and deterministic import/export checks.
 
@@ -78,7 +78,7 @@ It does not claim complete parity for:
 - Excel's full UI collaboration surface
 - every file produced by every Excel-compatible application
 
-The current XLSX scorecard proves round trips for values, formulas, formats,
+The current XLSX contract covers round trips for values, formulas, formats,
 defined names, comments, styles, conditional formats, dimensions, merges,
 freeze panes, filters, sorts, sheet protection, protected ranges, data
 validations, tables, charts, pivots, multi-sheet workbooks, and macro payload
@@ -91,9 +91,9 @@ The formula registry and fixture suite are broad, and the current tracked
 Office formula inventory is production-routed. The formula-behavior claim is
 still evidence-scoped.
 
-The current formula semantics artifact proves the committed canonical fixtures
+The current formula semantics artifact covers the committed canonical fixtures
 and workbook semantics fixtures. It should not be read as "every Excel formula
-argument combination and locale/date edge case is already proven." New edge
+argument combination and locale/date edge case is already covered." New edge
 cases should become fixtures, and unsupported deterministic formulas in an XLSX
 corpus should show up as mismatches rather than being silently accepted.
 
@@ -115,14 +115,14 @@ Missing cached results and volatile or environment-dependent formulas such as
 For a concrete report walkthrough, see
 [`docs/xlsx-corpus-verifier-walkthrough.md`](xlsx-corpus-verifier-walkthrough.md).
 
-### UI Claim Boundaries
+### Browser Claim Boundaries
 
 The local browser grid and WorkPaper headless engine are different surfaces.
 
-The live browser scorecard currently covers public unauthenticated browser load
-and viewport scroll timing for Google Sheets and Microsoft Excel Web. Its own
-limitations say it does not cover authenticated edit latency, equivalent
-tenants, every browser-cache condition, or every real user workflow.
+Browser performance gates in this repository are deterministic product budgets
+for the local workbook shell, including large-workbook load and headed
+Playwright scroll behavior. They are not cross-product benchmark claims against
+Google Sheets, Microsoft Excel Web, or every real user workflow.
 
 Do not use the headless WorkPaper benchmark to claim the browser grid is faster
 than every spreadsheet UI. Keep those claims separated.

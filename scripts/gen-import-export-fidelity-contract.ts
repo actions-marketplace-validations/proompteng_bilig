@@ -11,16 +11,16 @@ import { SpreadsheetEngine } from '../packages/core/src/engine.js'
 import { exportXlsx, importCsv, importXlsx, manualCalculationModeWarning } from '../packages/excel-import/src/index.js'
 import type { WorkbookSnapshot } from '../packages/protocol/src/types.js'
 import { projectSupportedSnapshotSemantics } from './import-export-fidelity-projection.ts'
-import { parseImportExportFidelityScorecard, validateImportExportFidelityScorecard } from './import-export-fidelity-scorecard-validation.ts'
+import { parseImportExportFidelityContract, validateImportExportFidelityContract } from './import-export-fidelity-contract-validation.ts'
 import {
   buildImportExportSemanticLedger,
   importExportDeclinedRuntimeFeatures,
   importExportUnsupportedFeatures,
   type ImportExportSemanticLedgerEntry,
 } from './import-export-semantic-loss-ledger.ts'
-import { formatJsonForRepo } from './scorecard-format.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 
-export { parseImportExportFidelityScorecard, validateImportExportFidelityScorecard }
+export { parseImportExportFidelityContract, validateImportExportFidelityContract }
 
 export interface ImportExportFidelityCase {
   readonly id: string
@@ -33,12 +33,12 @@ export interface ImportExportFidelityCase {
   readonly evidence: string
 }
 
-export interface ImportExportFidelityScorecard {
+export interface ImportExportFidelityContract {
   readonly schemaVersion: 1
   readonly suite: 'import-export-fidelity'
   readonly generatedAt: string
   readonly source: {
-    readonly artifactGenerator: 'scripts/gen-import-export-fidelity-scorecard.ts'
+    readonly artifactGenerator: 'scripts/gen-import-export-fidelity-contract.ts'
     readonly implementationPackage: 'packages/excel-import'
     readonly enginePackage: 'packages/core'
   }
@@ -56,7 +56,7 @@ export interface ImportExportFidelityScorecard {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'import-export-fidelity-scorecard.json')
+const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'import-export-fidelity-contract.json')
 const coveredFeatureOrder = [
   'csv.import',
   'csv.preview',
@@ -105,21 +105,21 @@ async function main(): Promise<void> {
   const isCheckMode = process.argv.includes('--check')
   if (isCheckMode) {
     if (!existsSync(outputPath)) {
-      throw new Error(`Import/export fidelity scorecard is missing. Run: bun scripts/gen-import-export-fidelity-scorecard.ts`)
+      throw new Error(`Import/export fidelity contract is missing. Run: bun scripts/gen-import-export-fidelity-contract.ts`)
     }
-    const scorecard = parseImportExportFidelityScorecard(JSON.parse(readFileSync(outputPath, 'utf8')) as unknown)
-    validateImportExportFidelityScorecard(scorecard)
+    const scorecard = parseImportExportFidelityContract(JSON.parse(readFileSync(outputPath, 'utf8')) as unknown)
+    validateImportExportFidelityContract(scorecard)
     logResult('check', scorecard)
     return
   }
 
-  const scorecard = await buildImportExportFidelityScorecard()
+  const scorecard = await buildImportExportFidelityContract()
   mkdirSync(dirname(outputPath), { recursive: true })
   writeFileSync(outputPath, formatJsonForRepo(`${JSON.stringify(scorecard, null, 2)}\n`))
   logResult('write', scorecard)
 }
 
-export async function buildImportExportFidelityScorecard(generatedAt = new Date().toISOString()): Promise<ImportExportFidelityScorecard> {
+export async function buildImportExportFidelityContract(generatedAt = new Date().toISOString()): Promise<ImportExportFidelityContract> {
   const cases = [
     runCsvImportPreviewCase(),
     await runCsvEngineRoundTripCase(),
@@ -150,7 +150,7 @@ export async function buildImportExportFidelityScorecard(generatedAt = new Date(
     suite: 'import-export-fidelity',
     generatedAt,
     source: {
-      artifactGenerator: 'scripts/gen-import-export-fidelity-scorecard.ts',
+      artifactGenerator: 'scripts/gen-import-export-fidelity-contract.ts',
       implementationPackage: 'packages/excel-import',
       enginePackage: 'packages/core',
     },
@@ -893,12 +893,12 @@ function createFidelitySnapshot(): WorkbookSnapshot {
 function scorecardCase(cases: readonly ImportExportFidelityCase[], id: string): ImportExportFidelityCase {
   const entry = cases.find((candidate) => candidate.id === id)
   if (!entry) {
-    throw new Error(`Import/export fidelity scorecard is missing required case: ${id}`)
+    throw new Error(`Import/export fidelity contract is missing required case: ${id}`)
   }
   return entry
 }
 
-function logResult(mode: 'check' | 'write', scorecard: ImportExportFidelityScorecard): void {
+function logResult(mode: 'check' | 'write', scorecard: ImportExportFidelityContract): void {
   console.log(
     JSON.stringify(
       {

@@ -139,7 +139,7 @@ mcp:server`.
 
 Current checked npm footprint for `@bilig/headless@0.164.11`:
 
-- Pack dry run: `859 kB` tarball, `5.24 MB` unpacked, `835` package entries.
+- Pack dry run: `860 kB` tarball, `5.25 MB` unpacked, `841` package entries.
 - Boundary: the main import is the WorkPaper formula/JSON runtime; XLSX
   import/export stays behind the `@bilig/headless/xlsx` subpath; MCP is the
   `bilig-workpaper-mcp` binary wrapper; reduced workbook reports use the
@@ -822,7 +822,7 @@ When the sanity check passes, these are the next useful pages.
   [ExcelJS shared formulas in Node.js](https://github.com/proompteng/bilig/blob/main/docs/exceljs-shared-formula-recalculation-node.md),
   [docs/sheetjs-exceljs-alternative-formula-workbook-api.md](https://github.com/proompteng/bilig/blob/main/docs/sheetjs-exceljs-alternative-formula-workbook-api.md),
   [headless engine comparison](https://github.com/proompteng/bilig/blob/main/docs/headless-spreadsheet-engine-comparison.md),
-  and [HyperFormula comparison](https://github.com/proompteng/bilig/blob/main/docs/hyperformula-alternative-headless-workpaper.md).
+  and [JavaScript spreadsheet library guide](https://github.com/proompteng/bilig/blob/main/docs/javascript-spreadsheet-library-headless-node.md).
 - Accuracy and compatibility:
   [compatibility boundaries](https://github.com/proompteng/bilig/blob/main/docs/where-bilig-is-not-excel-compatible-yet.md),
   [XLSX corpus verifier walkthrough](https://github.com/proompteng/bilig/blob/main/docs/xlsx-corpus-verifier-walkthrough.md),

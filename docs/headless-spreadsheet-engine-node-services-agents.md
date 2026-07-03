@@ -165,7 +165,7 @@ when the boundary is not obvious.
 - [Server-side spreadsheet automation in Node](server-side-spreadsheet-automation-node.md)
 - [Google Sheets API boundary](google-sheets-api-alternative-node-workpaper.md)
 - [SheetJS and ExcelJS boundary](sheetjs-exceljs-alternative-formula-workbook-api.md)
-- [HyperFormula alternative notes](hyperformula-alternative-headless-workpaper.md)
+- [JavaScript spreadsheet library for Node services](javascript-spreadsheet-library-headless-node.md)
 - [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 - [Compatibility limits](where-bilig-is-not-excel-compatible-yet.md)
 

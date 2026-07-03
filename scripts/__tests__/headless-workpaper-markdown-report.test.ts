@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { parseNodeMarkdownReportOutput } from '../workpaper-external-smoke-parsers.ts'
+import { parseNodeMarkdownReportOutput } from '../workpaper-smoke-parsers.ts'
 
 const repoRoot = resolve(new URL('../..', import.meta.url).pathname)
 const exampleDir = resolve(repoRoot, 'examples', 'headless-workpaper')

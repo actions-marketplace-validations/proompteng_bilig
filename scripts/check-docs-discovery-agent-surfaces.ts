@@ -40,7 +40,6 @@ export async function requireAgentPublicSurfaceDiscovery(input: {
     headlessExamplePackageJson,
     headlessSpreadsheetEngineComparison,
     sheetjsExceljsAlternativeFormulaWorkbookApi,
-    hyperformulaAlternativeHeadlessWorkpaper,
     xlsxFormulaRecalculationNode,
     googleSheetsApiBoundaryDoc,
     whyAgentsDoc,
@@ -475,7 +474,6 @@ export async function requireAgentPublicSurfaceDiscovery(input: {
   ] as const) {
     requireIncludes(headlessExamplePackageJson, required, 'examples/headless-workpaper/package.json')
   }
-  requireIncludes(rootPackageJson, '"workpaper:smoke:external": "bun scripts/workpaper-external-smoke.ts"', 'package.json')
   requireIncludes(
     mcpWorkPaperToolServerDoc,
     `npm exec --package ${workpaperPackageSpec} -- bilig-mcp-challenge`,
@@ -832,7 +830,6 @@ export async function requireAgentPublicSurfaceDiscovery(input: {
     '[Node quickstart](try-bilig-headless-in-node.md)',
     '[agent tool-calling recipe](agent-workpaper-tool-calling-recipe.md)',
     '[SheetJS and ExcelJS boundary guide](sheetjs-exceljs-alternative-formula-workbook-api.md)',
-    '[HyperFormula alternative notes](hyperformula-alternative-headless-workpaper.md)',
     '[documented Excel gaps](where-bilig-is-not-excel-compatible-yet.md)',
   ]) {
     requireIncludes(headlessSpreadsheetEngineComparison, required, 'docs/headless-spreadsheet-engine-comparison.md')
@@ -851,7 +848,6 @@ export async function requireAgentPublicSurfaceDiscovery(input: {
 
   for (const [path, content] of [
     ['docs/sheetjs-exceljs-alternative-formula-workbook-api.md', sheetjsExceljsAlternativeFormulaWorkbookApi],
-    ['docs/hyperformula-alternative-headless-workpaper.md', hyperformulaAlternativeHeadlessWorkpaper],
   ] as const) {
     requireIncludes(
       content,

@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { formatJsonForRepo } from '../scorecard-format.ts'
+import { formatJsonForRepo } from '../generated-json-format.ts'
 
-describe('scorecard JSON formatting', () => {
+describe('generated JSON formatting', () => {
   it('accepts legacy serialized JSON string callers while preserving compact primitive arrays', () => {
     expect(
       formatJsonForRepo(
@@ -21,7 +21,7 @@ describe('scorecard JSON formatting', () => {
   })
 
   it('normalizes already-serialized JSON without invoking repo formatter binaries', () => {
-    const rootDirWithoutNodeModules = mkdtempSync(join(tmpdir(), 'scorecard-format-no-node-modules-'))
+    const rootDirWithoutNodeModules = mkdtempSync(join(tmpdir(), 'generated-json-format-no-node-modules-'))
     const serializedJson = `${JSON.stringify(
       {
         summary: { cachedWorkbookCount: 4_968 },
@@ -37,14 +37,14 @@ describe('scorecard JSON formatting', () => {
       formatJsonForRepo({
         rootDir: rootDirWithoutNodeModules,
         serializedJson,
-        tempPrefix: 'scorecard-format-test',
+        tempPrefix: 'generated-json-format-test',
       }),
     ).toBe(
       '{\n  "summary": {\n    "cachedWorkbookCount": 4968\n  },\n  "workbookMetadata": {\n    "sheetNames": ["Sheet1", "Summary"]\n  }\n}\n',
     )
   })
 
-  it('wraps primitive arrays that exceed the generated scorecard print width', () => {
+  it('wraps primitive arrays that exceed the generated JSON print width', () => {
     const serializedJson = JSON.stringify(
       {
         workbookMetadata: {
@@ -62,9 +62,9 @@ describe('scorecard JSON formatting', () => {
 
     expect(
       formatJsonForRepo({
-        rootDir: mkdtempSync(join(tmpdir(), 'scorecard-format-wrap-array-')),
+        rootDir: mkdtempSync(join(tmpdir(), 'generated-json-format-wrap-array-')),
         serializedJson,
-        tempPrefix: 'scorecard-format-test',
+        tempPrefix: 'generated-json-format-test',
       }),
     ).toBe(
       '{\n  "workbookMetadata": {\n    "sheetNames": [\n      "department-public-workbook-sheet-name-000",\n      "department-public-workbook-sheet-name-001",\n      "department-public-workbook-sheet-name-002",\n      "department-public-workbook-sheet-name-003"\n    ]\n  }\n}\n',
@@ -85,9 +85,9 @@ describe('scorecard JSON formatting', () => {
 
     expect(
       formatJsonForRepo({
-        rootDir: mkdtempSync(join(tmpdir(), 'scorecard-format-object-array-')),
+        rootDir: mkdtempSync(join(tmpdir(), 'generated-json-format-object-array-')),
         serializedJson,
-        tempPrefix: 'scorecard-format-test',
+        tempPrefix: 'generated-json-format-test',
       }),
     ).toBe(
       '{\n  "dimensions": [\n    {\n      "sheetName": "Sheet1",\n      "rows": 10,\n      "columns": 4\n    },\n    {\n      "sheetName": "Summary",\n      "rows": 3,\n      "columns": 2\n    }\n  ]\n}\n',

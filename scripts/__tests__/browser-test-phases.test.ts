@@ -14,7 +14,7 @@ describe('browser test phases', () => {
     expect(phases[0]?.args).toEqual([
       '--workers=2',
       '--grep-invert',
-      '@clipboard-global|@browser-serial|@fuzz-browser|@browser-perf|@browser-deep|@browser-webgpu',
+      '@clipboard-global|@browser-serial|@fuzz-browser|@browser-sync|@browser-perf|@browser-deep|@browser-webgpu',
     ])
     expect(phases[1]).toEqual({
       label: 'browser webgpu tests',
@@ -78,6 +78,19 @@ describe('browser test phases', () => {
     })
   })
 
+  it('moves remote-sync browser tests into an explicit sync lane', () => {
+    const phases = resolveBrowserTestPhases({
+      playwrightArgs: [],
+      env: { BILIG_BROWSER_INCLUDE_SYNC: '1' },
+    })
+
+    expect(phases.at(-1)).toEqual({
+      label: 'browser sync tests',
+      args: ['--workers=1', '--grep', '@browser-sync'],
+      env: { BILIG_E2E_REMOTE_SYNC: '1' },
+    })
+  })
+
   it('allows the default parallel browser worker cap to be configured', () => {
     const phases = resolveBrowserTestPhases({
       playwrightArgs: [],
@@ -89,7 +102,7 @@ describe('browser test phases', () => {
     expect(phases[0]?.args).toEqual([
       '--workers=4',
       '--grep-invert',
-      '@clipboard-global|@browser-serial|@fuzz-browser|@browser-perf|@browser-deep|@browser-webgpu',
+      '@clipboard-global|@browser-serial|@fuzz-browser|@browser-sync|@browser-perf|@browser-deep|@browser-webgpu',
     ])
   })
 
@@ -136,7 +149,13 @@ describe('browser test phases', () => {
     expect(phases).toEqual([
       {
         label: 'browser ci smoke tests',
-        args: ['--workers=3', '--grep', '@browser-ci', '--grep-invert', '@browser-perf|@browser-deep|@fuzz-browser|@browser-webgpu'],
+        args: [
+          '--workers=3',
+          '--grep',
+          '@browser-ci',
+          '--grep-invert',
+          '@browser-perf|@browser-deep|@fuzz-browser|@browser-sync|@browser-webgpu',
+        ],
         env: { BILIG_BROWSER_WEBGPU: '1' },
       },
     ])

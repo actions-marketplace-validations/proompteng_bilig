@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildLargeWorkbookSloScorecard } from '../gen-large-workbook-slo-scorecard.ts'
+import { buildLargeWorkbookSloBudget } from '../gen-large-workbook-slo-budget.ts'
 
-describe('large workbook SLO scorecard', () => {
+describe('large workbook SLO budget', () => {
   it('maps benchmark-contract output into checked large-workbook and worker-runtime SLOs', () => {
-    const scorecard = buildLargeWorkbookSloScorecard(buildReportFixture())
+    const scorecard = buildLargeWorkbookSloBudget(buildReportFixture())
 
     expect(scorecard.summary.coveredLargeWorkbookRows).toEqual([100_000, 250_000])
     expect(scorecard.summary.allSloBudgetsPassed).toBe(true)
@@ -51,7 +51,7 @@ describe('large workbook SLO scorecard', () => {
     const report = buildReportFixture()
     delete report.results.load250k
 
-    expect(() => buildLargeWorkbookSloScorecard(report)).toThrow('Missing large workbook SLO benchmark result: load250k')
+    expect(() => buildLargeWorkbookSloBudget(report)).toThrow('Missing large workbook SLO benchmark result: load250k')
   })
 })
 

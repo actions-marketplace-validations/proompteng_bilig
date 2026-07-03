@@ -20,20 +20,20 @@ import {
   readJsonObject,
   stringArrayField,
   stringField,
-} from './json-scorecard-helpers.ts'
-import { formatJsonForRepo } from './scorecard-format.ts'
+} from './json-contract-helpers.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 
 export interface WorkbookSemanticsCategoryCoverage {
   readonly category: string
   readonly fixtureIds: string[]
 }
 
-export interface CalculationSemanticsScorecard {
+export interface CalculationSemanticsContract {
   readonly schemaVersion: 1
   readonly suite: 'calculation-semantics-coverage'
   readonly generatedAt: string
   readonly source: {
-    readonly artifactGenerator: 'scripts/gen-calculation-semantics-scorecard.ts'
+    readonly artifactGenerator: 'scripts/gen-calculation-semantics-contract.ts'
     readonly fixturePackage: 'packages/excel-fixtures'
     readonly compatibilityRegistry: 'packages/formula/src/compatibility.ts'
     readonly fixtureHarnessTest: 'packages/formula/src/__tests__/fixture-harness.test.ts'
@@ -67,7 +67,7 @@ export interface CalculationSemanticsScorecard {
 }
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'calculation-semantics-scorecard.json')
+const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'calculation-semantics-contract.json')
 const executableStatuses = new Set(['implemented-js', 'implemented-js-and-wasm-shadow', 'implemented-wasm-production'])
 const deterministicVolatileFixtureIdSet = new Set(['date-time:today-volatile', 'date-time:now-volatile', 'volatile:rand-basic'])
 const workbookSemanticsCategorySpecs = [
@@ -101,18 +101,18 @@ const workbookSemanticsCategorySpecs = [
 
 function main(): void {
   const isCheckMode = process.argv.includes('--check')
-  const scorecard = buildCalculationSemanticsScorecard()
+  const scorecard = buildCalculationSemanticsContract()
   const serializedScorecard = formatJsonForRepo(`${JSON.stringify(scorecard, null, 2)}\n`)
 
   if (isCheckMode) {
     if (!existsSync(outputPath)) {
-      throw new Error(`Calculation semantics scorecard is missing. Run: bun scripts/gen-calculation-semantics-scorecard.ts`)
+      throw new Error(`Calculation semantics contract is missing. Run: bun scripts/gen-calculation-semantics-contract.ts`)
     }
     const currentScorecard = readFileSync(outputPath, 'utf8')
     if (currentScorecard !== serializedScorecard) {
-      throw new Error('Generated calculation semantics scorecard is out of date. Run: bun scripts/gen-calculation-semantics-scorecard.ts')
+      throw new Error('Generated calculation semantics contract is out of date. Run: bun scripts/gen-calculation-semantics-contract.ts')
     }
-    validateCalculationSemanticsScorecard(parseCalculationSemanticsScorecard(readJsonObject(outputPath)))
+    validateCalculationSemanticsContract(parseCalculationSemanticsContract(readJsonObject(outputPath)))
   } else {
     mkdirSync(dirname(outputPath), { recursive: true })
     writeFileSync(outputPath, serializedScorecard)
@@ -135,7 +135,7 @@ function main(): void {
   )
 }
 
-export function buildCalculationSemanticsScorecard(generatedAt = 'checked-in-generated-artifact'): CalculationSemanticsScorecard {
+export function buildCalculationSemanticsContract(generatedAt = 'checked-in-generated-artifact'): CalculationSemanticsContract {
   const stableFormulaFixtureIds = canonicalFormulaFixtures
     .filter(isStableExecutableFormulaFixture)
     .map((fixture) => fixture.id)
@@ -178,7 +178,7 @@ export function buildCalculationSemanticsScorecard(generatedAt = 'checked-in-gen
     suite: 'calculation-semantics-coverage',
     generatedAt,
     source: {
-      artifactGenerator: 'scripts/gen-calculation-semantics-scorecard.ts',
+      artifactGenerator: 'scripts/gen-calculation-semantics-contract.ts',
       fixturePackage: 'packages/excel-fixtures',
       compatibilityRegistry: 'packages/formula/src/compatibility.ts',
       fixtureHarnessTest: 'packages/formula/src/__tests__/fixture-harness.test.ts',
@@ -213,7 +213,7 @@ export function buildCalculationSemanticsScorecard(generatedAt = 'checked-in-gen
   }
 }
 
-export function parseCalculationSemanticsScorecard(value: Record<string, unknown>): CalculationSemanticsScorecard {
+export function parseCalculationSemanticsContract(value: Record<string, unknown>): CalculationSemanticsContract {
   const source = asObject(value['source'], 'calculation semantics source')
   const summary = asObject(value['summary'], 'calculation semantics summary')
   const coverage = asObject(value['coverage'], 'calculation semantics coverage')
@@ -222,7 +222,7 @@ export function parseCalculationSemanticsScorecard(value: Record<string, unknown
     suite: literalField(value, 'suite', 'calculation-semantics-coverage'),
     generatedAt: typeof value['generatedAt'] === 'string' ? value['generatedAt'] : '',
     source: {
-      artifactGenerator: literalField(source, 'artifactGenerator', 'scripts/gen-calculation-semantics-scorecard.ts'),
+      artifactGenerator: literalField(source, 'artifactGenerator', 'scripts/gen-calculation-semantics-contract.ts'),
       fixturePackage: literalField(source, 'fixturePackage', 'packages/excel-fixtures'),
       compatibilityRegistry: literalField(source, 'compatibilityRegistry', 'packages/formula/src/compatibility.ts'),
       fixtureHarnessTest: literalField(source, 'fixtureHarnessTest', 'packages/formula/src/__tests__/fixture-harness.test.ts'),
@@ -260,13 +260,13 @@ export function parseCalculationSemanticsScorecard(value: Record<string, unknown
   }
 }
 
-export function validateCalculationSemanticsScorecard(scorecard: CalculationSemanticsScorecard): void {
-  const current = buildCalculationSemanticsScorecard(scorecard.generatedAt)
+export function validateCalculationSemanticsContract(scorecard: CalculationSemanticsContract): void {
+  const current = buildCalculationSemanticsContract(scorecard.generatedAt)
   if (
     JSON.stringify(scorecard.summary) !== JSON.stringify(current.summary) ||
     JSON.stringify(scorecard.coverage) !== JSON.stringify(current.coverage)
   ) {
-    throw new Error('Calculation semantics scorecard is stale against the current fixture corpus')
+    throw new Error('Calculation semantics contract is stale against the current fixture corpus')
   }
   if (!scorecard.summary.allCommittedFormulaSemanticsCovered) {
     throw new Error(
@@ -276,10 +276,10 @@ export function validateCalculationSemanticsScorecard(scorecard: CalculationSema
     )
   }
   if (!scorecard.coverage.stableFormulaFixtureIds.includes('lookup-reference:offset-basic')) {
-    throw new Error('Calculation semantics scorecard must cover the canonical OFFSET fixture')
+    throw new Error('Calculation semantics contract must cover the canonical OFFSET fixture')
   }
   if (!scorecard.summary.coveredWorkbookSemanticsCategories.includes('structured-references')) {
-    throw new Error('Calculation semantics scorecard must cover structured-reference workbook semantics')
+    throw new Error('Calculation semantics contract must cover structured-reference workbook semantics')
   }
 }
 

@@ -1,4 +1,4 @@
-import { isNumberArray, isStringArray, parseJsonRecord, parseRecordValue, sameJson } from './workpaper-external-smoke-parser-helpers.ts'
+import { isNumberArray, isStringArray, parseJsonRecord, parseRecordValue, sameJson } from './workpaper-smoke-parser-helpers.ts'
 
 export {
   parseNodeAgentToolCallOutput,
@@ -13,7 +13,7 @@ export type {
   McpTranscriptSummary,
   RevenueScenarioSummary,
 } from './workpaper-agent-smoke-parsers.ts'
-export { parseJsonRecord } from './workpaper-external-smoke-parser-helpers.ts'
+export { parseJsonRecord } from './workpaper-smoke-parser-helpers.ts'
 
 export function parseNodeSmokeOutput(output: string): {
   afterAgentEdit: {

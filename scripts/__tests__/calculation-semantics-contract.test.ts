@@ -2,14 +2,14 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-import { buildCalculationSemanticsScorecard, parseCalculationSemanticsScorecard } from '../gen-calculation-semantics-scorecard.ts'
-import { readJsonObject } from '../json-scorecard-helpers.ts'
+import { buildCalculationSemanticsContract, parseCalculationSemanticsContract } from '../gen-calculation-semantics-contract.ts'
+import { readJsonObject } from '../json-contract-helpers.ts'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
-describe('calculation semantics scorecard', () => {
+describe('calculation semantics contract', () => {
   it('covers every committed canonical and workbook-semantics fixture', () => {
-    const scorecard = buildCalculationSemanticsScorecard()
+    const scorecard = buildCalculationSemanticsContract()
 
     expect(scorecard.summary.allCommittedFormulaSemanticsCovered).toBe(true)
     expect(scorecard.summary.canonicalFormulaFixtureCount).toBeGreaterThan(0)
@@ -36,10 +36,10 @@ describe('calculation semantics scorecard', () => {
   })
 
   it('keeps the checked-in generated artifact aligned with the live fixture corpus', () => {
-    const artifact = parseCalculationSemanticsScorecard(
-      readJsonObject(resolve(repoRoot, 'packages/benchmarks/baselines/calculation-semantics-scorecard.json')),
+    const artifact = parseCalculationSemanticsContract(
+      readJsonObject(resolve(repoRoot, 'packages/benchmarks/baselines/calculation-semantics-contract.json')),
     )
-    const current = buildCalculationSemanticsScorecard(artifact.generatedAt)
+    const current = buildCalculationSemanticsContract(artifact.generatedAt)
 
     expect(artifact.summary).toEqual(current.summary)
     expect(artifact.coverage).toEqual(current.coverage)

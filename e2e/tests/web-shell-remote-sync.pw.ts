@@ -8,16 +8,13 @@ import {
   openZeroWorkbookPage,
   pickToolbarBorderPreset,
   pickToolbarPresetColor,
-  remoteSyncEnabled,
   runToolbarSyncActions,
   seedToolbarActionRange,
   selectToolbarActionRange,
   waitForWorkbookReady,
 } from './web-shell-helpers.js'
 
-const remoteSyncTest = remoteSyncEnabled ? test : test.skip.bind(test)
-
-remoteSyncTest('web app propagates content and styling changes across live zero tabs', async ({ page }, testInfo) => {
+test('@browser-sync web app propagates content and styling changes across live zero tabs', async ({ page }, testInfo) => {
   test.slow()
   const documentId = createTestDocumentId('playwright-zero-style-multiplayer')
   const mirrorPage = await page.context().newPage()
@@ -51,7 +48,7 @@ remoteSyncTest('web app propagates content and styling changes across live zero 
   }
 })
 
-remoteSyncTest('web app keeps two live zero tabs visually converged across toolbar actions', async ({ page }, testInfo) => {
+test('@browser-sync web app keeps two live zero tabs visually converged across toolbar actions', async ({ page }, testInfo) => {
   test.slow()
   const documentId = createTestDocumentId('playwright-zero-toolbar-multiplayer')
   const mirrorPage = await page.context().newPage()
@@ -86,7 +83,7 @@ remoteSyncTest('web app keeps two live zero tabs visually converged across toolb
   }
 })
 
-remoteSyncTest('web app preserves an in-progress local draft when another tab edits the same cell', async ({ page }) => {
+test('@browser-sync web app preserves an in-progress local draft when another tab edits the same cell', async ({ page }) => {
   test.slow()
   const documentId = createTestDocumentId('playwright-zero-same-cell-draft')
   const mirrorPage = await page.context().newPage()
@@ -128,7 +125,7 @@ remoteSyncTest('web app preserves an in-progress local draft when another tab ed
   }
 })
 
-remoteSyncTest('web app compares and applies a stale same-cell draft without losing local work', async ({ page }) => {
+test('@browser-sync web app compares and applies a stale same-cell draft without losing local work', async ({ page }) => {
   test.slow()
   const documentId = createTestDocumentId('playwright-zero-same-cell-conflict')
   const mirrorPage = await page.context().newPage()
@@ -177,7 +174,7 @@ remoteSyncTest('web app compares and applies a stale same-cell draft without los
   }
 })
 
-remoteSyncTest('web app reverts an authoritative change from the changes pane', async ({ page }) => {
+test('@browser-sync web app reverts an authoritative change from the changes pane', async ({ page }) => {
   const documentId = createTestDocumentId('playwright-zero-change-revert')
   await openZeroWorkbookPage(page, documentId)
 
@@ -208,7 +205,7 @@ remoteSyncTest('web app reverts an authoritative change from the changes pane', 
   await expect(changeRows.nth(1)).toContainText('reverted by r2')
 })
 
-remoteSyncTest('web app restores persisted workbook state after a full reload', async ({ page }) => {
+test('@browser-sync web app restores persisted workbook state after a full reload', async ({ page }) => {
   const documentId = createTestDocumentId('playwright-zero-reload-persist')
   const formulaInput = page.getByTestId('formula-input')
   const resolvedValue = page.getByTestId('formula-resolved-value')
@@ -233,7 +230,7 @@ remoteSyncTest('web app restores persisted workbook state after a full reload', 
   await expect(resolvedValue).toHaveText('17')
 })
 
-remoteSyncTest('web app restores persisted fill styles after a full reload', async ({ page }) => {
+test('@browser-sync web app restores persisted fill styles after a full reload', async ({ page }) => {
   const documentId = createTestDocumentId('playwright-zero-reload-fill-persist')
   const formulaInput = page.getByTestId('formula-input')
 
@@ -270,7 +267,7 @@ remoteSyncTest('web app restores persisted fill styles after a full reload', asy
     .toBeGreaterThan(120)
 })
 
-remoteSyncTest('web app survives repeated tab crash restarts with persisted workbook state', async ({ page }) => {
+test('@browser-sync web app survives repeated tab crash restarts with persisted workbook state', async ({ page }) => {
   test.slow()
   const documentId = createTestDocumentId('playwright-zero-crash-restart-soak')
 

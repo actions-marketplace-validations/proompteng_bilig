@@ -273,7 +273,6 @@ export const llmsRequiredLinks = [
   'https://github.com/proompteng/bilig/blob/main/docs/production-adoption-checklist-headless-workpaper.md',
   'https://proompteng.github.io/bilig/npm-provenance-package-trust.html',
   'https://github.com/proompteng/bilig/blob/main/docs/npm-provenance-package-trust.md',
-  'https://github.com/proompteng/bilig/blob/main/docs/hyperformula-alternative-headless-workpaper.md',
   'https://github.com/proompteng/bilig/blob/main/docs/headless-spreadsheet-engine-comparison.md',
   'https://github.com/proompteng/bilig/blob/main/docs/javascript-spreadsheet-library-headless-node.md',
   'https://github.com/proompteng/bilig/blob/main/docs/sheetjs-exceljs-alternative-formula-workbook-api.md',

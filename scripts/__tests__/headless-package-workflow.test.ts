@@ -21,7 +21,6 @@ describe('headless package workflow', () => {
     expect(testPaths).toContain('packages/headless/src/__tests__/xlookup-decimal-exact-match.test.ts')
     expect(testPaths).toContain('packages/headless/src/__tests__/persistence.test.ts')
     expect(testPaths).toContain('packages/headless/src/__tests__/persistence.fuzz.test.ts')
-    expect(testPaths).toContain('packages/headless/src/__tests__/hyperformula-surface-parity.test.ts')
     expect(scriptTestPaths).toContain('scripts/__tests__/runtime-package-publish-validation.test.ts')
 
     for (const testPath of [...testPaths, ...scriptTestPaths]) {
@@ -29,7 +28,7 @@ describe('headless package workflow', () => {
     }
   })
 
-  it('keeps publish, benchmark, and clean consumer smoke gates in the package workflow', () => {
+  it('keeps publish, benchmark, and package validation gates in the package workflow', () => {
     const source = readFileSync(resolve(repoRoot, '.github/workflows/headless-package.yml'), 'utf8')
     const biligPackageJsonSource = readFileSync(resolve(repoRoot, 'packages/bilig/package.json'), 'utf8')
     const greenCiScript = readFileSync(resolve(repoRoot, 'scripts/wait-for-github-ci-green.mjs'), 'utf8')
@@ -232,7 +231,8 @@ describe('headless package workflow', () => {
     expect(source).toContain('(cd build/mcp-registry/package && ../../../mcp-publisher publish)')
     expect(source).toContain('pnpm publish:runtime:check')
     expect(source).not.toContain('pnpm workpaper:bench:competitive:check')
-    expect(source).toContain('pnpm workpaper:smoke:external')
+    expect(source).not.toContain(`pnpm ${['workpaper', 'smoke', 'external'].join(':')}`)
+    expect(source).not.toContain([['hyperformula', 'surface'].join('-'), 'parity'].join('-'))
     expect(source).toContain('Verify n8n community node package')
     expect(source).toContain('cd integrations/n8n-nodes-workpaper')
     expect(source).toContain('npm run check')

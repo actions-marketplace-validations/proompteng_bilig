@@ -1,11 +1,8 @@
-import { basename } from 'node:path'
-import { readFileSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import { expect, type Page, test } from '@playwright/test'
 import {
   decodeCellAddress,
   encodeCellAddress,
-  readXlsxWorkbookCells,
   writeSimpleXlsxWorkbook,
   type SimpleXlsxAxisEntry,
   type SimpleXlsxCell,
@@ -173,40 +170,6 @@ async function writeFixture(testInfo: { outputPath: (pathSegment: string) => str
   return path
 }
 
-function normalizeWorkbookName(fileName: string): string {
-  return basename(fileName).replace(/\.(xlsx|csv)$/i, '') || 'Imported workbook'
-}
-
-function readExternalWorkbookExpectation(path: string): WorkbookImportExpectation {
-  const workbook = readXlsxWorkbookCells(readFileSync(path))
-  const cells: WorkbookImportExpectation['cells'] = []
-  for (const sheet of workbook.sheets) {
-    for (const cell of sheet.cells) {
-      if (cells.length >= 6) {
-        break
-      }
-      if (typeof cell.formula === 'string' && cell.formula.trim().length > 0) {
-        cells.push({ sheetName: sheet.name, address: cell.address, value: `=${cell.formula}` })
-        continue
-      }
-      if (typeof cell.value === 'string' && cell.value.trim().length > 0) {
-        cells.push({ sheetName: sheet.name, address: cell.address, value: cell.value })
-      }
-    }
-  }
-  const sheetNames = workbook.sheets.map((sheet) => sheet.name)
-  if (sheetNames.length === 0 || cells.length === 0) {
-    throw new Error('External workbook verifier needs at least one sheet and one string or formula cell')
-  }
-  return {
-    workbookName: normalizeWorkbookName(path),
-    uploadFileName: basename(path),
-    sheetNames,
-    activeSheetName: sheetNames[0] ?? 'Sheet1',
-    cells,
-  }
-}
-
 async function importWorkbookThroughUi(page: Page, path: string, expectation: WorkbookImportExpectation): Promise<void> {
   await page.getByTestId('workbook-import-toggle').click()
   await page.getByTestId('workbook-import-file').setInputFiles({
@@ -296,19 +259,3 @@ for (const fixture of generatedFixtures) {
     }
   })
 }
-
-test('web app imports an external workbook when BILIG_REFERENCE_WORKBOOK_XLSX is set', async ({ page }) => {
-  const referencePath = process.env['BILIG_REFERENCE_WORKBOOK_XLSX']
-  test.skip(!referencePath, 'Set BILIG_REFERENCE_WORKBOOK_XLSX to verify a local workbook through the normal import UI.')
-
-  await gotoWorkbookShell(page)
-  await waitForWorkbookReady(page)
-
-  const expectation = readExternalWorkbookExpectation(referencePath)
-  await importWorkbookThroughUi(page, referencePath, expectation)
-
-  for (const cell of expectation.cells.slice(0, 4)) {
-    // oxlint-disable-next-line eslint(no-await-in-loop)
-    await expectImportedCell(page, cell.sheetName, cell.address, cell.value)
-  }
-})

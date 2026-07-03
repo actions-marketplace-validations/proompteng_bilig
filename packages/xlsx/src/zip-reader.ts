@@ -1,5 +1,4 @@
-import { inflateRawSync } from 'node:zlib'
-import { Inflate } from 'fflate-stream'
+import { Inflate, inflateSync } from 'fflate-stream'
 
 export type XlsxZipEntries = Record<string, Uint8Array>
 export type XlsxZipSource = Uint8Array | XlsxZipEntries
@@ -370,7 +369,7 @@ function inflateCentralDirectoryEntry(
     return new Uint8Array(source.readRange(dataStart, dataEnd))
   }
   if (compressionMethod === deflatedCompressionMethod) {
-    return source.inflateRawRange ? source.inflateRawRange(dataStart, dataEnd) : inflateRawSync(source.readRange(dataStart, dataEnd))
+    return source.inflateRawRange ? source.inflateRawRange(dataStart, dataEnd) : inflateSync(source.readRange(dataStart, dataEnd))
   }
   throw new Error(`Unsupported XLSX compression method: ${String(compressionMethod)}`)
 }
@@ -393,7 +392,7 @@ function inflateCentralDirectoryEntryChunks(
   }
   if (!options.forceStreamingInflate && options.uncompressedSize <= defaultZipEntryChunkSize) {
     emitInflatedChunks(
-      source.inflateRawRange ? source.inflateRawRange(dataStart, dataEnd) : inflateRawSync(source.readRange(dataStart, dataEnd)),
+      source.inflateRawRange ? source.inflateRawRange(dataStart, dataEnd) : inflateSync(source.readRange(dataStart, dataEnd)),
       options.chunkSize,
       onChunk,
     )
@@ -447,7 +446,7 @@ async function inflateCentralDirectoryEntryChunksAsync(
     return
   }
   await emitInflatedChunksAsync(
-    source.inflateRawRange ? source.inflateRawRange(dataStart, dataEnd) : inflateRawSync(source.readRange(dataStart, dataEnd)),
+    source.inflateRawRange ? source.inflateRawRange(dataStart, dataEnd) : inflateSync(source.readRange(dataStart, dataEnd)),
     options.chunkSize,
     onChunk,
   )

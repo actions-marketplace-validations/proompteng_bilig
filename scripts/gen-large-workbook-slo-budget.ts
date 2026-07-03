@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
-import { formatJsonForRepo } from './scorecard-format.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 
 interface NumericSummary {
   readonly samples: number[]
@@ -54,7 +54,7 @@ export interface HeadedBrowserFrameP95Contract {
   readonly findings: string[]
 }
 
-export interface LargeWorkbookSloScorecard {
+export interface LargeWorkbookSloBudget {
   readonly schemaVersion: 1
   readonly suite: 'large-workbook-slo'
   readonly generatedAt: string
@@ -63,7 +63,7 @@ export interface LargeWorkbookSloScorecard {
     readonly benchmarkScript: 'scripts/bench-contracts.ts'
     readonly headedBrowserCommand: 'pnpm test:browser:full'
     readonly headedBrowserTestFile: 'e2e/tests/web-shell-scroll-performance.pw.ts'
-    readonly artifactGenerator: 'scripts/gen-large-workbook-slo-scorecard.ts'
+    readonly artifactGenerator: 'scripts/gen-large-workbook-slo-budget.ts'
   }
   readonly summary: {
     readonly coveredLargeWorkbookRows: number[]
@@ -198,27 +198,27 @@ const headedBrowserFrameP95ContractSpecs = [
 ] as const satisfies readonly HeadedBrowserFrameP95ContractSpec[]
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
-const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'large-workbook-slo-scorecard.json')
+const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'large-workbook-slo-budget.json')
 const isCheckMode = process.argv.includes('--check')
 
 function main(): void {
   if (isCheckMode) {
     if (!existsSync(outputPath)) {
-      throw new Error(`Large workbook SLO scorecard is missing. Run: bun scripts/gen-large-workbook-slo-scorecard.ts`)
+      throw new Error(`Large workbook SLO budget is missing. Run: bun scripts/gen-large-workbook-slo-budget.ts`)
     }
-    const scorecard = parseLargeWorkbookSloScorecard(JSON.parse(readFileSync(outputPath, 'utf8')) as unknown)
-    validateLargeWorkbookSloScorecard(scorecard)
+    const scorecard = parseLargeWorkbookSloBudget(JSON.parse(readFileSync(outputPath, 'utf8')) as unknown)
+    validateLargeWorkbookSloBudget(scorecard)
     logResult('check', scorecard)
     return
   }
 
-  const scorecard = buildLargeWorkbookSloScorecard(runBenchContractsReport())
+  const scorecard = buildLargeWorkbookSloBudget(runBenchContractsReport())
   mkdirSync(dirname(outputPath), { recursive: true })
   writeFileSync(outputPath, formatJsonForRepo(`${JSON.stringify(scorecard, null, 2)}\n`))
   logResult('write', scorecard)
 }
 
-export function buildLargeWorkbookSloScorecard(reportInput: unknown, generatedAt = new Date().toISOString()): LargeWorkbookSloScorecard {
+export function buildLargeWorkbookSloBudget(reportInput: unknown, generatedAt = new Date().toISOString()): LargeWorkbookSloBudget {
   const report = parseBenchContractsReport(reportInput)
   const measurements = measurementSpecs.map((spec) => buildMeasurement(report, spec))
   const headedBrowserFrameP95Contracts = buildHeadedBrowserFrameP95Contracts(
@@ -234,7 +234,7 @@ export function buildLargeWorkbookSloScorecard(reportInput: unknown, generatedAt
       benchmarkScript: 'scripts/bench-contracts.ts',
       headedBrowserCommand: 'pnpm test:browser:full',
       headedBrowserTestFile,
-      artifactGenerator: 'scripts/gen-large-workbook-slo-scorecard.ts',
+      artifactGenerator: 'scripts/gen-large-workbook-slo-budget.ts',
     },
     summary: {
       coveredLargeWorkbookRows: [
@@ -372,7 +372,7 @@ function runBenchContractsReport(): unknown {
 
   if (result.exitCode !== 0) {
     const stderr = new TextDecoder().decode(result.stderr).trim()
-    throw new Error(`Unable to generate large workbook SLO scorecard from bench contracts: ${stderr}`)
+    throw new Error(`Unable to generate large workbook SLO budget from bench contracts: ${stderr}`)
   }
 
   return JSON.parse(new TextDecoder().decode(result.stdout)) as unknown
@@ -390,45 +390,45 @@ function parseBenchContractsReport(value: unknown): BenchContractsReport {
   }
 }
 
-export function parseLargeWorkbookSloScorecard(value: unknown): LargeWorkbookSloScorecard {
-  const record = toRecord(value, 'large workbook SLO scorecard')
+export function parseLargeWorkbookSloBudget(value: unknown): LargeWorkbookSloBudget {
+  const record = toRecord(value, 'large workbook SLO budget')
   if (record['schemaVersion'] !== 1 || record['suite'] !== 'large-workbook-slo') {
-    throw new Error('Unexpected large workbook SLO scorecard header')
+    throw new Error('Unexpected large workbook SLO budget header')
   }
-  const source = recordField(record, 'source', 'large workbook SLO scorecard source')
-  const summary = recordField(record, 'summary', 'large workbook SLO scorecard summary')
-  const measurements = arrayField(record, 'measurements', 'large workbook SLO scorecard measurements').map((entry, index) => {
-    const measurement = toRecord(entry, `large workbook SLO scorecard measurement ${String(index)}`)
+  const source = recordField(record, 'source', 'large workbook SLO budget source')
+  const summary = recordField(record, 'summary', 'large workbook SLO budget summary')
+  const measurements = arrayField(record, 'measurements', 'large workbook SLO budget measurements').map((entry, index) => {
+    const measurement = toRecord(entry, `large workbook SLO budget measurement ${String(index)}`)
     return {
-      id: stringField(measurement, 'id', `large workbook SLO scorecard measurement ${String(index)} id`),
-      category: parseCategory(stringField(measurement, 'category', `large workbook SLO scorecard measurement ${String(index)} category`)),
-      label: stringField(measurement, 'label', `large workbook SLO scorecard measurement ${String(index)} label`),
+      id: stringField(measurement, 'id', `large workbook SLO budget measurement ${String(index)} id`),
+      category: parseCategory(stringField(measurement, 'category', `large workbook SLO budget measurement ${String(index)} category`)),
+      label: stringField(measurement, 'label', `large workbook SLO budget measurement ${String(index)} label`),
       materializedCells: numberField(
         measurement,
         'materializedCells',
-        `large workbook SLO scorecard measurement ${String(index)} materializedCells`,
+        `large workbook SLO budget measurement ${String(index)} materializedCells`,
       ),
       corpusCaseId: optionalStringField(measurement, 'corpusCaseId'),
-      metric: stringField(measurement, 'metric', `large workbook SLO scorecard measurement ${String(index)} metric`),
-      actualP95: numberField(measurement, 'actualP95', `large workbook SLO scorecard measurement ${String(index)} actualP95`),
-      budgetP95: numberField(measurement, 'budgetP95', `large workbook SLO scorecard measurement ${String(index)} budgetP95`),
-      gateBudgetP95: numberField(measurement, 'gateBudgetP95', `large workbook SLO scorecard measurement ${String(index)} gateBudgetP95`),
-      sampleCount: numberField(measurement, 'sampleCount', `large workbook SLO scorecard measurement ${String(index)} sampleCount`),
-      passed: booleanField(measurement, 'passed', `large workbook SLO scorecard measurement ${String(index)} passed`),
-      gatePassed: booleanField(measurement, 'gatePassed', `large workbook SLO scorecard measurement ${String(index)} gatePassed`),
+      metric: stringField(measurement, 'metric', `large workbook SLO budget measurement ${String(index)} metric`),
+      actualP95: numberField(measurement, 'actualP95', `large workbook SLO budget measurement ${String(index)} actualP95`),
+      budgetP95: numberField(measurement, 'budgetP95', `large workbook SLO budget measurement ${String(index)} budgetP95`),
+      gateBudgetP95: numberField(measurement, 'gateBudgetP95', `large workbook SLO budget measurement ${String(index)} gateBudgetP95`),
+      sampleCount: numberField(measurement, 'sampleCount', `large workbook SLO budget measurement ${String(index)} sampleCount`),
+      passed: booleanField(measurement, 'passed', `large workbook SLO budget measurement ${String(index)} passed`),
+      gatePassed: booleanField(measurement, 'gatePassed', `large workbook SLO budget measurement ${String(index)} gatePassed`),
     }
   })
 
   return {
     schemaVersion: 1,
     suite: 'large-workbook-slo',
-    generatedAt: stringField(record, 'generatedAt', 'large workbook SLO scorecard generatedAt'),
+    generatedAt: stringField(record, 'generatedAt', 'large workbook SLO budget generatedAt'),
     source: {
       benchmarkCommand: literalField(source, 'benchmarkCommand', 'CI=1 pnpm bench:contracts'),
       benchmarkScript: literalField(source, 'benchmarkScript', 'scripts/bench-contracts.ts'),
       headedBrowserCommand: literalField(source, 'headedBrowserCommand', 'pnpm test:browser:full'),
       headedBrowserTestFile: literalField(source, 'headedBrowserTestFile', headedBrowserTestFile),
-      artifactGenerator: literalField(source, 'artifactGenerator', 'scripts/gen-large-workbook-slo-scorecard.ts'),
+      artifactGenerator: literalField(source, 'artifactGenerator', 'scripts/gen-large-workbook-slo-budget.ts'),
     },
     summary: {
       coveredLargeWorkbookRows: numberArrayField(summary, 'coveredLargeWorkbookRows'),
@@ -450,35 +450,35 @@ export function parseLargeWorkbookSloScorecard(value: unknown): LargeWorkbookSlo
   }
 }
 
-function validateLargeWorkbookSloScorecard(scorecard: LargeWorkbookSloScorecard): void {
+function validateLargeWorkbookSloBudget(scorecard: LargeWorkbookSloBudget): void {
   const actualIds = scorecard.measurements.map((measurement) => measurement.id)
   const expectedIds = measurementSpecs.map((spec) => spec.id)
   if (JSON.stringify(actualIds) !== JSON.stringify(expectedIds)) {
     throw new Error(
-      `Large workbook SLO scorecard measurement coverage is stale. Expected ${expectedIds.join(', ')}, got ${actualIds.join(', ')}`,
+      `Large workbook SLO budget measurement coverage is stale. Expected ${expectedIds.join(', ')}, got ${actualIds.join(', ')}`,
     )
   }
   if (JSON.stringify(scorecard.summary.coveredLargeWorkbookRows) !== JSON.stringify([100_000, 250_000])) {
-    throw new Error('Large workbook SLO scorecard must cover 100k and 250k materialized-cell sessions')
+    throw new Error('Large workbook SLO budget must cover 100k and 250k materialized-cell sessions')
   }
   const actualHeadedBrowserIds = scorecard.headedBrowserFrameP95Contracts.map((contract) => contract.id)
   const expectedHeadedBrowserIds = headedBrowserFrameP95ContractSpecs.map((spec) => spec.id)
   if (JSON.stringify(actualHeadedBrowserIds) !== JSON.stringify(expectedHeadedBrowserIds)) {
     throw new Error(
-      `Large workbook SLO scorecard headed browser coverage is stale. Expected ${expectedHeadedBrowserIds.join(', ')}, got ${actualHeadedBrowserIds.join(', ')}`,
+      `Large workbook SLO budget headed browser coverage is stale. Expected ${expectedHeadedBrowserIds.join(', ')}, got ${actualHeadedBrowserIds.join(', ')}`,
     )
   }
   const failed = scorecard.measurements.find((measurement) => !measurement.passed || !measurement.gatePassed)
   if (failed) {
-    throw new Error(`Large workbook SLO scorecard contains a failed measurement: ${failed.id}`)
+    throw new Error(`Large workbook SLO budget contains a failed measurement: ${failed.id}`)
   }
   const failedContract = scorecard.headedBrowserFrameP95Contracts.find((contract) => !contract.passed)
   if (failedContract) {
-    throw new Error(`Large workbook SLO scorecard contains a failed headed browser contract: ${failedContract.id}`)
+    throw new Error(`Large workbook SLO budget contains a failed headed browser contract: ${failedContract.id}`)
   }
 }
 
-function logResult(mode: 'check' | 'write', scorecard: LargeWorkbookSloScorecard): void {
+function logResult(mode: 'check' | 'write', scorecard: LargeWorkbookSloBudget): void {
   console.log(
     JSON.stringify(
       {

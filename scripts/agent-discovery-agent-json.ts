@@ -1,6 +1,6 @@
 import { agentNotAFitBoundaries, mcpPromptNames } from './agent-discovery-constants.ts'
 import { buildEvaluatorDoors, buildProofContract, compactProofContractJsonArrays } from './agent-discovery-evaluator-doors.ts'
-import { formatJsonForRepo } from './scorecard-format.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 
 export type BuildAgentJsonManifestInput = {
   readonly siteRoot: string

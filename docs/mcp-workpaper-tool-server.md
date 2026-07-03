@@ -428,7 +428,7 @@ readiness checklist:
 - `packages/workpaper/package.json` includes
   `mcpName: io.github.proompteng/bilig-workpaper`.
 - `pnpm publish:runtime:check` passes against the runtime packages.
-- `pnpm workpaper:smoke:external` passes against packed local runtime packages.
+- `pnpm --dir examples/headless-workpaper run agent:mcp-transcript` passes.
 
 Passing the checklist means the repository metadata and smoke checks are ready
 for registry submission; it does not mean the package has already been

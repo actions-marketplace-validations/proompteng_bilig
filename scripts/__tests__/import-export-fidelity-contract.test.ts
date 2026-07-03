@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildImportExportFidelityScorecard, validateImportExportFidelityScorecard } from '../gen-import-export-fidelity-scorecard.ts'
+import { buildImportExportFidelityContract, validateImportExportFidelityContract } from '../gen-import-export-fidelity-contract.ts'
 
-describe('import/export fidelity scorecard', () => {
+describe('import/export fidelity contract', () => {
   it('generates a checked artifact from real CSV and XLSX import/export round trips', async () => {
-    const scorecard = await buildImportExportFidelityScorecard('2026-05-06T08:00:00.000Z')
+    const scorecard = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
 
     expect(scorecard).toMatchObject({
       schemaVersion: 1,
@@ -106,7 +106,7 @@ describe('import/export fidelity scorecard', () => {
   })
 
   it('keeps unsupported and declined import/export semantics explicit', async () => {
-    const scorecard = await buildImportExportFidelityScorecard('test-generated')
+    const scorecard = await buildImportExportFidelityContract('test-generated')
 
     expect(scorecard.summary.unsupportedFeatures).toEqual([])
     expect(scorecard.summary.declinedRuntimeFeatures).toEqual(['xlsx.macros.execution'])
@@ -114,19 +114,19 @@ describe('import/export fidelity scorecard', () => {
   })
 
   it('rejects stale artifacts missing required fidelity cases', async () => {
-    const scorecard = await buildImportExportFidelityScorecard('2026-05-06T08:00:00.000Z')
+    const scorecard = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
     const staleScorecard = {
       ...scorecard,
       cases: scorecard.cases.filter((entry) => entry.id !== 'xlsx-snapshot-roundtrip-dimensions-merges'),
     }
 
-    expect(() => validateImportExportFidelityScorecard(staleScorecard)).toThrow(
-      'Import/export fidelity scorecard is missing required case: xlsx-snapshot-roundtrip-dimensions-merges',
+    expect(() => validateImportExportFidelityContract(staleScorecard)).toThrow(
+      'Import/export fidelity contract is missing required case: xlsx-snapshot-roundtrip-dimensions-merges',
     )
   })
 
   it('rejects artifacts whose summary feature coverage drifts from case evidence', async () => {
-    const scorecard = await buildImportExportFidelityScorecard('2026-05-06T08:00:00.000Z')
+    const scorecard = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
     const missingFeatureScorecard = {
       ...scorecard,
       summary: {
@@ -142,11 +142,11 @@ describe('import/export fidelity scorecard', () => {
       },
     }
 
-    expect(() => validateImportExportFidelityScorecard(missingFeatureScorecard)).toThrow(
-      'Import/export fidelity scorecard summary is missing covered feature: xlsx.styles',
+    expect(() => validateImportExportFidelityContract(missingFeatureScorecard)).toThrow(
+      'Import/export fidelity contract summary is missing covered feature: xlsx.styles',
     )
-    expect(() => validateImportExportFidelityScorecard(extraFeatureScorecard)).toThrow(
-      'Import/export fidelity scorecard summary reports uncovered feature: xlsx.unbackedClaim',
+    expect(() => validateImportExportFidelityContract(extraFeatureScorecard)).toThrow(
+      'Import/export fidelity contract summary reports uncovered feature: xlsx.unbackedClaim',
     )
   })
 })

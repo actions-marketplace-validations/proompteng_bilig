@@ -1,6 +1,6 @@
 import { expect, test, type Locator } from '@playwright/test'
 import * as fc from 'fast-check'
-import { runProperty, shouldRunFuzzSuite } from '../../packages/test-fuzz/src/index.ts'
+import { runProperty } from '../../packages/test-fuzz/src/index.ts'
 import {
   PRIMARY_MODIFIER,
   PRODUCT_HEADER_HEIGHT,
@@ -16,13 +16,9 @@ import {
   getProductColumnWidth,
   gotoWorkbookShell,
   installTypeGpuCellReadbackHarness,
-  remoteSyncEnabled,
   waitForProductColumnWidthChange,
   waitForWorkbookReady,
 } from './web-shell-helpers.js'
-const fuzzBrowserEnabled = process.env['BILIG_FUZZ_BROWSER'] === '1'
-const remoteSyncTest = remoteSyncEnabled ? test : test.skip.bind(test)
-const fuzzBrowserTest = fuzzBrowserEnabled && shouldRunFuzzSuite('browser/grid-selection-focus', 'browser') ? test : test.skip.bind(test)
 
 type BrowserSelectionAction =
   | { kind: 'click'; row: number; col: number }
@@ -407,7 +403,7 @@ test('@browser-ci web app keeps click-away commits and keyboard clears stable', 
   await expect(resolvedValue).toHaveText('∅')
 })
 
-remoteSyncTest('@browser-ci web app recovers after runtime config failures outlive the fast retry window', async ({ page }) => {
+test('@browser-sync @browser-ci web app recovers after runtime config failures outlive the fast retry window', async ({ page }) => {
   let runtimeConfigAttempts = 0
   await page.route('**/runtime-config.json', async (route) => {
     runtimeConfigAttempts += 1
@@ -876,7 +872,7 @@ test('@browser-ci web app autoscrolls while dragging the fill handle past visibl
   await expect(formulaInput).toHaveValue('9')
 })
 
-remoteSyncTest('web app enables undo and redo for a normal edit', async ({ page }) => {
+test('@browser-sync web app enables undo and redo for a normal edit', async ({ page }) => {
   const documentId = createTestDocumentId('playwright-undo-redo-basic')
   await page.goto(`/?document=${encodeURIComponent(documentId)}`)
   await waitForWorkbookReady(page)
@@ -912,7 +908,7 @@ remoteSyncTest('web app enables undo and redo for a normal edit', async ({ page 
   await expect(resolvedValue).toHaveText('undo-check')
 })
 
-remoteSyncTest('web app preserves redo across a longer undo history', async ({ page }) => {
+test('@browser-sync web app preserves redo across a longer undo history', async ({ page }) => {
   const documentId = createTestDocumentId('playwright-undo-redo-long')
   await page.goto(`/?document=${encodeURIComponent(documentId)}`)
   await waitForWorkbookReady(page)
@@ -970,7 +966,7 @@ remoteSyncTest('web app preserves redo across a longer undo history', async ({ p
   await expect(formulaInput).toHaveValue('gamma')
 })
 
-remoteSyncTest('web app clears redo after a fresh edit branches history', async ({ page }) => {
+test('@browser-sync web app clears redo after a fresh edit branches history', async ({ page }) => {
   const documentId = createTestDocumentId('playwright-undo-redo-branch')
   await page.goto(`/?document=${encodeURIComponent(documentId)}`)
   await waitForWorkbookReady(page)
@@ -2444,46 +2440,43 @@ test('web app ignores right gutter clicks', async ({ page }) => {
   await expect(page.getByTestId('status-selection')).toHaveText('Sheet1!A1')
 })
 
-fuzzBrowserTest(
-  '@fuzz-browser web app preserves valid selection geometry and focus under generated selection actions',
-  async ({ page }) => {
-    await runProperty({
-      suite: 'browser/grid-selection-focus',
-      kind: 'browser',
-      arbitrary: fc.array(
-        fc.oneof<BrowserSelectionAction>(
-          fc.record({
-            kind: fc.constant<'click'>('click'),
-            row: fc.integer({ min: 0, max: 8 }),
-            col: fc.integer({ min: 0, max: 8 }),
-          }),
-          fc.record({
-            kind: fc.constant<'shiftClick'>('shiftClick'),
-            row: fc.integer({ min: 0, max: 8 }),
-            col: fc.integer({ min: 0, max: 8 }),
-          }),
-          fc.record({
-            kind: fc.constant<'key'>('key'),
-            key: fc.constantFrom('ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'),
-            shift: fc.boolean(),
-          }),
-        ),
-        { minLength: 6, maxLength: 10 },
+test('@fuzz-browser web app preserves valid selection geometry and focus under generated selection actions', async ({ page }) => {
+  await runProperty({
+    suite: 'browser/grid-selection-focus',
+    kind: 'browser',
+    arbitrary: fc.array(
+      fc.oneof<BrowserSelectionAction>(
+        fc.record({
+          kind: fc.constant<'click'>('click'),
+          row: fc.integer({ min: 0, max: 8 }),
+          col: fc.integer({ min: 0, max: 8 }),
+        }),
+        fc.record({
+          kind: fc.constant<'shiftClick'>('shiftClick'),
+          row: fc.integer({ min: 0, max: 8 }),
+          col: fc.integer({ min: 0, max: 8 }),
+        }),
+        fc.record({
+          kind: fc.constant<'key'>('key'),
+          key: fc.constantFrom('ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'),
+          shift: fc.boolean(),
+        }),
       ),
-      parameters: {
-        interruptAfterTimeLimit: 40_000,
-      },
-      predicate: async (actions) => {
-        await gotoWorkbookShell(page)
-        await waitForWorkbookReady(page)
-        const grid = page.getByTestId('sheet-grid')
-        const nameBox = page.getByTestId('name-box')
-        await expect(grid).toBeVisible({ timeout: 15_000 })
-        await nameBox.fill('C5')
-        await nameBox.press('Enter')
-        await expect(page.getByTestId('status-selection')).toHaveText('Sheet1!C5')
-        await runSelectionFuzzActions(page, grid, actions)
-      },
-    })
-  },
-)
+      { minLength: 6, maxLength: 10 },
+    ),
+    parameters: {
+      interruptAfterTimeLimit: 40_000,
+    },
+    predicate: async (actions) => {
+      await gotoWorkbookShell(page)
+      await waitForWorkbookReady(page)
+      const grid = page.getByTestId('sheet-grid')
+      const nameBox = page.getByTestId('name-box')
+      await expect(grid).toBeVisible({ timeout: 15_000 })
+      await nameBox.fill('C5')
+      await nameBox.press('Enter')
+      await expect(page.getByTestId('status-selection')).toHaveText('Sheet1!C5')
+      await runSelectionFuzzActions(page, grid, actions)
+    },
+  })
+})

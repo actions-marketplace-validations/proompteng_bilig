@@ -158,7 +158,7 @@ Then inspect the focused examples:
 - [Headless spreadsheet engine comparison for Node services and agents](headless-spreadsheet-engine-comparison.md)
 - [JavaScript spreadsheet library for Node services](javascript-spreadsheet-library-headless-node.md)
 - [SheetJS and ExcelJS alternative for formula-backed workbook APIs](sheetjs-exceljs-alternative-formula-workbook-api.md)
-- [HyperFormula alternative for headless WorkPaper workflows](hyperformula-alternative-headless-workpaper.md)
+- [JavaScript spreadsheet library for Node services](javascript-spreadsheet-library-headless-node.md)
 - [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 - [Starter issues for first-time contributors](starter-issues.md)
 

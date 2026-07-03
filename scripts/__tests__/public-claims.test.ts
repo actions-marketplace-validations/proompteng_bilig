@@ -59,7 +59,7 @@ describe('public claim check', () => {
       'README.md': 'Root readme',
       'docs/index.html': '<main>Public site</main>',
       'docs/public-api.md': '# Public API',
-      'docs/archive/2026-plans/workbook-view-platform-10x-production-plan-2026-04-29.md': '# Internal plan',
+      'internal/plans/workbook-view-platform-10x-production-plan-2026-04-29.md': '# Internal plan',
       'packages/headless/README.md': '# Headless',
     })
 

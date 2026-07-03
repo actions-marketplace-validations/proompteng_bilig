@@ -1,4 +1,4 @@
-import { isStringArray, parseJsonRecord, parseRecordValue, sameJson } from './workpaper-external-smoke-parser-helpers.ts'
+import { isStringArray, parseJsonRecord, parseRecordValue, sameJson } from './workpaper-smoke-parser-helpers.ts'
 
 export type RevenueScenarioSummary = {
   annualRunRate: number

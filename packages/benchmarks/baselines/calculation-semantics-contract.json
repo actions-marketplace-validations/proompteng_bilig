@@ -3,7 +3,7 @@
   "suite": "calculation-semantics-coverage",
   "generatedAt": "checked-in-generated-artifact",
   "source": {
-    "artifactGenerator": "scripts/gen-calculation-semantics-scorecard.ts",
+    "artifactGenerator": "scripts/gen-calculation-semantics-contract.ts",
     "fixturePackage": "packages/excel-fixtures",
     "compatibilityRegistry": "packages/formula/src/compatibility.ts",
     "fixtureHarnessTest": "packages/formula/src/__tests__/fixture-harness.test.ts",

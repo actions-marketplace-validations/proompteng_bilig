@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { formatJsonForRepo } from './scorecard-format.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const packageDir = join(repoRoot, 'packages', 'headless')

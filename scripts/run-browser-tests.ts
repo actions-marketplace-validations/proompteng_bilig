@@ -479,6 +479,7 @@ function terminatePreviewServers(): void {
 
 async function runPlaywright(phase: BrowserTestPhase): Promise<void> {
   const activePorts = e2ePorts
+  const phaseRemoteSync = phase.env?.['BILIG_E2E_REMOTE_SYNC']
   console.log(`Running ${phase.label}: playwright test ${phase.args.join(' ')}`)
   const result = Bun.spawnSync(['pnpm', 'exec', 'playwright', 'test', ...phase.args], {
     stdin: 'inherit',
@@ -489,7 +490,8 @@ async function runPlaywright(phase: BrowserTestPhase): Promise<void> {
       ...phase.env,
       BILIG_BROWSER_STACK: browserStack,
       BILIG_DEV_DISABLE_COMPOSE: browserStack === 'local' ? '1' : (process.env['BILIG_DEV_DISABLE_COMPOSE'] ?? '0'),
-      BILIG_E2E_REMOTE_SYNC: browserStack === 'local' ? '0' : (process.env['BILIG_E2E_REMOTE_SYNC'] ?? '1'),
+      BILIG_E2E_REMOTE_SYNC:
+        browserStack === 'local' && phaseRemoteSync !== '1' ? '0' : (phaseRemoteSync ?? process.env['BILIG_E2E_REMOTE_SYNC'] ?? '1'),
       BILIG_E2E_WEB_PORT: activePorts.webPort,
       BILIG_E2E_SYNC_SERVER_PORT: activePorts.syncServerPort,
       BILIG_E2E_ZERO_PORT: activePorts.zeroPort,

@@ -36,7 +36,6 @@ on:
       - 'scripts/check-runtime-commit-policy.ts'
       - 'scripts/gen-formula-compatibility-snapshot.ts'
       - 'scripts/gen-workpaper-benchmark-baseline.ts'
-      - 'scripts/gen-workpaper-hyperformula-audit.ts'
       - 'scripts/next-runtime-release-version.ts'
       - 'scripts/plan-runtime-release.ts'
       - 'scripts/check-runtime-npm-provisioning.ts'
@@ -46,8 +45,6 @@ on:
       - 'scripts/runtime-release.ts'
       - 'scripts/sync-runtime-package-versions.ts'
       - 'scripts/sync-runtime-release-metadata.ts'
-      - 'scripts/workpaper-external-smoke.ts'
-      - 'scripts/workpaper-surface-contract.ts'
       - 'integrations/n8n-nodes-workpaper/**'
       - 'tsconfig.base.json'
       - 'tsconfig.json'
@@ -185,7 +182,6 @@ jobs:
             packages/headless/src/__tests__/xlookup-decimal-exact-match.test.ts \
             packages/headless/src/__tests__/persistence.test.ts \
             packages/headless/src/__tests__/persistence.fuzz.test.ts \
-            packages/headless/src/__tests__/hyperformula-surface-parity.test.ts \
             packages/bilig/src/__tests__/bilig-alias.test.ts \
             packages/exceljs-formula-recalc/src/__tests__/exceljs-formula-recalc.test.ts \
             scripts/__tests__/runtime-package-publish-validation.test.ts
@@ -204,11 +200,6 @@ jobs:
         run: |
           set -euo pipefail
           pnpm formula:compatibility:check
-
-      - name: Run WorkPaper external-consumer smoke test
-        run: |
-          set -euo pipefail
-          pnpm workpaper:smoke:external
 
       - name: Verify n8n community node package
         run: |

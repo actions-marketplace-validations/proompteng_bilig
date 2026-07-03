@@ -4,6 +4,7 @@ export const BROWSER_PERF_GREP = '@browser-perf'
 export const BROWSER_DEEP_GREP = '@browser-deep'
 export const BROWSER_SERIAL_GREP = '@browser-serial'
 export const BROWSER_FUZZ_GREP = '@fuzz-browser'
+export const BROWSER_SYNC_GREP = '@browser-sync'
 export const BROWSER_WEBGPU_GREP = '@browser-webgpu'
 const WEBGPU_BROWSER_ENV = { BILIG_BROWSER_WEBGPU: '1' } as const
 const WEBGPU_PERF_GREP = `${BROWSER_WEBGPU_GREP}.*${BROWSER_PERF_GREP}|${BROWSER_PERF_GREP}.*${BROWSER_WEBGPU_GREP}`
@@ -21,6 +22,7 @@ export interface BrowserTestPhaseEnv {
   readonly BILIG_BROWSER_INCLUDE_PERF?: string | undefined
   readonly BILIG_BROWSER_INCLUDE_DEEP?: string | undefined
   readonly BILIG_BROWSER_INCLUDE_FUZZ?: string | undefined
+  readonly BILIG_BROWSER_INCLUDE_SYNC?: string | undefined
   readonly BILIG_BROWSER_PARALLEL_WORKERS?: string | undefined
   readonly BILIG_FUZZ_PROFILE?: string | undefined
   readonly BILIG_FUZZ_CAPTURE?: string | undefined
@@ -69,6 +71,7 @@ export function resolveBrowserTestPhases(input: {
   const includePerf = envFlagEnabled(input.env.BILIG_BROWSER_INCLUDE_PERF, 'BILIG_BROWSER_INCLUDE_PERF')
   const includeDeep = envFlagEnabled(input.env.BILIG_BROWSER_INCLUDE_DEEP, 'BILIG_BROWSER_INCLUDE_DEEP')
   const includeFuzz = envFlagEnabled(input.env.BILIG_BROWSER_INCLUDE_FUZZ, 'BILIG_BROWSER_INCLUDE_FUZZ')
+  const includeSync = envFlagEnabled(input.env.BILIG_BROWSER_INCLUDE_SYNC, 'BILIG_BROWSER_INCLUDE_SYNC')
   const ciSmoke = envFlagEnabled(input.env.BILIG_BROWSER_CI_SMOKE, 'BILIG_BROWSER_CI_SMOKE')
   if (ciSmoke) {
     return [
@@ -79,7 +82,7 @@ export function resolveBrowserTestPhases(input: {
           '--grep',
           BROWSER_CI_GREP,
           '--grep-invert',
-          [BROWSER_PERF_GREP, BROWSER_DEEP_GREP, BROWSER_FUZZ_GREP, BROWSER_WEBGPU_GREP].join('|'),
+          [BROWSER_PERF_GREP, BROWSER_DEEP_GREP, BROWSER_FUZZ_GREP, BROWSER_SYNC_GREP, BROWSER_WEBGPU_GREP].join('|'),
         ],
         env: WEBGPU_BROWSER_ENV,
       },
@@ -90,6 +93,7 @@ export function resolveBrowserTestPhases(input: {
     CLIPBOARD_GLOBAL_GREP,
     BROWSER_SERIAL_GREP,
     BROWSER_FUZZ_GREP,
+    BROWSER_SYNC_GREP,
     BROWSER_PERF_GREP,
     BROWSER_DEEP_GREP,
     BROWSER_WEBGPU_GREP,
@@ -158,6 +162,14 @@ export function resolveBrowserTestPhases(input: {
         BILIG_FUZZ_PROFILE: input.env.BILIG_FUZZ_PROFILE ?? 'main',
         BILIG_FUZZ_CAPTURE: input.env.BILIG_FUZZ_CAPTURE ?? '1',
       },
+    })
+  }
+
+  if (includeSync) {
+    phases.push({
+      label: 'browser sync tests',
+      args: ['--workers=1', '--grep', BROWSER_SYNC_GREP],
+      env: { BILIG_E2E_REMOTE_SYNC: '1' },
     })
   }
 

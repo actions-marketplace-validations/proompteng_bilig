@@ -122,11 +122,12 @@ The expected output includes both the pre-edit and post-edit model:
 }
 ```
 
-The repository smoke test also runs this scenario against packed local runtime
-packages:
+The repository checks this scenario through the example package and docs
+discovery gates:
 
 ```bash
-pnpm workpaper:smoke:external
+pnpm --dir examples/headless-workpaper run scenarios
+pnpm docs:discovery:check
 ```
 
 ## Why This Matters

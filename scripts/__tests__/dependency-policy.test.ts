@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { join, resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -12,7 +13,7 @@ const excelImportRuntimeXlsxImportAllowlist = new Set([
 ])
 const nativeXlsxFixtureScripts = [
   'e2e/tests/web-shell-import.pw.ts',
-  'scripts/gen-import-export-fidelity-scorecard.ts',
+  'scripts/gen-import-export-fidelity-contract.ts',
   'scripts/gen-workpaper-xlsx-corpus-fixtures.ts',
 ] as const
 const nativeXlsxCorpusProofScripts = ['scripts/check-workpaper-xlsx-corpus.ts', 'scripts/workpaper-xlsx-volatile-dependencies.ts'] as const
@@ -202,6 +203,12 @@ function runtimeXlsxImportViolations(path: string): string[] {
 
 function hasRuntimeXlsxImport(source: string): boolean {
   return /(?:^|\n)\s*import\s+\*\s+as\s+\w+\s+from\s+['"]xlsx['"]|require\(['"]xlsx['"]\)|import\(['"]xlsx['"]\)/u.test(source)
+}
+
+function gitTrackedFiles(): string[] {
+  return execFileSync('git', ['ls-files'], { cwd: repoRoot, encoding: 'utf8' })
+    .split('\n')
+    .filter((path) => path.length > 0)
 }
 
 function packageDependencyViolations(path: string, forbiddenDependencies: readonly string[]): string[] {
@@ -664,6 +671,61 @@ describe('repository dependency policy', () => {
     expect(violations).toEqual([])
   })
 
+  it('keeps removed proof and research garbage out of default scripts, workflows, docs, and tracked files', () => {
+    const manifest = packageManifest('.')
+    const scripts = objectField(manifest, 'scripts')
+    const defaultScriptNames = Object.keys(scripts).filter((name) => !name.startsWith('research:'))
+    const checkedSources = [
+      ['package.json', readFileSync(join(repoRoot, 'package.json'), 'utf8')],
+      ['scripts/run-ci.ts', readFileSync(join(repoRoot, 'scripts/run-ci.ts'), 'utf8')],
+      ['scripts/runtime-release.ts', readFileSync(join(repoRoot, 'scripts/runtime-release.ts'), 'utf8')],
+      ['.github/workflows/headless-package.yml', readFileSync(join(repoRoot, '.github/workflows/headless-package.yml'), 'utf8')],
+      ...defaultScriptNames.map((name) => [`package.json scripts.${name}`, stringField(scripts, name)] as const),
+    ] as const
+    const forbiddenDefaultSourcePatterns = [
+      new RegExp(['external', 'xlsx', 'memory', 'stress'].join('-'), 'u'),
+      new RegExp(['workpaper', 'parity'].join(':'), 'u'),
+      new RegExp(['workpaper', 'smoke', 'external'].join(':'), 'u'),
+      new RegExp(['gen', 'workpaper', 'hyperformula'].join('-'), 'u'),
+      new RegExp(['ironcalc', 'rust', 'sidecar'].join('-'), 'u'),
+      new RegExp(['workpaper', 'external', 'smoke'].join('-'), 'u'),
+      new RegExp(['hyperformula', 'surface'].join('-'), 'u'),
+      /\.cache\/public-workbook-corpus/u,
+      /\.cache\/issue-442/u,
+    ] as const
+    const sourceViolations = checkedSources.flatMap(([path, source]) =>
+      forbiddenDefaultSourcePatterns.filter((pattern) => pattern.test(source)).map((pattern) => `${path}: ${String(pattern)}`),
+    )
+    const forbiddenTrackedPatterns = [
+      /^(?:docs\/archive\/|output\/)/u,
+      new RegExp(['external', 'xlsx', 'memory', 'stress'].join('-'), 'u'),
+      new RegExp(['workpaper', 'external', 'smoke'].join('-'), 'u'),
+      new RegExp(['gen', 'workpaper', 'hyperformula'].join('-'), 'u'),
+      new RegExp(['ironcalc', 'rust', 'sidecar'].join('-'), 'u'),
+      new RegExp(['hyperformula', 'surface'].join('-'), 'u'),
+    ] as const
+    const trackedViolations = gitTrackedFiles().filter((path) => forbiddenTrackedPatterns.some((pattern) => pattern.test(path)))
+
+    expect(sourceViolations).toEqual([])
+    expect(trackedViolations).toEqual([])
+  })
+
+  it('keeps default E2E registration free of env-driven skipped tests', () => {
+    const forbiddenE2eSkipPatterns = [
+      ['test.skip', /test\.skip/u],
+      ['skip.bind(test)', /skip\.bind\(test\)/u],
+      [['BILIG', 'REFERENCE', 'WORKBOOK', 'XLSX'].join('_'), new RegExp(['BILIG', 'REFERENCE', 'WORKBOOK', 'XLSX'].join('_'), 'u')],
+    ] as const
+    const e2eSources = gitTrackedFiles()
+      .filter((path) => path.startsWith('e2e/tests/') && path.endsWith('.pw.ts'))
+      .map((path) => [path, readFileSync(join(repoRoot, path), 'utf8')] as const)
+    const violations = e2eSources.flatMap(([path, source]) =>
+      forbiddenE2eSkipPatterns.filter(([_name, pattern]) => pattern.test(source)).map(([name]) => `${path}: ${name}`),
+    )
+
+    expect(violations).toEqual([])
+  })
+
   it('keeps the issue 442 memory gate deterministic instead of requiring ignored cache state', () => {
     const manifest = packageManifest('.')
     const scripts = objectField(manifest, 'scripts')
@@ -832,43 +894,6 @@ describe('repository dependency policy', () => {
     expect(largeFileGuardIndex).toBeGreaterThan(-1)
     expect(readBytesIndex).toBeGreaterThan(largeFileGuardIndex)
     expect(workPaperIndex).toBeGreaterThan(readBytesIndex)
-  })
-
-  it('keeps external XLSX stress public import small-workbook only before materialized reads', () => {
-    const stressWorker = readFileSync(join(repoRoot, 'scripts/external-xlsx-memory-stress-worker.ts'), 'utf8')
-    const guardIndex = stressWorker.indexOf('assertExternalXlsxStressPublicImportWithinSmallWorkbookLimit(filePath)')
-    const readIndex = stressWorker.indexOf('return readFileSync(filePath)')
-
-    expect(stressWorker).toContain('const externalXlsxStressPublicImportBytesLimit = 1_000_000')
-    expect(stressWorker).toContain("from '@bilig/xlsx/zip-reader'")
-    expect(stressWorker).toContain('Use default file-backed external XLSX stress mode for large workbook memory gates.')
-    expect(stressWorker).not.toContain("requireModule('../packages/excel-import/src/xlsx-zip.js')")
-    expect(guardIndex).toBeGreaterThan(-1)
-    expect(readIndex).toBeGreaterThan(guardIndex)
-  })
-
-  it('keeps external XLSX stress source resolution file-backed for cached workbooks', () => {
-    const stress = readFileSync(join(repoRoot, 'scripts/external-xlsx-memory-stress.ts'), 'utf8')
-    const zipBranchIndex = stress.indexOf("if (source.fileName.toLowerCase().endsWith('.zip'))")
-    const ensureCachedIndex = stress.indexOf('await ensureSourceFileCached(source, sourceCachePath, args)')
-    const extractArchiveIndex = stress.indexOf(
-      'extractExternalXlsxStressWorkbookEntriesFromArchiveFile(source, sourceCachePath, args.cacheDir)',
-    )
-
-    expect(stress).toContain('async function ensureSourceFileCached(')
-    expect(stress).toContain("from '@bilig/xlsx'")
-    expect(stress).toContain('readXlsxZipEntriesLazyFromByteSource(archiveSource)')
-    expect(stress).toContain('forEachInflatedXlsxZipEntryChunkAsync(')
-    expect(stress).toContain('statSync(input.path).size')
-    expect(stress).toContain('hashExternalXlsxStressWorkbookFileSha256(input.path)')
-    expect(stress).toContain('statSync(outputPath).size !== expectedEntryByteLength')
-    expect(stress).not.toContain('const bytes = readFileSync(input.path)')
-    expect(stress).not.toContain('readFileSync(outputPath).byteLength')
-    expect(stress).not.toContain('readOrFetchSourceBytes')
-    expect(stress).not.toContain('unzipSync')
-    expect(zipBranchIndex).toBeGreaterThan(-1)
-    expect(ensureCachedIndex).toBeGreaterThan(zipBranchIndex)
-    expect(extractArchiveIndex).toBeGreaterThan(ensureCachedIndex)
   })
 
   it('keeps WorkPaper evaluator doors owned by WorkPaper packages', () => {

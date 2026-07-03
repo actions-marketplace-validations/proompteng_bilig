@@ -137,7 +137,6 @@ export const docsSiteSources = [
   ['unsupported-formula-troubleshooting-recipe.html', 'unsupported-formula-troubleshooting-recipe.md'],
   ['building-a-revenue-model-with-headless-workpaper.html', 'building-a-revenue-model-with-headless-workpaper.md'],
   ['persisting-formula-backed-workpaper-documents-in-node.html', 'persisting-formula-backed-workpaper-documents-in-node.md'],
-  ['hyperformula-alternative-headless-workpaper.html', 'hyperformula-alternative-headless-workpaper.md'],
   ['headless-spreadsheet-engine-comparison.html', 'headless-spreadsheet-engine-comparison.md'],
   ['javascript-spreadsheet-library-headless-node.html', 'javascript-spreadsheet-library-headless-node.md'],
   ['sheetjs-exceljs-alternative-formula-workbook-api.html', 'sheetjs-exceljs-alternative-formula-workbook-api.md'],

@@ -7,7 +7,7 @@
     "benchmarkScript": "scripts/bench-contracts.ts",
     "headedBrowserCommand": "pnpm test:browser:full",
     "headedBrowserTestFile": "e2e/tests/web-shell-scroll-performance.pw.ts",
-    "artifactGenerator": "scripts/gen-large-workbook-slo-scorecard.ts"
+    "artifactGenerator": "scripts/gen-large-workbook-slo-budget.ts"
   },
   "summary": {
     "coveredLargeWorkbookRows": [100000, 250000],

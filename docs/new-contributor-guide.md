@@ -68,10 +68,10 @@ pnpm format:check
 pnpm lint
 ```
 
-If your example changes the packaged WorkPaper example set, also run:
+If your example changes public docs or generated discovery output, also run:
 
 ```bash
-pnpm workpaper:smoke:external
+pnpm docs:discovery:check
 ```
 
 If the patch changes package behavior, generated files, benchmarks, browser

@@ -10,7 +10,7 @@ import {
   type FormulaCompatibilityEntry,
 } from '../packages/formula/src/compatibility.ts'
 import { formulaInventory, formulaInventorySummary } from '../packages/formula/src/generated/formula-inventory.ts'
-import { formatJsonForRepo } from './scorecard-format.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 
 interface FormulaCompatibilitySnapshot {
   schemaVersion: 1

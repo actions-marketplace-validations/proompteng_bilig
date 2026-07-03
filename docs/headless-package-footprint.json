@@ -5,13 +5,12 @@
     "version": "0.164.11",
     "description": "Lower-level WorkPaper formula runtime for Node services with JSON persistence and verified formula readback.",
     "nodeEngine": ">=22.0.0",
-    "keywordCount": 20,
+    "keywordCount": 19,
     "keywords": [
       "bilig",
       "formula-engine",
       "formula-recalculation",
       "formula-workbook",
-      "hyperformula",
       "mcp",
       "mcp-server",
       "mcp-tools",
@@ -43,11 +42,11 @@
     "hasMcpBinary": true
   },
   "npmPackDryRun": {
-    "tarballBytes": 859305,
-    "unpackedBytes": 5244205,
-    "entryCount": 835,
-    "readmeBytes": 50298,
-    "packageJsonBytes": 3274
+    "tarballBytes": 860001,
+    "unpackedBytes": 5249591,
+    "entryCount": 841,
+    "readmeBytes": 50216,
+    "packageJsonBytes": 3254
   },
   "coldStartProbe": {
     "runtime": "node",

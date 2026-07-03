@@ -514,9 +514,8 @@ npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./
   https://github.com/proompteng/bilig/blob/main/docs/npm-provenance-package-trust.md
   verifies @bilig/workpaper registry signatures, SLSA provenance attestations,
   and the release workflow path before production adoption.
-- hyperformula comparison:
-  https://github.com/proompteng/bilig/blob/main/docs/hyperformula-alternative-headless-workpaper.md
 - WorkPaper engine comparison:
+  https://proompteng.github.io/bilig/headless-spreadsheet-engine-comparison.html
   https://github.com/proompteng/bilig/blob/main/docs/headless-spreadsheet-engine-comparison.md
 - WorkPaper engine for Node services and agents:
   https://proompteng.github.io/bilig/headless-spreadsheet-engine-node-services-agents.html

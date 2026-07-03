@@ -12,7 +12,6 @@ export function requirePackageMetadataDiscovery(args: {
       'formula-engine',
       'formula-recalculation',
       'formula-workbook',
-      'hyperformula',
       'mcp',
       'mcp-server',
       'mcp-tools',
