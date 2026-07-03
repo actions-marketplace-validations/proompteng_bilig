@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { SpreadsheetEngine } from '@bilig/core'
 import { ValueTag } from '@bilig/protocol'
-import { EXPANDED_COMPARATIVE_WORKLOADS } from '../../../benchmarks/src/expanded-competitive-workloads.js'
 
 import {
   detachTrackedIndexChanges,
@@ -523,12 +522,5 @@ describe('materializeTrackedIndexChanges', () => {
       a1: 'A1',
       newValue: { tag: ValueTag.Number, value: 1 },
     })
-  })
-
-  it('keeps tracked-index-sensitive expanded workloads covered', () => {
-    expect(EXPANDED_COMPARATIVE_WORKLOADS).toHaveLength(106)
-    expect(EXPANDED_COMPARATIVE_WORKLOADS).toContain('lookup-with-column-index-after-column-write')
-    expect(EXPANDED_COMPARATIVE_WORKLOADS).toContain('lookup-approximate-sorted-after-column-write')
-    expect(EXPANDED_COMPARATIVE_WORKLOADS).toContain('structural-insert-columns-large')
   })
 })

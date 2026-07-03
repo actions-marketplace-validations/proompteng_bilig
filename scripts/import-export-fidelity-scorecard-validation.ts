@@ -27,7 +27,6 @@ const requiredCaseIds = [
   'xlsx-external-data-provenance',
   'xlsx-macro-payload-preserved-without-execution',
   'xlsx-runtime-feature-policy-warning',
-  'external-sheets-excel-import-export-comparison',
 ] as const
 
 export function parseImportExportFidelityScorecard(value: unknown): ImportExportFidelityScorecard {
@@ -45,11 +44,6 @@ export function parseImportExportFidelityScorecard(value: unknown): ImportExport
       artifactGenerator: literalField(source, 'artifactGenerator', 'scripts/gen-import-export-fidelity-scorecard.ts'),
       implementationPackage: literalField(source, 'implementationPackage', 'packages/excel-import'),
       enginePackage: literalField(source, 'enginePackage', 'packages/core'),
-      externalImportExportComparisonArtifact: literalField(
-        source,
-        'externalImportExportComparisonArtifact',
-        'packages/benchmarks/baselines/import-export-external-sheets-excel-comparison.json',
-      ),
     },
     summary: {
       allRequiredCasesPassed: booleanField(summary, 'allRequiredCasesPassed', 'import/export fidelity allRequiredCasesPassed'),
@@ -63,8 +57,6 @@ export function parseImportExportFidelityScorecard(value: unknown): ImportExport
       coveredFeatures: stringArrayField(summary, 'coveredFeatures', 'import/export fidelity coveredFeatures'),
       unsupportedFeatures: stringArrayField(summary, 'unsupportedFeatures', 'import/export fidelity unsupportedFeatures'),
       declinedRuntimeFeatures: stringArrayField(summary, 'declinedRuntimeFeatures', 'import/export fidelity declinedRuntimeFeatures'),
-      externalGoogleSheetsEvidence: literalField(summary, 'externalGoogleSheetsEvidence', 'official-docs-comparison-artifact'),
-      externalMicrosoftExcelEvidence: literalField(summary, 'externalMicrosoftExcelEvidence', 'official-docs-comparison-artifact'),
     },
     semanticLedger: arrayField(record, 'semanticLedger', 'import/export fidelity semanticLedger').map(parseSemanticLedgerEntry),
     cases: arrayField(record, 'cases', 'import/export fidelity cases').map(parseImportExportFidelityCase),
@@ -115,7 +107,7 @@ function validateSemanticLedger(scorecard: ImportExportFidelityScorecard): void 
     throw new Error('Import/export fidelity semantic ledger is stale against the current feature evidence')
   }
   const dispositions = new Set(scorecard.semanticLedger.map((entry) => entry.disposition))
-  for (const requiredDisposition of ['preserved', 'external', 'declined-runtime'] satisfies ImportExportSemanticDisposition[]) {
+  for (const requiredDisposition of ['preserved', 'declined-runtime'] satisfies ImportExportSemanticDisposition[]) {
     if (!dispositions.has(requiredDisposition)) {
       throw new Error(`Import/export fidelity semantic ledger is missing ${requiredDisposition} entries`)
     }
@@ -169,21 +161,21 @@ function parseSemanticLedgerEntry(value: unknown): ImportExportSemanticLedgerEnt
 }
 
 function parseSemanticDisposition(value: string): ImportExportSemanticDisposition {
-  if (value === 'preserved' || value === 'unsupported' || value === 'external' || value === 'declined-runtime') {
+  if (value === 'preserved' || value === 'unsupported' || value === 'declined-runtime') {
     return value
   }
   throw new Error(`Unexpected import/export semantic ledger disposition: ${value}`)
 }
 
 function parseFormat(value: string): ImportExportFidelityCase['format'] {
-  if (value === 'csv' || value === 'xlsx' || value === 'external-docs') {
+  if (value === 'csv' || value === 'xlsx') {
     return value
   }
   throw new Error(`Unexpected import/export fidelity format: ${value}`)
 }
 
 function parseDirection(value: string): ImportExportFidelityCase['direction'] {
-  if (value === 'import' || value === 'export-import' || value === 'import-export-import' || value === 'comparison') {
+  if (value === 'import' || value === 'export-import' || value === 'import-export-import') {
     return value
   }
   throw new Error(`Unexpected import/export fidelity direction: ${value}`)

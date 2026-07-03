@@ -1,4 +1,4 @@
-export type ImportExportSemanticDisposition = 'preserved' | 'unsupported' | 'external' | 'declined-runtime'
+export type ImportExportSemanticDisposition = 'preserved' | 'unsupported' | 'declined-runtime'
 
 export interface ImportExportSemanticLedgerEntry {
   readonly feature: string
@@ -46,13 +46,10 @@ export function importExportDeclinedRuntimeFeatures(
     .toSorted()
 }
 
-function importExportCoveredFeatureDisposition(feature: string): ImportExportSemanticDisposition {
-  return feature.startsWith('external.') ? 'external' : 'preserved'
+function importExportCoveredFeatureDisposition(_feature: string): ImportExportSemanticDisposition {
+  return 'preserved'
 }
 
-function importExportCoveredFeatureReason(feature: string): string {
-  if (feature.startsWith('external.')) {
-    return 'Tracked by the official Google Sheets and Microsoft Excel import/export comparison artifact.'
-  }
+function importExportCoveredFeatureReason(_feature: string): string {
   return 'Preserved by required import/export fidelity case evidence.'
 }

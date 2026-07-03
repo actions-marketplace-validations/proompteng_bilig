@@ -10,12 +10,6 @@ import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 import { SpreadsheetEngine } from '../packages/core/src/engine.js'
 import { exportXlsx, importCsv, importXlsx, manualCalculationModeWarning } from '../packages/excel-import/src/index.js'
 import type { WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import {
-  externalImportExportComparisonArtifactRepoPath,
-  externalImportExportComparisonCoveredFeatures,
-  parseExternalImportExportComparisonArtifact,
-  validateExternalImportExportComparisonArtifact,
-} from './import-export-external-sheets-excel-comparison.ts'
 import { projectSupportedSnapshotSemantics } from './import-export-fidelity-projection.ts'
 import { parseImportExportFidelityScorecard, validateImportExportFidelityScorecard } from './import-export-fidelity-scorecard-validation.ts'
 import {
@@ -30,8 +24,8 @@ export { parseImportExportFidelityScorecard, validateImportExportFidelityScoreca
 
 export interface ImportExportFidelityCase {
   readonly id: string
-  readonly format: 'csv' | 'xlsx' | 'external-docs'
-  readonly direction: 'import' | 'export-import' | 'import-export-import' | 'comparison'
+  readonly format: 'csv' | 'xlsx'
+  readonly direction: 'import' | 'export-import' | 'import-export-import'
   readonly required: boolean
   readonly passed: boolean
   readonly coveredFeatures: string[]
@@ -47,7 +41,6 @@ export interface ImportExportFidelityScorecard {
     readonly artifactGenerator: 'scripts/gen-import-export-fidelity-scorecard.ts'
     readonly implementationPackage: 'packages/excel-import'
     readonly enginePackage: 'packages/core'
-    readonly externalImportExportComparisonArtifact: 'packages/benchmarks/baselines/import-export-external-sheets-excel-comparison.json'
   }
   readonly summary: {
     readonly allRequiredCasesPassed: boolean
@@ -57,8 +50,6 @@ export interface ImportExportFidelityScorecard {
     readonly coveredFeatures: string[]
     readonly unsupportedFeatures: string[]
     readonly declinedRuntimeFeatures: string[]
-    readonly externalGoogleSheetsEvidence: 'official-docs-comparison-artifact'
-    readonly externalMicrosoftExcelEvidence: 'official-docs-comparison-artifact'
   }
   readonly semanticLedger: ImportExportSemanticLedgerEntry[]
   readonly cases: ImportExportFidelityCase[]
@@ -66,7 +57,6 @@ export interface ImportExportFidelityScorecard {
 
 const rootDir = resolve(new URL('..', import.meta.url).pathname)
 const outputPath = join(rootDir, 'packages', 'benchmarks', 'baselines', 'import-export-fidelity-scorecard.json')
-const externalImportExportComparisonArtifactPath = join(rootDir, externalImportExportComparisonArtifactRepoPath)
 const coveredFeatureOrder = [
   'csv.import',
   'csv.preview',
@@ -107,7 +97,6 @@ const coveredFeatureOrder = [
   'xlsx.macros.codeNameRoundtrip',
   'xlsx.externalData.provenance',
   'xlsx.runtimeFeaturePolicyWarnings',
-  ...externalImportExportComparisonCoveredFeatures,
 ] as const
 const unsupportedFeatureDisclosures = importExportUnsupportedFeatures()
 const declinedRuntimeFeatureDisclosures = importExportDeclinedRuntimeFeatures()
@@ -151,7 +140,6 @@ export async function buildImportExportFidelityScorecard(generatedAt = new Date(
     runXlsxExternalDataProvenanceCase(),
     runXlsxMacroPayloadPreservedWithoutExecutionCase(),
     runXlsxRuntimeFeaturePolicyWarningCase(),
-    runExternalSheetsExcelImportExportComparisonCase(),
   ]
   const coveredFeatureSet = new Set(cases.flatMap((entry) => entry.coveredFeatures))
   const coveredFeatures = coveredFeatureOrder.filter((feature) => coveredFeatureSet.has(feature))
@@ -165,7 +153,6 @@ export async function buildImportExportFidelityScorecard(generatedAt = new Date(
       artifactGenerator: 'scripts/gen-import-export-fidelity-scorecard.ts',
       implementationPackage: 'packages/excel-import',
       enginePackage: 'packages/core',
-      externalImportExportComparisonArtifact: externalImportExportComparisonArtifactRepoPath,
     },
     summary: {
       allRequiredCasesPassed: cases.filter((entry) => entry.required).every((entry) => entry.passed),
@@ -186,8 +173,6 @@ export async function buildImportExportFidelityScorecard(generatedAt = new Date(
       coveredFeatures,
       unsupportedFeatures: [...importExportUnsupportedFeatures(semanticLedger)],
       declinedRuntimeFeatures: [...importExportDeclinedRuntimeFeatures(semanticLedger)],
-      externalGoogleSheetsEvidence: 'official-docs-comparison-artifact',
-      externalMicrosoftExcelEvidence: 'official-docs-comparison-artifact',
     },
     semanticLedger: [...semanticLedger],
     cases,
@@ -689,28 +674,6 @@ function createMacroEnabledWorkbookBytes(): Uint8Array {
       workbookCodeName: 'ThisWorkbook',
       sheetCodeNames: [{ sheetName: 'Sheet1', codeName: 'Sheet1' }],
     },
-  })
-}
-
-function runExternalSheetsExcelImportExportComparisonCase(): ImportExportFidelityCase {
-  const artifact = parseExternalImportExportComparisonArtifact(
-    JSON.parse(readFileSync(externalImportExportComparisonArtifactPath, 'utf8')) as unknown,
-  )
-  const findings = validateExternalImportExportComparisonArtifact(artifact)
-  const googleSourceCount = artifact.officialSources.filter((source) => source.vendor === 'google-sheets').length
-  const microsoftSourceCount = artifact.officialSources.filter((source) => source.vendor === 'microsoft-excel').length
-
-  return fidelityCase({
-    id: 'external-sheets-excel-import-export-comparison',
-    format: 'external-docs',
-    direction: 'comparison',
-    passed: findings.length === 0,
-    coveredFeatures: externalImportExportComparisonCoveredFeatures,
-    missingFeatures: findings,
-    evidence:
-      `Validated ${externalImportExportComparisonArtifactRepoPath} from ${artifact.sourceBasis}: ` +
-      `${String(artifact.dimensions.length)} required comparison dimensions cite ${String(googleSourceCount)} official Google Sheets/Drive sources ` +
-      `and ${String(microsoftSourceCount)} official Microsoft Excel sources.`,
   })
 }
 

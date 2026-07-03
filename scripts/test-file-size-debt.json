@@ -1,0 +1,200 @@
+[
+  {
+    "path": "apps/bilig/src/codex-app/workbook-agent-mutation-receipt.test.ts",
+    "maxLines": 1633,
+    "targetMaxLines": 1500,
+    "reason": "Legacy agent mutation receipt coverage needs split by receipt family before new scenarios are added."
+  },
+  {
+    "path": "apps/bilig/src/codex-app/workbook-agent-service.test.ts",
+    "maxLines": 6426,
+    "targetMaxLines": 1500,
+    "reason": "Legacy agent service suite mixes lifecycle, proof, and mutation scenarios; split by service boundary."
+  },
+  {
+    "path": "apps/bilig/src/codex-app/workbook-agent-tools.test.ts",
+    "maxLines": 4833,
+    "targetMaxLines": 1500,
+    "reason": "Legacy tool suite mixes protocol, validation, and runtime behavior; split by tool family."
+  },
+  {
+    "path": "apps/bilig/src/http/sync-server.test.ts",
+    "maxLines": 2279,
+    "targetMaxLines": 1500,
+    "reason": "Legacy sync server suite mixes routing, auth, and conflict behavior; split by HTTP contract."
+  },
+  {
+    "path": "apps/bilig/src/zero/__tests__/workbook-change-store.test.ts",
+    "maxLines": 1760,
+    "targetMaxLines": 1500,
+    "reason": "Legacy change-store coverage mixes persistence and replay behavior; split by storage operation."
+  },
+  {
+    "path": "apps/web/src/__tests__/projected-viewport-store.test.ts",
+    "maxLines": 1925,
+    "targetMaxLines": 1500,
+    "reason": "Legacy viewport store coverage mixes projection geometry and invalidation behavior; split by concern."
+  },
+  {
+    "path": "apps/web/src/__tests__/workbook-agent-pane.test.tsx",
+    "maxLines": 4883,
+    "targetMaxLines": 1500,
+    "reason": "Legacy pane suite mixes rendering, commands, and async agent states; split by visible surface."
+  },
+  {
+    "path": "apps/web/src/__tests__/workbook-toolbar.test.tsx",
+    "maxLines": 1935,
+    "targetMaxLines": 1500,
+    "reason": "Legacy toolbar suite mixes rendering and command policy; split by control group."
+  },
+  {
+    "path": "e2e/tests/web-shell-selection.pw.ts",
+    "maxLines": 1796,
+    "targetMaxLines": 1500,
+    "reason": "Legacy E2E selection coverage mixes pointer, keyboard, and fill behavior; split by workflow."
+  },
+  {
+    "path": "e2e/tests/web-shell-typegpu.pw.ts",
+    "maxLines": 2606,
+    "targetMaxLines": 1500,
+    "reason": "Legacy TypeGPU E2E coverage mixes runtime setup and rendering assertions; split by rendering contract."
+  },
+  {
+    "path": "e2e/tests/web-shell.pw.ts",
+    "maxLines": 2490,
+    "targetMaxLines": 1500,
+    "reason": "Legacy shell E2E coverage mixes navigation, editing, and persistence flows; split by workflow."
+  },
+  {
+    "path": "packages/core/src/__tests__/engine.test.ts",
+    "maxLines": 7580,
+    "targetMaxLines": 1500,
+    "reason": "Legacy engine suite mixes recalculation, dependency graph, and mutation behavior; split by engine subsystem."
+  },
+  {
+    "path": "packages/core/src/__tests__/formula-evaluation-service.test.ts",
+    "maxLines": 1524,
+    "targetMaxLines": 1500,
+    "reason": "Legacy formula evaluation service coverage is just above limit; split new scenarios into focused files."
+  },
+  {
+    "path": "packages/core/src/__tests__/operation-service-fast-path-coverage.test.ts",
+    "maxLines": 1870,
+    "targetMaxLines": 1500,
+    "reason": "Legacy fast-path coverage mixes operation families; split by operation group."
+  },
+  {
+    "path": "packages/core/src/__tests__/operation-service.test.ts",
+    "maxLines": 1769,
+    "targetMaxLines": 1500,
+    "reason": "Legacy operation service suite mixes cells, sheets, names, and formulas; split by service boundary."
+  },
+  {
+    "path": "packages/excel-import/src/__tests__/excel-import.test.ts",
+    "maxLines": 2456,
+    "targetMaxLines": 1500,
+    "reason": "Legacy import suite mixes workbook structures; split by imported artifact type."
+  },
+  {
+    "path": "packages/excel-import/src/__tests__/xlsx-large-simple-import.test.ts",
+    "maxLines": 1762,
+    "targetMaxLines": 1500,
+    "reason": "Legacy large-import coverage mixes generation and import assertions; split helper setup from behavior cases."
+  },
+  {
+    "path": "packages/formula/src/__tests__/builtins.test.ts",
+    "maxLines": 6041,
+    "targetMaxLines": 1500,
+    "reason": "Legacy builtin suite mixes function families; split by formula category before adding coverage."
+  },
+  {
+    "path": "packages/formula/src/__tests__/datetime-builtins.test.ts",
+    "maxLines": 1536,
+    "targetMaxLines": 1500,
+    "reason": "Legacy datetime suite is just above limit; split additional cases by date/time family."
+  },
+  {
+    "path": "packages/formula/src/__tests__/evaluation.test.ts",
+    "maxLines": 2391,
+    "targetMaxLines": 1500,
+    "reason": "Legacy evaluation suite mixes parser, coercion, and evaluator behavior; split by evaluator layer."
+  },
+  {
+    "path": "packages/formula/src/__tests__/lookup-builtins.test.ts",
+    "maxLines": 1643,
+    "targetMaxLines": 1500,
+    "reason": "Legacy lookup suite mixes lookup functions; split by function family before adding cases."
+  },
+  {
+    "path": "packages/grid/src/__tests__/gridClipboardKeyboardController.test.ts",
+    "maxLines": 2042,
+    "targetMaxLines": 1500,
+    "reason": "Legacy clipboard keyboard suite mixes copy, paste, and shortcut behavior; split by command."
+  },
+  {
+    "path": "packages/grid/src/__tests__/gridRenderTilePaneRuntime.test.ts",
+    "maxLines": 3464,
+    "targetMaxLines": 1500,
+    "reason": "Legacy render tile pane suite mixes rendering, input, and geometry; split by runtime concern."
+  },
+  {
+    "path": "packages/grid/src/__tests__/typegpu-resource-cache-signature.test.ts",
+    "maxLines": 1595,
+    "targetMaxLines": 1500,
+    "reason": "Legacy resource cache signature suite is above limit; split new cases by resource family."
+  },
+  {
+    "path": "packages/headless/src/__tests__/macos-desktop-excel-xlsx-oracle.test.ts",
+    "maxLines": 2733,
+    "targetMaxLines": 1500,
+    "reason": "Legacy Excel oracle suite mixes structural families; split by workbook feature."
+  },
+  {
+    "path": "packages/headless/src/__tests__/work-paper-runtime.test.ts",
+    "maxLines": 2684,
+    "targetMaxLines": 1500,
+    "reason": "Legacy runtime suite mixes engine lifecycle and workbook API behavior; split by runtime boundary."
+  },
+  {
+    "path": "packages/wasm-kernel/src/__tests__/kernel.test.ts",
+    "maxLines": 6682,
+    "targetMaxLines": 1500,
+    "reason": "Legacy kernel suite mixes all accelerated families; split by kernel dispatch family."
+  },
+  {
+    "path": "packages/workbook/src/__tests__/command-bundle-api.test.ts",
+    "maxLines": 1549,
+    "targetMaxLines": 1500,
+    "reason": "Legacy command bundle suite is above limit; split new cases by command family."
+  },
+  {
+    "path": "packages/workbook/src/__tests__/model-api.test.ts",
+    "maxLines": 2002,
+    "targetMaxLines": 1500,
+    "reason": "Legacy model API suite mixes workbook, sheet, and cell behavior; split by model boundary."
+  },
+  {
+    "path": "packages/workbook/src/__tests__/run-api.test.ts",
+    "maxLines": 2068,
+    "targetMaxLines": 1500,
+    "reason": "Legacy run API suite mixes execution and proof behavior; split by API concern."
+  },
+  {
+    "path": "packages/workbook/src/__tests__/run-proof-boundary.test.ts",
+    "maxLines": 1867,
+    "targetMaxLines": 1500,
+    "reason": "Legacy proof boundary suite mixes allowed and rejected evidence; split by boundary type."
+  },
+  {
+    "path": "packages/workbook/src/__tests__/testing-api.test.ts",
+    "maxLines": 1514,
+    "targetMaxLines": 1500,
+    "reason": "Legacy testing API suite is just above limit; split new cases into focused API tests."
+  },
+  {
+    "path": "packages/xlsx-formula-recalc/src/__tests__/xlsx-formula-recalc-cli.test.ts",
+    "maxLines": 1631,
+    "targetMaxLines": 1500,
+    "reason": "Legacy CLI suite mixes command parsing and workbook behavior; split by command mode."
+  }
+]

@@ -341,7 +341,7 @@ const generatedSourceChecks: readonly CiTask[] = [
   bunScript('create WorkPaper package check', 'scripts/check-create-workpaper-package.ts'),
   bunScript('agent discovery docs check', 'scripts/sync-agent-discovery-docs.ts', '--check'),
   tsxScript('public agent start rules published-package check', 'scripts/check-public-agent-start-rules.ts'),
-  tsxScript('docs discovery check', 'scripts/check-docs-discovery.ts'),
+  tsxScript('docs integrity check', 'scripts/check-docs-integrity.ts'),
 ]
 const semanticFastGate = pnpm('semantic correctness fast gate', 'test:semantic:fast')
 
@@ -395,6 +395,7 @@ try {
         'runner',
       ),
       direct('source size check', 'bun', 'scripts/check-source-file-size.ts'),
+      direct('test size check', 'bun', 'scripts/check-test-file-size.ts'),
       direct('typecheck', workspaceBin('tsc'), '-b', '--pretty', 'false'),
     ])),
   )

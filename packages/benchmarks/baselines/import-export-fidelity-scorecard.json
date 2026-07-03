@@ -1,12 +1,11 @@
 {
   "schemaVersion": 1,
   "suite": "import-export-fidelity",
-  "generatedAt": "2026-05-20T08:34:25.229Z",
+  "generatedAt": "2026-07-03T19:24:51.119Z",
   "source": {
     "artifactGenerator": "scripts/gen-import-export-fidelity-scorecard.ts",
     "implementationPackage": "packages/excel-import",
-    "enginePackage": "packages/core",
-    "externalImportExportComparisonArtifact": "packages/benchmarks/baselines/import-export-external-sheets-excel-comparison.json"
+    "enginePackage": "packages/core"
   },
   "summary": {
     "allRequiredCasesPassed": true,
@@ -52,15 +51,10 @@
       "xlsx.macros.payloadRoundtrip",
       "xlsx.macros.codeNameRoundtrip",
       "xlsx.externalData.provenance",
-      "xlsx.runtimeFeaturePolicyWarnings",
-      "external.googleSheetsImportExportDocs",
-      "external.microsoftExcelImportExportDocs",
-      "external.sheetsExcelImportExportComparison"
+      "xlsx.runtimeFeaturePolicyWarnings"
     ],
     "unsupportedFeatures": [],
-    "declinedRuntimeFeatures": ["xlsx.macros.execution"],
-    "externalGoogleSheetsEvidence": "official-docs-comparison-artifact",
-    "externalMicrosoftExcelEvidence": "official-docs-comparison-artifact"
+    "declinedRuntimeFeatures": ["xlsx.macros.execution"]
   },
   "semanticLedger": [
     {
@@ -82,21 +76,6 @@
       "feature": "csv.roundtrip",
       "disposition": "preserved",
       "reason": "Preserved by required import/export fidelity case evidence."
-    },
-    {
-      "feature": "external.googleSheetsImportExportDocs",
-      "disposition": "external",
-      "reason": "Tracked by the official Google Sheets and Microsoft Excel import/export comparison artifact."
-    },
-    {
-      "feature": "external.microsoftExcelImportExportDocs",
-      "disposition": "external",
-      "reason": "Tracked by the official Google Sheets and Microsoft Excel import/export comparison artifact."
-    },
-    {
-      "feature": "external.sheetsExcelImportExportComparison",
-      "disposition": "external",
-      "reason": "Tracked by the official Google Sheets and Microsoft Excel import/export comparison artifact."
     },
     {
       "feature": "xlsx.calculationSettings",
@@ -487,20 +466,6 @@
       "coveredFeatures": ["xlsx.runtimeFeaturePolicyWarnings"],
       "missingFeatures": [],
       "evidence": "Scorecard separates import/export compatibility from unsafe runtime execution surfaces: preserved manual calculation metadata emits the expected stale-cache warning, while native macro execution is disclosed as a declined runtime feature."
-    },
-    {
-      "id": "external-sheets-excel-import-export-comparison",
-      "format": "external-docs",
-      "direction": "comparison",
-      "required": true,
-      "passed": true,
-      "coveredFeatures": [
-        "external.googleSheetsImportExportDocs",
-        "external.microsoftExcelImportExportDocs",
-        "external.sheetsExcelImportExportComparison"
-      ],
-      "missingFeatures": [],
-      "evidence": "Validated packages/benchmarks/baselines/import-export-external-sheets-excel-comparison.json from official-public-docs-reviewed-2026-05-06: 4 required comparison dimensions cite 5 official Google Sheets/Drive sources and 4 official Microsoft Excel sources."
     }
   ]
 }

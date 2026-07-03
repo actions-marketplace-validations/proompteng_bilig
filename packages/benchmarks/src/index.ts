@@ -3,7 +3,6 @@ import { runLoadBenchmark } from './benchmark-load.js'
 import { runRangeAggregateBenchmark } from './benchmark-range-heavy.js'
 import { runRenderCommitBenchmark } from './benchmark-renderer.js'
 import { runTopologyEditBenchmark } from './benchmark-topology-edit.js'
-import { runWorkPaperVsHyperFormulaExpandedBenchmarkSuite } from './benchmark-workpaper-vs-hyperformula-expanded.js'
 import { runWorkPaperBenchmarkSuite } from './benchmark-workpaper.js'
 
 export * from './benchmark-edit.js'
@@ -11,16 +10,9 @@ export * from './benchmark-load.js'
 export * from './benchmark-range-heavy.js'
 export * from './benchmark-renderer.js'
 export * from './benchmark-topology-edit.js'
-export * from './benchmark-workpaper-vs-hyperformula-expanded.js'
-export * from './benchmark-workpaper-vs-truecalc.js'
-export * from './benchmark-workpaper-vs-univer.js'
-export * from './benchmark-workpaper-vs-xlsx-calc.js'
 export * from './benchmark-workpaper.js'
-export * from './benchmark-workpaper-vs-hyperformula.js'
-export * from './expanded-competitive-workloads.js'
 export * from './generate-workbook.js'
 export * from './metrics.js'
-export * from './report-competitive-families.js'
 export * from './stats.js'
 export * from './workbook-corpus.js'
 export * from './workpaper-benchmark-fixtures.js'
@@ -39,7 +31,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   results.push(await runRenderCommitBenchmark(1_000))
   results.push(await runRenderCommitBenchmark(10_000))
   results.push(...(await runWorkPaperBenchmarkSuite()))
-  results.push(...runWorkPaperVsHyperFormulaExpandedBenchmarkSuite())
 
   console.log(JSON.stringify(results, null, 2))
 }

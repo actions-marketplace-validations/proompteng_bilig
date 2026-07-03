@@ -15,13 +15,8 @@ describe('import/export fidelity scorecard', () => {
         csvRoundTripPassed: true,
         xlsxImportPassed: true,
         xlsxSnapshotRoundTripPassed: true,
-        externalGoogleSheetsEvidence: 'official-docs-comparison-artifact',
-        externalMicrosoftExcelEvidence: 'official-docs-comparison-artifact',
       },
     })
-    expect(scorecard.source.externalImportExportComparisonArtifact).toBe(
-      'packages/benchmarks/baselines/import-export-external-sheets-excel-comparison.json',
-    )
     expect(scorecard.cases.map((entry) => entry.id)).toEqual([
       'csv-import-preview',
       'csv-engine-roundtrip',
@@ -42,7 +37,6 @@ describe('import/export fidelity scorecard', () => {
       'xlsx-external-data-provenance',
       'xlsx-macro-payload-preserved-without-execution',
       'xlsx-runtime-feature-policy-warning',
-      'external-sheets-excel-import-export-comparison',
     ])
     expect(scorecard.cases.every((entry) => entry.required && entry.passed)).toBe(true)
     expect(scorecard.cases.find((entry) => entry.id === 'xlsx-macro-payload-preserved-without-execution')).toMatchObject({
@@ -55,15 +49,6 @@ describe('import/export fidelity scorecard', () => {
         'xlsx.runtimeFeaturePolicyWarnings',
       ],
       missingFeatures: [],
-    })
-    expect(scorecard.cases.find((entry) => entry.id === 'external-sheets-excel-import-export-comparison')).toMatchObject({
-      format: 'external-docs',
-      direction: 'comparison',
-      coveredFeatures: [
-        'external.googleSheetsImportExportDocs',
-        'external.microsoftExcelImportExportDocs',
-        'external.sheetsExcelImportExportComparison',
-      ],
     })
     expect(scorecard.summary.coveredFeatures).toEqual([
       'csv.import',
@@ -105,9 +90,6 @@ describe('import/export fidelity scorecard', () => {
       'xlsx.macros.codeNameRoundtrip',
       'xlsx.externalData.provenance',
       'xlsx.runtimeFeaturePolicyWarnings',
-      'external.googleSheetsImportExportDocs',
-      'external.microsoftExcelImportExportDocs',
-      'external.sheetsExcelImportExportComparison',
     ])
     expect(scorecard.summary.unsupportedFeatures).toEqual([])
     expect(scorecard.summary.declinedRuntimeFeatures).toEqual(['xlsx.macros.execution'])
@@ -115,11 +97,6 @@ describe('import/export fidelity scorecard', () => {
       feature: 'xlsx.macros.execution',
       disposition: 'declined-runtime',
       reason: 'Bilig preserves macro payload metadata but intentionally never executes workbook macros.',
-    })
-    expect(scorecard.semanticLedger).toContainEqual({
-      feature: 'external.sheetsExcelImportExportComparison',
-      disposition: 'external',
-      reason: 'Tracked by the official Google Sheets and Microsoft Excel import/export comparison artifact.',
     })
     expect(scorecard.semanticLedger).toContainEqual({
       feature: 'xlsx.values',
@@ -133,9 +110,7 @@ describe('import/export fidelity scorecard', () => {
 
     expect(scorecard.summary.unsupportedFeatures).toEqual([])
     expect(scorecard.summary.declinedRuntimeFeatures).toEqual(['xlsx.macros.execution'])
-    expect(new Set(scorecard.semanticLedger.map((entry) => entry.disposition))).toEqual(
-      new Set(['preserved', 'external', 'declined-runtime']),
-    )
+    expect(new Set(scorecard.semanticLedger.map((entry) => entry.disposition))).toEqual(new Set(['preserved', 'declined-runtime']))
   })
 
   it('rejects stale artifacts missing required fidelity cases', async () => {
