@@ -145,7 +145,8 @@ engine behavior and a commercial option.
 
 Evaluate `@bilig/headless` when the core need is a Node WorkPaper object with
 agent-oriented writeback verification, persistence helpers, restored readback,
-history, and a narrow benchmark artifact tied to repository commands.
+history, and deterministic evaluator or compatibility checks tied to repository
+commands.
 
 Do not treat `bilig` as a complete HyperFormula replacement. The current
 tracked Office formula inventory is production-routed, but `bilig` still keeps

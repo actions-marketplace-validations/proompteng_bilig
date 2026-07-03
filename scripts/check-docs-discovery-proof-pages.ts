@@ -1,9 +1,6 @@
-import type { BenchmarkDiscoveryEvidence } from './check-docs-discovery-benchmark-evidence.ts'
-
 type RequireIncludes = (haystack: string, needle: string, context: string) => void
 
 export function requireFormulaProofDiscovery({
-  benchmarkEvidence,
   communityLaunchPack,
   formulaWorkbooksProof,
   headlessReadme,
@@ -13,7 +10,6 @@ export function requireFormulaProofDiscovery({
   requireIncludes,
   showHnFormulaWorkbooksProof,
 }: {
-  readonly benchmarkEvidence: BenchmarkDiscoveryEvidence
   readonly communityLaunchPack: string
   readonly formulaWorkbooksProof: string
   readonly headlessReadme: string
@@ -32,8 +28,7 @@ export function requireFormulaProofDiscovery({
     'Use HyperFormula first when you need a mature, broad formula engine',
     'Use SheetJS or ExcelJS first when the primary job is reading, writing, styling',
     'Use Google Sheets API first when a shared hosted spreadsheet',
-    `The current checked benchmark artifact records \`${benchmarkEvidence.meanWinHeadline}\` comparable`,
-    benchmarkEvidence.p95HoldoutWorkload,
+    'Do not treat WorkPaper as a universal spreadsheet-engine replacement.',
     'https://github.com/proompteng/bilig',
     'https://github.com/proompteng/bilig/discussions/new?category=general',
     'concrete implementation-gap discussion',
@@ -58,9 +53,7 @@ export function requireFormulaProofDiscovery({
     'npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json',
     'npm install @bilig/workpaper',
     '"verified": true',
-    `wins \`${benchmarkEvidence.meanWinHeadline}\` comparable`,
-    `\`${benchmarkEvidence.meanAndP95Headline}\` on both mean and p95`,
-    `\`${benchmarkEvidence.p95HoldoutWorkload}\` is the current worst p95`,
+    'Known limits stay explicit.',
     'Bilig maintainer note: formula WorkPapers for Node services and tool hosts',
     '## Review checklist',
     'bilig-evaluate --door workpaper-service --json',

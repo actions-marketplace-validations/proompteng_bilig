@@ -69,20 +69,20 @@ and [`docs/xlsx-formula-recalculation-node.md`](https://github.com/proompteng/bi
 
 ## Choose An Evaluation Path
 
-| If you are evaluating...  | Start here                                                                                                                                                                                                                      | What should be true before you adopt                                                           |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Basic fit                 | [Why use Bilig?](https://proompteng.github.io/bilig/why-use-bilig.html)                                                                                                                                                         | The problem is workbook-shaped business logic that needs API readback and persistence.         |
-| Published npm package     | [90-second Node quickstart](https://proompteng.github.io/bilig/try-bilig-headless-in-node.html)                                                                                                                                 | It edits one input, recalculates, persists JSON, restores, and prints `verified: true`.        |
-| Backend service shape     | [Quote approval WorkPaper API](https://proompteng.github.io/bilig/quote-approval-workpaper-api.html) and `pnpm --dir examples/serverless-workpaper-api run hono-route`                                                          | A realistic route-style workflow returns formula readback and `restoredMatchesAfter: true`.    |
-| Saved workbook files      | [Workbook Compatibility Report](https://proompteng.github.io/bilig/workbook-compatibility-report.html) and [XLSX formula recalculation example](https://github.com/proompteng/bilig/tree/main/examples/xlsx-recalculation-node) | Use this only when a workbook file remains the integration contract.                           |
-| Agent or MCP tools        | [Headless WorkPaper agent handbook](https://proompteng.github.io/bilig/headless-workpaper-agent-handbook.html) and [MCP spreadsheet tool server](https://proompteng.github.io/bilig/mcp-workpaper-tool-server.html)             | The agent can pick MCP, direct TypeScript, or route tools and prove write/readback/persist.    |
-| Runtime intent contracts  | [Workbook runtime intent API](https://proompteng.github.io/bilig/workbook-runtime-intent-api.html)                                                                                                                              | `@bilig/workbook` can describe plans, receipts, and strict runtime proof without owning state. |
-| Tool-owned workbook files | [Workbook Compatibility Report](https://proompteng.github.io/bilig/workbook-compatibility-report.html)                                                                                                                          | A tool can inspect file risks before the service trusts imported formulas.                     |
-| Technical review note     | [WorkPaper maintainer proof note](https://proompteng.github.io/bilig/show-hn-formula-workbooks-node-services.html)                                                                                                              | One compact page has the npm check, benchmark caveat, known limits, and open questions.        |
-| Trust and performance     | [npm provenance](https://proompteng.github.io/bilig/npm-provenance-package-trust.html) and [benchmark evidence](https://proompteng.github.io/bilig/what-workpaper-benchmark-proves.html)                                        | npm shows SLSA provenance, and benchmark claims match the checked artifact.                    |
-| Almost a fit              | [implementation gap discussion](https://github.com/proompteng/bilig/discussions/new?category=general)                                                                                                                           | Name the formula, import/export, persistence, framework, MCP, package, or benchmark gap.       |
-| Formula or XLSX bug       | [formula bug clinic](https://proompteng.github.io/bilig/formula-bug-clinic.html) and [submit a workbook fixture](https://proompteng.github.io/bilig/submit-workbook-fixture.html)                                               | Share one reduced public fixture that maintainers can turn into a test.                        |
-| Real workbook blocked     | [submit a workbook fixture](https://proompteng.github.io/bilig/submit-workbook-fixture.html)                                                                                                                                    | Use the structured form when a reduced workbook is ready.                                      |
+| If you are evaluating...  | Start here                                                                                                                                                                                                                                                                                                  | What should be true before you adopt                                                                        |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Basic fit                 | [Why use Bilig?](https://proompteng.github.io/bilig/why-use-bilig.html)                                                                                                                                                                                                                                     | The problem is workbook-shaped business logic that needs API readback and persistence.                      |
+| Published npm package     | [90-second Node quickstart](https://proompteng.github.io/bilig/try-bilig-headless-in-node.html)                                                                                                                                                                                                             | It edits one input, recalculates, persists JSON, restores, and prints `verified: true`.                     |
+| Backend service shape     | [Quote approval WorkPaper API](https://proompteng.github.io/bilig/quote-approval-workpaper-api.html) and `pnpm --dir examples/serverless-workpaper-api run hono-route`                                                                                                                                      | A realistic route-style workflow returns formula readback and `restoredMatchesAfter: true`.                 |
+| Saved workbook files      | [Workbook Compatibility Report](https://proompteng.github.io/bilig/workbook-compatibility-report.html) and [XLSX formula recalculation example](https://github.com/proompteng/bilig/tree/main/examples/xlsx-recalculation-node)                                                                             | Use this only when a workbook file remains the integration contract.                                        |
+| Agent or MCP tools        | [Headless WorkPaper agent handbook](https://proompteng.github.io/bilig/headless-workpaper-agent-handbook.html) and [MCP spreadsheet tool server](https://proompteng.github.io/bilig/mcp-workpaper-tool-server.html)                                                                                         | The agent can pick MCP, direct TypeScript, or route tools and prove write/readback/persist.                 |
+| Runtime intent contracts  | [Workbook runtime intent API](https://proompteng.github.io/bilig/workbook-runtime-intent-api.html)                                                                                                                                                                                                          | `@bilig/workbook` can describe plans, receipts, and strict runtime proof without owning state.              |
+| Tool-owned workbook files | [Workbook Compatibility Report](https://proompteng.github.io/bilig/workbook-compatibility-report.html)                                                                                                                                                                                                      | A tool can inspect file risks before the service trusts imported formulas.                                  |
+| Technical review note     | [WorkPaper maintainer proof note](https://proompteng.github.io/bilig/show-hn-formula-workbooks-node-services.html)                                                                                                                                                                                          | One compact page has the npm check, benchmark caveat, known limits, and open questions.                     |
+| Trust and compatibility   | [npm provenance](https://proompteng.github.io/bilig/npm-provenance-package-trust.html), [compatibility limits](https://proompteng.github.io/bilig/where-bilig-is-not-excel-compatible-yet.html), and [Workbook Compatibility Report](https://proompteng.github.io/bilig/workbook-compatibility-report.html) | npm shows SLSA provenance, and workbook behavior is checked through deterministic evaluator and XLSX gates. |
+| Almost a fit              | [implementation gap discussion](https://github.com/proompteng/bilig/discussions/new?category=general)                                                                                                                                                                                                       | Name the formula, import/export, persistence, framework, MCP, package, or benchmark gap.                    |
+| Formula or XLSX bug       | [formula bug clinic](https://proompteng.github.io/bilig/formula-bug-clinic.html) and [submit a workbook fixture](https://proompteng.github.io/bilig/submit-workbook-fixture.html)                                                                                                                           | Share one reduced public fixture that maintainers can turn into a test.                                     |
+| Real workbook blocked     | [submit a workbook fixture](https://proompteng.github.io/bilig/submit-workbook-fixture.html)                                                                                                                                                                                                                | Use the structured form when a reduced workbook is ready.                                                   |
 
 Reduced workbook already in hand? If the blocker is an import, formula, or
 persistence gap, generate the fixture report:
@@ -660,13 +660,6 @@ pnpm workpaper:xlsx-corpus:check -- /path/to/xlsx-corpus
 - Auditing imported Excel files is a separate workflow. Cached formula values
   embedded in `.xlsx` files are useful for triage, but Bilig accuracy claims
   should be checked against a fresh Microsoft Excel recalculation.
-- Run `pnpm workpaper:bench:competitive:check` from the repository. The
-  checked-in artifact shows
-  [`100/100` comparable WorkPaper mean wins](https://github.com/proompteng/bilig/blob/main/docs/what-workpaper-benchmark-proves.md)
-  and `100/100` mean+p95 wins; the current worst p95 row is
-  `sheet-rename-dependencies` at `0.792x`.
-- The shareable benchmark card is generated from the checked-in artifact:
-  [`workpaper-benchmark-card.png`](https://github.com/proompteng/bilig/blob/main/docs/assets/workpaper-benchmark-card.png).
 - Read the
   [compatibility limits](https://github.com/proompteng/bilig/blob/main/docs/where-bilig-is-not-excel-compatible-yet.md)
   before importing real Excel workbooks.
@@ -742,20 +735,8 @@ Before publishing or claiming production readiness:
 
 ```sh
 pnpm publish:runtime:check
-pnpm workpaper:bench:competitive:check
 pnpm run ci
 ```
-
-Regenerate the competitive benchmark artifact only when intentionally updating
-benchmark evidence:
-
-```sh
-pnpm workpaper:bench:competitive:generate
-pnpm workpaper:bench:competitive:check
-```
-
-Do not change benchmark definitions, scoring, sampling, or workload sizes to
-hide losses.
 
 ## For Coding Agents
 
@@ -845,8 +826,7 @@ When the sanity check passes, these are the next useful pages.
 - Accuracy and compatibility:
   [compatibility boundaries](https://github.com/proompteng/bilig/blob/main/docs/where-bilig-is-not-excel-compatible-yet.md),
   [XLSX corpus verifier walkthrough](https://github.com/proompteng/bilig/blob/main/docs/xlsx-corpus-verifier-walkthrough.md),
-  [local benchmark walkthrough](https://github.com/proompteng/bilig/blob/main/docs/local-workpaper-benchmark-walkthrough.md),
-  and [benchmark proof note](https://github.com/proompteng/bilig/blob/main/docs/what-workpaper-benchmark-proves.md).
+  and [Workbook Compatibility Report](https://github.com/proompteng/bilig/blob/main/docs/workbook-compatibility-report.md).
 - Formula edge cases:
   [XLOOKUP exact fixture](https://github.com/proompteng/bilig/blob/main/docs/formula-edge-xlookup-exact-fixture.md),
   [SUMIFS paired criteria fixture](https://github.com/proompteng/bilig/blob/main/docs/formula-edge-sumifs-paired-criteria-fixture.md),

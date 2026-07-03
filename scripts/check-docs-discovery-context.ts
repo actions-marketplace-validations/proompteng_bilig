@@ -2,7 +2,6 @@ import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { getBenchmarkDiscoveryEvidence } from './check-docs-discovery-benchmark-evidence.ts'
 import { docsSiteSources } from './check-docs-discovery-site-sources.ts'
 
 export interface DocsDiscoveryContext {
@@ -11,7 +10,6 @@ export interface DocsDiscoveryContext {
   readonly siteRoot: string
   readonly expectedSitemapUrls: readonly string[]
   readonly sourceFilesByUrl: ReadonlyMap<string, string>
-  readonly benchmarkEvidence: ReturnType<typeof getBenchmarkDiscoveryEvidence>
   readonly headlessPackageVersion: string
   readonly readme: string
   readonly contributing: string
@@ -258,7 +256,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     siteRoot,
     expectedSitemapUrls,
     sourceFilesByUrl,
-    benchmarkEvidence: getBenchmarkDiscoveryEvidence(),
     headlessPackageVersion: parseHeadlessPackageVersion(headlessPackageJson),
     readme,
     contributing,

@@ -120,22 +120,21 @@ and needs formula readback, persistence, and restore proof.
 
 ## Evidence and limits
 
-The current checked benchmark artifact records `100/100` comparable
-mean-latency wins against HyperFormula-style workloads. The worst p95 row is
-public: `sheet-rename-dependencies` is a `0.792x`
-WorkPaper-to-HyperFormula p95 ratio, and browser UI rendering is outside the
-benchmark.
+The useful proof is workbook behavior: edit an input, recalculate dependent
+formulas, persist the WorkPaper document, restore it, and read back the same
+formula result. Saved XLSX files are a separate contract and should be checked
+with the compatibility report and Excel oracle fixtures before production use.
 
 This page does not claim full Excel compatibility. It does not claim chart,
 macro, formatting, collaborative editing, or complete XLSX fidelity. Start with
 the compatibility page before importing real workbooks.
+Do not treat WorkPaper as a universal spreadsheet-engine replacement.
 
 ## Start here
 
 - [Quote approval WorkPaper API proof](quote-approval-workpaper-api.md)
 - [Try `@bilig/workpaper` in Node](try-bilig-headless-in-node.md)
 - [MCP spreadsheet tool server](mcp-workpaper-tool-server.md)
-- [What the WorkPaper benchmark proves](what-workpaper-benchmark-proves.md)
 - [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 
 Repository and release notes:

@@ -142,7 +142,7 @@ pnpm --dir examples/serverless-workpaper-api run persistence-adapters
 - [Serverless WorkPaper API route](serverless-workpaper-api-route.md)
 - [Node service WorkPaper recipe](node-service-workpaper-recipe.md)
 - [Five Node.js workbook automation examples](workbook-automation-examples-node.md)
-- [What the WorkPaper benchmark proves](what-workpaper-benchmark-proves.md)
+- [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 - [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 
 If it almost matches but a gap blocks adoption, open an implementation gap discussion:

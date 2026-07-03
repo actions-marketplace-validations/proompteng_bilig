@@ -7,7 +7,6 @@ import {
   requireDocumentsNotInclude,
   requireIncludes,
 } from './check-docs-discovery-core.ts'
-import { getBenchmarkDiscoveryEvidence } from './check-docs-discovery-benchmark-evidence.ts'
 
 export async function requireSharedPublicDocsDiscovery(args: {
   readonly docsRoot: string
@@ -29,7 +28,6 @@ export async function requireSharedPublicDocsDiscovery(args: {
   readonly excelImportReadme: string
   readonly publicApi: string
 }): Promise<void> {
-  const benchmarkEvidence = getBenchmarkDiscoveryEvidence()
   const formulaBugClinic = await readFile(join(args.docsRoot, 'formula-bug-clinic.md'), 'utf8')
 
   requireDocumentsInclude(
@@ -64,9 +62,8 @@ export async function requireSharedPublicDocsDiscovery(args: {
     'https://github.com/proompteng/bilig/discussions/new?category=general',
     'above edits one input',
     'verifies the dependent formula result.',
-    'pnpm workpaper:bench:competitive:check',
-    benchmarkEvidence.p95HoldoutWorkload,
-    benchmarkEvidence.p95HoldoutRatio,
+    'Workbook Compatibility Report',
+    'XLSX formula recalculation example',
     'compatibility limits',
     'Excel oracle harness',
     'https://github.com/proompteng/bilig/discussions/307',
@@ -281,18 +278,7 @@ export async function requireSharedPublicDocsDiscovery(args: {
   requireIncludes(args.llms, 'https://proompteng.github.io/bilig/sheetjs-exceljs-alternative-formula-workbook-api.html', 'docs/llms.txt')
   requireIncludes(args.llms, 'routes high-traffic SheetJS, xlsx-populate, ExcelJS, xlsx-calc, FormulaJS', 'docs/llms.txt')
 
-  requireDocumentsInclude(
-    [
-      { path: 'README.md', content: args.readme },
-      { path: 'packages/headless/README.md', content: args.headlessReadme },
-      { path: 'docs/llms.txt', content: args.llms },
-      {
-        path: 'docs/what-workpaper-benchmark-proves.md',
-        content: await readFile(join(args.docsRoot, 'what-workpaper-benchmark-proves.md'), 'utf8'),
-      },
-    ],
-    ['workpaper-benchmark-card.png'],
-  )
+  requireDocumentsNotInclude(primaryPublicDocs, ['pnpm workpaper:bench:competitive:check', 'workpaper-benchmark-card.png'])
 
   requireDocumentsInclude(
     [

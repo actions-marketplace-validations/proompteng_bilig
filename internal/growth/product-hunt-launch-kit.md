@@ -43,8 +43,6 @@ UI.
 - Node service evaluator:
   <https://proompteng.github.io/bilig/eval-workpaper-service.html>
 - MCP tool evaluator: <https://proompteng.github.io/bilig/eval-agent-mcp.html>
-- Benchmark scope:
-  <https://proompteng.github.io/bilig/what-workpaper-benchmark-proves.html>
 - Compatibility limits:
   <https://proompteng.github.io/bilig/where-bilig-is-not-excel-compatible-yet.html>
 - MCP setup: <https://proompteng.github.io/bilig/mcp-client-setup.html>
@@ -94,10 +92,9 @@ These checks follow Product Hunt's launch prep guidance:
 - The public package is `@bilig/workpaper`.
 - A useful run returns `verified: true` after edit, recalculation, save, and
   restore.
-- The benchmark page documents the narrow comparable-row claim and the worst
-  p95 row, currently `sheet-rename-dependencies`.
 - The compatibility page states what is not Excel-compatible yet before a user
   tries to import a real workbook.
+- Known limits and compatibility boundaries stay visible.
 
 ## Launch Checklist
 
@@ -108,6 +105,6 @@ These checks follow Product Hunt's launch prep guidance:
 4. Submit from a personal maker account.
 5. Ask for feedback, not upvotes.
 6. Stay online to answer questions about compatibility, import/export, MCP
-   setup, and benchmark scope.
+   setup, and evaluator scope.
 7. If somebody asks for a missing workflow, turn it into a small issue or a
    focused example.

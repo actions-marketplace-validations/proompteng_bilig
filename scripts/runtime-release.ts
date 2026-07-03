@@ -32,7 +32,6 @@ export const RUNTIME_AFFECTING_PATH_PATTERNS = [
   'scripts/gen-formula-compatibility-snapshot.ts',
   'scripts/gen-workpaper-hyperformula-audit.ts',
   'scripts/gen-workpaper-benchmark-baseline.ts',
-  'scripts/gen-workpaper-vs-hyperformula-benchmark.ts',
   'scripts/workpaper-external-smoke.ts',
   '.github/workflows/headless-package.yml',
 ] as const

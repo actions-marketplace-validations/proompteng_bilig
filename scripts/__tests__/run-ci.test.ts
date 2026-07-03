@@ -91,10 +91,8 @@ describe('run-ci', () => {
     expect(source).not.toContain('WorkPaper xlsx-calc benchmark check')
     expect(source).not.toContain('WorkPaper IronCalc Rust benchmark check')
     expect(source).not.toContain('WorkPaper Univer benchmark check')
-    expect(source).toContain('...(skipBrowserGates')
-    expect(source).toContain(
-      "bunScript('UI responsiveness live browser scorecard check', 'scripts/gen-ui-responsiveness-live-browser-scorecard.ts', '--check')",
-    )
+    expect(source).not.toContain('UI responsiveness live browser scorecard check')
+    expect(source).not.toContain('scripts/gen-ui-responsiveness-live-browser-scorecard.ts')
     expect(source).toContain("bunScript('agent discovery docs check', 'scripts/sync-agent-discovery-docs.ts', '--check')")
     expect(source).toContain("await runSequential('static direct checks'")
     expect(source).toMatch(
@@ -123,21 +121,17 @@ describe('run-ci', () => {
     expect(scripts['collaboration:check']).toBeUndefined()
     expect(scripts['automation:check']).toBeUndefined()
     expect(scripts['security:posture:check']).toBeUndefined()
-    expect(packageJson).toContain(
-      '"research:public-corpus:memory-gate": "bun scripts/public-workbook-corpus-memory-gate.ts --require-public"',
-    )
-    expect(packageJson).toContain(
-      '"xlsx-import:memory-gate:synthetic": "bun scripts/public-workbook-corpus-memory-gate.ts --synthetic-only"',
-    )
+    expect(packageJson).toContain('"xlsx-import:memory-gate:synthetic": "bun scripts/xlsx-import-memory-gate.ts --synthetic-only"')
+    expect(packageJson).not.toContain('"research:public-corpus:')
     expect(packageJson).not.toContain('"research:public-corpus:memory-gate:synthetic"')
     expect(scripts[['test', 'correctness', 'corpus'].join(':')]).toBeUndefined()
     expect(scripts['test:correctness:xlsx']).toContain('packages/excel-fixtures/src/__tests__/oracle-harness.test.ts')
     expect(scripts['test:correctness:xlsx']).not.toContain('scripts/__tests__/public-workbook-corpus')
-    expect(scripts['research:public-corpus:test']).toContain('scripts/__tests__/public-workbook-corpus')
+    expect(scripts['research:public-corpus:test']).toBeUndefined()
     expect(scripts[['ui', 'same-corpus', 'fixture', 'generate'].join(':')]).toBeUndefined()
     expect(scripts[['ui', 'same-corpus', 'fixture', 'check'].join(':')]).toBeUndefined()
-    expect(scripts['research:ui-same-corpus:fixture:generate']).toContain('.cache/research-ui-same-corpus-fixtures')
-    expect(scripts['research:ui-same-corpus:fixture:check']).toContain('.cache/research-ui-same-corpus-fixtures --check')
+    expect(scripts['research:ui-same-corpus:fixture:generate']).toBeUndefined()
+    expect(scripts['research:ui-same-corpus:fixture:check']).toBeUndefined()
     expect(scripts['workpaper:bench:truecalc:check']).toBeUndefined()
     expect(scripts['workpaper:bench:xlsx-calc:check']).toBeUndefined()
     expect(scripts['workpaper:bench:ironcalc-rust:check']).toBeUndefined()

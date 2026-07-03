@@ -18,7 +18,7 @@ or outreach scripts.
 - MCP tool evaluator:
   <https://proompteng.github.io/bilig/eval-agent-mcp.html>
 - Benchmark scope:
-  <https://proompteng.github.io/bilig/what-workpaper-benchmark-proves.html>
+  <https://proompteng.github.io/bilig/where-bilig-is-not-excel-compatible-yet.html>
 - Compatibility limits:
   <https://proompteng.github.io/bilig/where-bilig-is-not-excel-compatible-yet.html>
 
@@ -103,8 +103,8 @@ Every loop should leave evidence, not vibes.
 - Do not paste canned launch comments.
 - Do not post the same copy across communities.
 - Do not claim full Excel compatibility.
-- Do not claim blanket performance wins; keep benchmark scope and the worst
-  p95 row visible.
+- Do not claim blanket performance wins; keep performance claims scoped and
+  compatibility boundaries visible.
 - Do not hide that the maintainer is recommending their own project.
 - Do not contact people through private channels unless there is a specific,
   relevant reason and the message is useful without a repo link.

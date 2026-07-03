@@ -42,7 +42,6 @@ const {
   siteRoot,
   expectedSitemapUrls,
   sourceFilesByUrl,
-  benchmarkEvidence,
   headlessPackageVersion,
   readme,
   contributing,
@@ -319,7 +318,6 @@ await Promise.all(
     'bilig-hero-ambient.png',
     'hero-scene.js',
     'github-social-preview.png',
-    'workpaper-benchmark-card.png',
     ...productHuntLaunchAssetFiles,
   ].map((sourceFile) => requireFile(join(docsRoot, 'assets', sourceFile))),
 )
@@ -349,7 +347,6 @@ for (const required of agentFrameworkLlmsRequiredLinks) {
 }
 
 requireFormulaProofDiscovery({
-  benchmarkEvidence,
   communityLaunchPack,
   formulaWorkbooksProof,
   headlessReadme,

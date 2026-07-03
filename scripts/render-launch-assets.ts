@@ -460,7 +460,7 @@ const gallerySpecs: GallerySpec[] = [
       <div class="pill-row">
         <span class="pill">formulas</span>
         <span class="pill">xlsx caveats documented</span>
-        <span class="pill">benchmark evidence</span>
+        <span class="pill">compatibility evidence</span>
         <span class="pill">starter issues</span>
       </div>
     `,

@@ -14,15 +14,15 @@ Status: public compatibility boundary for `@bilig/headless`
 
 `bilig` is not a complete Excel clone. The current adoption wedge is narrower:
 `@bilig/workpaper` gives Node services and tool hosts a workbook API with formulas,
-structural edits, persistence, validation, and auditable benchmark artifacts.
+structural edits, persistence, validation, and auditable compatibility fixtures.
 
 This page names the main compatibility boundaries so people can evaluate the
-project without reading a pile of benchmark JSON first.
+project without reading a pile of internal scorecard JSON first.
 
 ## Current Evidence Snapshot
 
-The repository keeps compatibility and performance claims tied to checked-in
-artifacts:
+The repository keeps compatibility claims tied to checked-in fixtures and
+reports:
 
 - formula inventory breadth is `100%` for the current office-listed and tracked
   formula inventory in
@@ -33,10 +33,8 @@ artifacts:
 - import/export fidelity passes required CSV/XLSX cases, reports no unsupported
   import/export features, and explicitly declines native macro execution in
   [`packages/benchmarks/baselines/import-export-fidelity-scorecard.json`](../packages/benchmarks/baselines/import-export-fidelity-scorecard.json)
-- the headless benchmark claim is `100/100` mean wins against the current
-  HyperFormula-style comparable workload scorecard, with the worst p95 row kept
-  visible in
-  [`docs/what-workpaper-benchmark-proves.md`](what-workpaper-benchmark-proves.md)
+- the headless product claim is API behavior: WorkPaper edit/readback,
+  recalculation, persistence, restore, and deterministic import/export checks.
 
 Those artifacts are useful evidence. They are not a blanket promise that every
 Excel workbook, every formula argument shape, every UI interaction, or every
@@ -137,7 +135,7 @@ than every spreadsheet UI. Keep those claims separated.
 - agent-controlled workbook edits with explicit readback
 - structural edits without driving a browser UI
 - JSON persistence and restore for workbook state
-- benchmark artifacts you can inspect and rerun
+- compatibility reports and deterministic fixtures you can inspect and rerun
 - import/export paths that surface compatibility warnings instead of hiding
   them
 

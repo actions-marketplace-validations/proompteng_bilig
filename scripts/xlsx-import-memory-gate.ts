@@ -56,9 +56,9 @@ const {
   syntheticCachedExternalFormulaMaxRssBytes,
 } = memoryGateRssBudgets
 const hardMaxRssBytes = 192 * mib
-const defaultCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus')
+const defaultCacheDir = join(rootDir, '.cache', 'xlsx-import-memory-gate')
 const defaultManifestPath = join(defaultCacheDir, 'manifest.json')
-const defaultSyntheticCacheDir = join(rootDir, '.cache', 'research-public-workbook-corpus-memory-gate')
+const defaultSyntheticCacheDir = join(rootDir, '.cache', 'xlsx-import-memory-gate')
 const verifyTimeoutMs = 180_000
 const verifyMaxCellCount = 1_500_000
 const rssCheckIntervalMs = 10
@@ -91,7 +91,7 @@ async function main(): Promise<void> {
   process.stdout.write(
     `${JSON.stringify(
       {
-        mode: 'public-workbook-corpus-memory-gate',
+        mode: 'xlsx-import-memory-gate',
         targets: {
           publicWorkbookMaxRssBytes,
           synthetic750kMaxRssBytes,
@@ -110,9 +110,7 @@ async function main(): Promise<void> {
     )}\n`,
   )
   if (failed.length > 0) {
-    throw new Error(
-      `Public workbook memory gate failed: ${failed.map((result) => `${result.id} ${result.reason ?? ''}`.trim()).join('; ')}`,
-    )
+    throw new Error(`XLSX import memory gate failed: ${failed.map((result) => `${result.id} ${result.reason ?? ''}`.trim()).join('; ')}`)
   }
 }
 

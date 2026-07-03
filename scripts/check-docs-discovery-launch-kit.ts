@@ -1,5 +1,4 @@
 import { communityLaunchPackRequiredLinks } from './check-docs-discovery-growth-links.ts'
-import { getBenchmarkDiscoveryEvidence } from './check-docs-discovery-benchmark-evidence.ts'
 
 const productHuntLaunchKitRequiredText = [
   'title: Bilig product surface notes',
@@ -14,7 +13,6 @@ const productHuntLaunchKitRequiredText = [
   'product-hunt-gallery-02-agent-readback.png',
   'product-hunt-gallery-03-node-service.png',
   'product-hunt-demo.webm',
-  'what-workpaper-benchmark-proves.html',
   'where-bilig-is-not-excel-compatible-yet.html',
   'mcp-client-setup.html',
   'Fit Check',
@@ -40,13 +38,11 @@ export function requireProductHuntLaunchKitDiscovery(
   productHuntLaunchKit: string,
   requireIncludes: (haystack: string, needle: string, context: string) => void,
 ): void {
-  const benchmarkEvidence = getBenchmarkDiscoveryEvidence()
   const requiredText = [
     ...productHuntLaunchKitRequiredText,
     'The public package is `@bilig/workpaper`.',
     'returns `verified: true` after edit, recalculation, save, and\n  restore.',
-    'the narrow comparable-row claim',
-    benchmarkEvidence.p95HoldoutWorkload,
+    'Known limits and compatibility boundaries stay visible.',
   ] as const
 
   for (const required of requiredText) {

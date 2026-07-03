@@ -5,7 +5,7 @@ body:
     attributes:
       value: |
         Use this when you tried or evaluated `@bilig/workpaper` and something would block real use.
-        Good reports are specific: the workflow, formula family, import/export shape, persistence requirement, agent tool contract, or benchmark proof you need.
+        Good reports are specific: the workflow, formula family, import/export shape, persistence requirement, agent tool contract, or compatibility proof you need.
   - type: dropdown
     id: gap_type
     attributes:
@@ -47,7 +47,7 @@ body:
     id: current_evidence
     attributes:
       label: What did you already try?
-      description: Link the docs page, command, package version, example, or benchmark artifact you checked.
+      description: Link the docs page, command, package version, example, evaluator output, or fixture you checked.
       placeholder: |
         package version:
         command:

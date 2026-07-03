@@ -81,7 +81,7 @@ export async function requireAgentPublicSurfaceDiscovery(input: {
   requireIncludes(jekyllDefaultLayout, 'href="{{ \'/#runtime\' | relative_url }}">Runtime</a>', 'docs/_layouts/default.html')
   requireIncludes(jekyllDefaultLayout, 'href="{{ \'/#install\' | relative_url }}">Install</a>', 'docs/_layouts/default.html')
   requireIncludes(jekyllDefaultLayout, 'href="{{ \'/#mcp\' | relative_url }}">Agents</a>', 'docs/_layouts/default.html')
-  requireIncludes(jekyllDefaultLayout, 'href="{{ \'/#benchmark\' | relative_url }}">Benchmark</a>', 'docs/_layouts/default.html')
+  requireIncludes(jekyllDefaultLayout, 'href="{{ \'/#compatibility\' | relative_url }}">Compatibility</a>', 'docs/_layouts/default.html')
   requireIncludes(jekyllDefaultLayout, 'href="{{ \'/#docs\' | relative_url }}">Docs</a>', 'docs/_layouts/default.html')
   requireIncludes(jekyllDefaultLayout, 'href="https://github.com/proompteng/bilig">GitHub</a>', 'docs/_layouts/default.html')
   requireNotIncludes(jekyllDefaultLayout, '/#market', 'docs/_layouts/default.html')

@@ -3,13 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-import {
-  buildVitestArgBatches,
-  buildVitestArgs,
-  isBroadCorpusVitestRun,
-  readVitestBatchCooldownMs,
-  resolveVitestBin,
-} from '../run-vitest.ts'
+import { buildVitestArgBatches, buildVitestArgs, readVitestBatchCooldownMs, resolveVitestBin } from '../run-vitest.ts'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -136,29 +130,6 @@ describe('run-vitest wrapper arguments', () => {
     ])
   })
 
-  it('keeps broad corpus CI runs in one worker-bounded batch', () => {
-    const files = [
-      'scripts/__tests__/public-workbook-corpus.test.ts',
-      'scripts/__tests__/public-workbook-corpus-cli.test.ts',
-      'scripts/__tests__/public-workbook-corpus-evidence-refresh.test.ts',
-      'scripts/__tests__/public-workbook-corpus-feature-witness-plan.test.ts',
-      'scripts/__tests__/public-workbook-corpus-financial-plan.test.ts',
-      'scripts/__tests__/public-workbook-corpus-links.test.ts',
-      'scripts/__tests__/public-workbook-corpus-resource-limit-plan.test.ts',
-      'scripts/__tests__/public-workbook-corpus-missing.test.ts',
-      'scripts/__tests__/public-workbook-corpus-verify-checkpoint.test.ts',
-      'scripts/__tests__/public-workbook-corpus-workbook.test.ts',
-      'packages/excel-import/src/__tests__/xlsx-formula-cache-roundtrip.test.ts',
-      'packages/excel-import/src/__tests__/xlsx-table-sort-state-roundtrip.test.ts',
-    ]
-
-    expect(
-      buildVitestArgBatches(['--run', ...files], {
-        BILIG_CI_PROFILE: 'fast',
-      }),
-    ).toEqual([['--run', ...files, '--maxWorkers', '1', '--pool', 'forks', '--configLoader', 'runner', '--reporter', 'verbose']])
-  })
-
   it('allows CI file chunk size overrides', () => {
     expect(
       buildVitestArgBatches(['--run', 'a.test.ts', 'b.test.ts', 'c.test.ts'], {
@@ -277,32 +248,6 @@ describe('run-vitest wrapper arguments', () => {
   it('resolves the Vitest binary from the workspace root', () => {
     expect(resolveVitestBin(repoRoot, 'darwin')).toBe(resolve(repoRoot, 'node_modules/.bin/vitest'))
     expect(resolveVitestBin(repoRoot, 'win32')).toBe(resolve(repoRoot, 'node_modules/.bin/vitest.cmd'))
-  })
-
-  it('classifies the public workbook corpus correctness lane as broad', () => {
-    expect(
-      isBroadCorpusVitestRun([
-        '--run',
-        'scripts/__tests__/public-workbook-corpus.test.ts',
-        'scripts/__tests__/public-workbook-corpus-cli.test.ts',
-        'scripts/__tests__/public-workbook-corpus-links.test.ts',
-        'scripts/__tests__/public-workbook-corpus-resource-limit-plan.test.ts',
-      ]),
-    ).toBe(true)
-  })
-
-  it('allows focused public workbook corpus Vitest checks', () => {
-    expect(isBroadCorpusVitestRun(['--run', 'scripts/__tests__/public-workbook-corpus-links.test.ts'])).toBe(false)
-  })
-
-  it('classifies mixed public-corpus and xlsx import correctness as broad', () => {
-    expect(
-      isBroadCorpusVitestRun([
-        '--run',
-        'scripts/__tests__/public-workbook-corpus.test.ts',
-        'packages/excel-import/src/__tests__/xlsx-formula-cache-roundtrip.test.ts',
-      ]),
-    ).toBe(true)
   })
 
   it('runs package Vitest wrappers through tsx instead of bun', () => {

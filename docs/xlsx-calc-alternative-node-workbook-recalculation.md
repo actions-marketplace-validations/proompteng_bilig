@@ -150,7 +150,6 @@ that adapter like business logic.
 - [Excel file as a calculation engine in Node.js](excel-file-calculation-engine-node.md)
 - [XLSX formula recalculation in Node.js](xlsx-formula-recalculation-node.md)
 - [SheetJS and ExcelJS boundary](sheetjs-exceljs-alternative-formula-workbook-api.md)
-- [Headless benchmark evidence](headless-workpaper-benchmark-evidence.md)
 - [Compatibility limits](where-bilig-is-not-excel-compatible-yet.md)
 
 Repository and release notes:

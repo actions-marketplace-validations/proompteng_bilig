@@ -1,7 +1,7 @@
 ---
 title: Production adoption checklist for headless WorkPaper
 published: true
-description: A service-readiness checklist for adopting @bilig/headless in Node services and agent tools without overstating Excel parity or benchmark evidence.
+description: A service-readiness checklist for adopting @bilig/headless in Node services and agent tools without overstating Excel parity or performance claims.
 tags: typescript, node, spreadsheet, production, agents
 canonical_url: https://proompteng.github.io/bilig/production-adoption-checklist-headless-workpaper.html
 cover_image: https://raw.githubusercontent.com/proompteng/bilig/main/docs/assets/github-social-preview.png
@@ -106,7 +106,8 @@ starting point, then measure your own workload.
 Repository checks:
 
 ```sh
-pnpm workpaper:bench:competitive:check
+pnpm import-export:fidelity:check
+pnpm large-workbook:slo:check
 pnpm public:evidence:check
 ```
 

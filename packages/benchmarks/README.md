@@ -14,9 +14,9 @@ npm install @bilig/benchmarks
 - Types: `./dist/index.d.ts`
 - Corpus: `./dist/workbook-corpus.js`
 
-## WorkPaper baseline
+## WorkPaper local baseline
 
-The repo tracks a checked-in WorkPaper benchmark artifact at
+The repo tracks a deterministic WorkPaper local baseline at
 `packages/benchmarks/baselines/workpaper-baseline.json`.
 
 Refresh or validate it with:
@@ -26,35 +26,10 @@ pnpm workpaper:bench:generate
 pnpm workpaper:bench:check
 ```
 
-## WorkPaper vs HyperFormula benchmark
-
-The repo tracks one checked-in competitive benchmark artifact at
-`packages/benchmarks/baselines/workpaper-vs-hyperformula.json`.
-
-This is the competitive matrix. It includes the original control workloads, the broader expanded
-workload set against HyperFormula `3.2.0`, and unsupported-capability workloads that must be labeled
-unsupported instead of silently omitted.
-
-Refresh or validate it with:
-
-```bash
-pnpm workpaper:bench:competitive:generate
-pnpm workpaper:bench:competitive:check
-```
-
-For exploratory local refreshes on larger machines, shard independent workloads across worker
-processes:
-
-```bash
-pnpm workpaper:bench:competitive:generate -- --jobs 8
-```
-
-Each workload still runs its warmup and measured samples sequentially; `--jobs` only parallelizes
-different workloads and the checked artifact remains ordered canonically.
-
 ## Other Headless Competitor Research
 
-Scoped competitor generators remain available for local performance investigation:
+Scoped competitor generators remain available for local performance investigation. These artifacts
+are written under `.cache/research-workpaper-benchmarks` and are not checked-in public proof status.
 
 ```bash
 pnpm research:workpaper:bench:truecalc:generate
@@ -63,8 +38,7 @@ pnpm research:workpaper:bench:xlsx-calc:generate
 ```
 
 The Univer generator uses Univer's documented `@univerjs/preset-sheets-node-core` Node preset and
-times public Facade API edits through formula recalculation completion. These artifacts are written
-under `.cache/research-workpaper-benchmarks` and are not checked-in public proof status.
+times public Facade API edits through formula recalculation completion.
 
 ## Named giant-workbook corpus
 

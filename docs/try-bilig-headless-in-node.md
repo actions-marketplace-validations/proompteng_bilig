@@ -138,7 +138,7 @@ compatibility pages before adopting it.
 - [Node.js spreadsheet formula engine guide](node-spreadsheet-formula-engine.md)
 - [WorkPaper service recipe](node-service-workpaper-recipe.md)
 - [MCP spreadsheet tool server](mcp-workpaper-tool-server.md)
-- [What the WorkPaper benchmark proves](what-workpaper-benchmark-proves.md)
+- [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 - [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 
 If it almost matches but a gap blocks adoption, open an implementation gap discussion:

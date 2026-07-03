@@ -142,4 +142,4 @@ browser grid:
 
 `@bilig/headless` is meant for that boundary. It does not claim to be a complete
 Excel clone; it gives code a typed workbook surface with formulas, structural
-edits, persistence, and benchmark evidence in the same TypeScript package.
+edits, persistence, and compatibility evidence in the same TypeScript package.

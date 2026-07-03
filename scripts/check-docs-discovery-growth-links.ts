@@ -9,7 +9,6 @@ export function communityLaunchPackRequiredLinks(): readonly string[] {
     'https://proompteng.github.io/bilig/formula-workbooks-node-services-agent-tools.html',
     'https://proompteng.github.io/bilig/eval-workpaper-service.html',
     'https://proompteng.github.io/bilig/eval-agent-mcp.html',
-    'https://proompteng.github.io/bilig/what-workpaper-benchmark-proves.html',
     'https://proompteng.github.io/bilig/where-bilig-is-not-excel-compatible-yet.html',
     'https://github.com/proompteng/bilig/discussions/157',
     'https://github.com/proompteng/bilig/discussions/213',

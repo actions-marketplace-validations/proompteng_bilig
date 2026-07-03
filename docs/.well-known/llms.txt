@@ -424,7 +424,6 @@ restoring it, and confirming the restored value matches. Return `editedCell`,
 - https://github.com/proompteng/bilig/blob/main/docs/open-webui-workpaper-mcp.md
 - https://github.com/proompteng/bilig/blob/main/docs/lobehub-workpaper-mcp.md
 - https://github.com/proompteng/bilig/blob/main/docs/agent-spreadsheet-tool-call-loop.md
-- https://github.com/proompteng/bilig/blob/main/docs/local-workpaper-benchmark-walkthrough.md
 - https://github.com/proompteng/bilig/blob/main/docs/headless-spreadsheet-engine-comparison.md
 - https://github.com/proompteng/bilig/blob/main/docs/javascript-spreadsheet-library-headless-node.md
 - https://github.com/proompteng/bilig/blob/main/docs/why-use-bilig.md
@@ -496,8 +495,8 @@ npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./
 
 ## proof and caveats
 
-- benchmark explainer:
-  https://github.com/proompteng/bilig/blob/main/docs/what-workpaper-benchmark-proves.md
+- compatibility limits:
+  https://github.com/proompteng/bilig/blob/main/docs/where-bilig-is-not-excel-compatible-yet.md
 - quote approval WorkPaper API proof:
   https://proompteng.github.io/bilig/quote-approval-workpaper-api.html
   https://github.com/proompteng/bilig/blob/main/docs/quote-approval-workpaper-api.md
@@ -515,8 +514,6 @@ npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./
   https://github.com/proompteng/bilig/blob/main/docs/npm-provenance-package-trust.md
   verifies @bilig/workpaper registry signatures, SLSA provenance attestations,
   and the release workflow path before production adoption.
-- benchmark share card:
-  https://github.com/proompteng/bilig/blob/main/docs/assets/workpaper-benchmark-card.png
 - hyperformula comparison:
   https://github.com/proompteng/bilig/blob/main/docs/hyperformula-alternative-headless-workpaper.md
 - WorkPaper engine comparison:
@@ -534,8 +531,7 @@ npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./
   https://proompteng.github.io/bilig/show-hn-formula-workbooks-node-services.html
   https://github.com/proompteng/bilig/blob/main/docs/show-hn-formula-workbooks-node-services.md
   compresses the empty npm project proof, WorkPaper JSON restore check,
-  `100/100` mean-win benchmark claim, `100/100` mean+p95 claim, visible worst-p95 evidence, and open
-  questions.
+  compatibility boundaries, and open questions.
 - JavaScript spreadsheet library guide for Node services:
   https://github.com/proompteng/bilig/blob/main/docs/javascript-spreadsheet-library-headless-node.md
 - SheetJS and ExcelJS comparison:
@@ -601,10 +597,8 @@ npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./
   https://github.com/proompteng/bilig/blob/main/docs/xlsx-populate-formula-result-node.md
   separates formula serialization from recalculation and shows a WorkPaper
   readback path for backend-owned formula state.
-- benchmark evidence:
-  https://github.com/proompteng/bilig/blob/main/docs/headless-workpaper-benchmark-evidence.md
-- local benchmark walkthrough:
-  https://github.com/proompteng/bilig/blob/main/docs/local-workpaper-benchmark-walkthrough.md
+- workbook compatibility report:
+  https://github.com/proompteng/bilig/blob/main/docs/workbook-compatibility-report.md
 - workbook APIs for agents:
   https://proompteng.github.io/bilig/why-agents-need-workbook-apis.html
   https://github.com/proompteng/bilig/blob/main/docs/why-agents-need-workbook-apis.md
@@ -975,9 +969,9 @@ npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./
 ## boundaries
 
 bilig is early infrastructure and not a finished excel clone. do not claim full
-excel formula parity, complete xlsx compatibility, or blanket speed wins. the
-current public performance claim is the checked-in workpaper benchmark evidence,
-including its worst p95 row.
+excel formula parity, complete xlsx compatibility, or blanket speed wins. public
+proof should be evaluator readback, deterministic fixtures, and compatibility
+reports, not self-referential benchmark counters.
 
 ## contributor path
 

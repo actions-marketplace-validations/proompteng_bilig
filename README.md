@@ -198,7 +198,7 @@ Run one evaluator first. Then use the recipe that matches the platform boundary:
 | Backend service shape             | [Quote approval WorkPaper API](docs/quote-approval-workpaper-api.md)                                                                                                                                                                                                                                         | A realistic route-style workflow returns formula readback and `restoredMatchesAfter: true`.               |
 | MCP clients and host integrations | [WorkPaper host handbook](docs/headless-workpaper-agent-handbook.md), [MCP spreadsheet tool server](docs/mcp-workpaper-tool-server.md), [Gemini CLI extension](docs/gemini-cli-workpaper-extension.md), and [Claude Desktop MCPB bundle](docs/claude-desktop-mcpb-workpaper.md)                              | The host installs a tool path, follows the handoff guide, then proves write/readback/persist.             |
 | Technical WorkPaper review        | [WorkPaper maintainer proof note](docs/show-hn-formula-workbooks-node-services.md)                                                                                                                                                                                                                           | One compact page has the npm check, benchmark caveat, known limits, and open questions.                   |
-| Trust and performance             | [npm provenance](docs/npm-provenance-package-trust.md) and [benchmark evidence](docs/what-workpaper-benchmark-proves.md)                                                                                                                                                                                     | npm shows SLSA provenance, and benchmark claims match the checked artifact.                               |
+| Trust and compatibility           | [npm provenance](docs/npm-provenance-package-trust.md), [compatibility limits](docs/where-bilig-is-not-excel-compatible-yet.md), and [Workbook Compatibility Report](docs/workbook-compatibility-report.md)                                                                                                  | npm shows SLSA provenance, and workbook behavior is checked through deterministic evaluator and XLSX gates. |
 | Imported files                    | [Workbook Compatibility Report](docs/workbook-compatibility-report.md), [file formula recalculation](docs/xlsx-formula-recalculation-node.md), and [ExcelJS formula recalculation](docs/exceljs-formula-recalculation-node.md)                                                                               | The file boundary is inspected before a service, CI job, or workflow trusts imported formulas.            |
 | Almost a fit                      | [implementation gap discussion](https://github.com/proompteng/bilig/discussions/new?category=general)                                                                                                                                                                                                        | Name the formula, import/export, persistence, framework, MCP, package, or benchmark gap.                  |
 | Formula or import bug             | [formula bug clinic](docs/formula-bug-clinic.md) and [submit a workbook fixture](docs/submit-workbook-fixture.md)                                                                                                                                                                                            | Share one reduced public case that can become a fixture.                                                  |
@@ -675,12 +675,6 @@ file-backed WorkPaper tools:
   recalculated approval decision, exports XLSX, reimports it, and verifies the
   formulas survived the round trip. The public decision page is
   [XLSX formula recalculation in Node.js](docs/xlsx-formula-recalculation-node.md).
-- Run `pnpm workpaper:bench:competitive:check`. The checked-in artifact shows
-  [`100/100` comparable WorkPaper mean wins](docs/what-workpaper-benchmark-proves.md)
-  and `100/100` mean+p95 wins; the current worst p95 row is
-  `sheet-rename-dependencies` at `0.792x`.
-- The benchmark card is generated from that artifact:
-  [`docs/assets/workpaper-benchmark-card.png`](docs/assets/workpaper-benchmark-card.png).
 - Read the [compatibility limits](docs/where-bilig-is-not-excel-compatible-yet.md)
   before importing real Excel workbooks.
 - Use the
@@ -776,13 +770,12 @@ pnpm test:browser
 pnpm run ci
 ```
 
-Generated sources and public evidence are checked:
+Generated sources and deterministic public docs are checked:
 
 ```sh
 pnpm protocol:check
 pnpm formula-inventory:check
 pnpm workspace-resolution:check
-pnpm workpaper:bench:competitive:check
 pnpm docs:discovery:check
 ```
 

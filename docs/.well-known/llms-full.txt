@@ -576,7 +576,7 @@ Run one evaluator first. Then use the recipe that matches the platform boundary:
 | Backend service shape             | [Quote approval WorkPaper API](docs/quote-approval-workpaper-api.md)                                                                                                                                                                                                                                         | A realistic route-style workflow returns formula readback and `restoredMatchesAfter: true`.               |
 | MCP clients and host integrations | [WorkPaper host handbook](docs/headless-workpaper-agent-handbook.md), [MCP spreadsheet tool server](docs/mcp-workpaper-tool-server.md), [Gemini CLI extension](docs/gemini-cli-workpaper-extension.md), and [Claude Desktop MCPB bundle](docs/claude-desktop-mcpb-workpaper.md)                              | The host installs a tool path, follows the handoff guide, then proves write/readback/persist.             |
 | Technical WorkPaper review        | [WorkPaper maintainer proof note](docs/show-hn-formula-workbooks-node-services.md)                                                                                                                                                                                                                           | One compact page has the npm check, benchmark caveat, known limits, and open questions.                   |
-| Trust and performance             | [npm provenance](docs/npm-provenance-package-trust.md) and [benchmark evidence](docs/what-workpaper-benchmark-proves.md)                                                                                                                                                                                     | npm shows SLSA provenance, and benchmark claims match the checked artifact.                               |
+| Trust and compatibility           | [npm provenance](docs/npm-provenance-package-trust.md), [compatibility limits](docs/where-bilig-is-not-excel-compatible-yet.md), and [Workbook Compatibility Report](docs/workbook-compatibility-report.md)                                                                                                  | npm shows SLSA provenance, and workbook behavior is checked through deterministic evaluator and XLSX gates. |
 | Imported files                    | [Workbook Compatibility Report](docs/workbook-compatibility-report.md), [file formula recalculation](docs/xlsx-formula-recalculation-node.md), and [ExcelJS formula recalculation](docs/exceljs-formula-recalculation-node.md)                                                                               | The file boundary is inspected before a service, CI job, or workflow trusts imported formulas.            |
 | Almost a fit                      | [implementation gap discussion](https://github.com/proompteng/bilig/discussions/new?category=general)                                                                                                                                                                                                        | Name the formula, import/export, persistence, framework, MCP, package, or benchmark gap.                  |
 | Formula or import bug             | [formula bug clinic](docs/formula-bug-clinic.md) and [submit a workbook fixture](docs/submit-workbook-fixture.md)                                                                                                                                                                                            | Share one reduced public case that can become a fixture.                                                  |
@@ -1053,12 +1053,6 @@ file-backed WorkPaper tools:
   recalculated approval decision, exports XLSX, reimports it, and verifies the
   formulas survived the round trip. The public decision page is
   [XLSX formula recalculation in Node.js](docs/xlsx-formula-recalculation-node.md).
-- Run `pnpm workpaper:bench:competitive:check`. The checked-in artifact shows
-  [`100/100` comparable WorkPaper mean wins](docs/what-workpaper-benchmark-proves.md)
-  and `100/100` mean+p95 wins; the current worst p95 row is
-  `sheet-rename-dependencies` at `0.792x`.
-- The benchmark card is generated from that artifact:
-  [`docs/assets/workpaper-benchmark-card.png`](docs/assets/workpaper-benchmark-card.png).
 - Read the [compatibility limits](docs/where-bilig-is-not-excel-compatible-yet.md)
   before importing real Excel workbooks.
 - Use the
@@ -1154,13 +1148,12 @@ pnpm test:browser
 pnpm run ci
 ```
 
-Generated sources and public evidence are checked:
+Generated sources and deterministic public docs are checked:
 
 ```sh
 pnpm protocol:check
 pnpm formula-inventory:check
 pnpm workspace-resolution:check
-pnpm workpaper:bench:competitive:check
 pnpm docs:discovery:check
 ```
 
@@ -13390,7 +13383,7 @@ compatibility pages before adopting it.
 - [Node.js spreadsheet formula engine guide](node-spreadsheet-formula-engine.md)
 - [WorkPaper service recipe](node-service-workpaper-recipe.md)
 - [MCP spreadsheet tool server](mcp-workpaper-tool-server.md)
-- [What the WorkPaper benchmark proves](what-workpaper-benchmark-proves.md)
+- [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 - [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 
 If it almost matches but a gap blocks adoption, open an implementation gap discussion:
@@ -13536,7 +13529,7 @@ pnpm --dir examples/serverless-workpaper-api run persistence-adapters
 - [Serverless WorkPaper API route](serverless-workpaper-api-route.md)
 - [Node service WorkPaper recipe](node-service-workpaper-recipe.md)
 - [Five Node.js workbook automation examples](workbook-automation-examples-node.md)
-- [What the WorkPaper benchmark proves](what-workpaper-benchmark-proves.md)
+- [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 - [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 
 If it almost matches but a gap blocks adoption, open an implementation gap discussion:
@@ -13554,15 +13547,15 @@ Status: public compatibility boundary for `@bilig/headless`
 
 `bilig` is not a complete Excel clone. The current adoption wedge is narrower:
 `@bilig/workpaper` gives Node services and tool hosts a workbook API with formulas,
-structural edits, persistence, validation, and auditable benchmark artifacts.
+structural edits, persistence, validation, and auditable compatibility fixtures.
 
 This page names the main compatibility boundaries so people can evaluate the
-project without reading a pile of benchmark JSON first.
+project without reading a pile of internal scorecard JSON first.
 
 ## Current Evidence Snapshot
 
-The repository keeps compatibility and performance claims tied to checked-in
-artifacts:
+The repository keeps compatibility claims tied to checked-in fixtures and
+reports:
 
 - formula inventory breadth is `100%` for the current office-listed and tracked
   formula inventory in
@@ -13573,10 +13566,8 @@ artifacts:
 - import/export fidelity passes required CSV/XLSX cases, reports no unsupported
   import/export features, and explicitly declines native macro execution in
   [`packages/benchmarks/baselines/import-export-fidelity-scorecard.json`](../packages/benchmarks/baselines/import-export-fidelity-scorecard.json)
-- the headless benchmark claim is `100/100` mean wins against the current
-  HyperFormula-style comparable workload scorecard, with the worst p95 row kept
-  visible in
-  [`docs/what-workpaper-benchmark-proves.md`](what-workpaper-benchmark-proves.md)
+- the headless product claim is API behavior: WorkPaper edit/readback,
+  recalculation, persistence, restore, and deterministic import/export checks.
 
 Those artifacts are useful evidence. They are not a blanket promise that every
 Excel workbook, every formula argument shape, every UI interaction, or every
@@ -13677,7 +13668,7 @@ than every spreadsheet UI. Keep those claims separated.
 - agent-controlled workbook edits with explicit readback
 - structural edits without driving a browser UI
 - JSON persistence and restore for workbook state
-- benchmark artifacts you can inspect and rerun
+- compatibility reports and deterministic fixtures you can inspect and rerun
 - import/export paths that surface compatibility warnings instead of hiding
   them
 

@@ -4,7 +4,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this for questions about using `@bilig/headless`, the workbook APIs, examples, formulas, persistence, or benchmark evidence.
+        Use this for questions about using `@bilig/headless`, the workbook APIs, examples, formulas, persistence, or compatibility evidence.
         If your question is about service-side workbook automation, the five-example page is the fastest starting point: https://proompteng.github.io/bilig/workbook-automation-examples-node.html.
   - type: dropdown
     id: area

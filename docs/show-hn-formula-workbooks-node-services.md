@@ -1,7 +1,7 @@
 ---
 title: 'Bilig maintainer note: formula WorkPapers for Node services and tool hosts'
 published: true
-description: A plain maintainer note for Bilig with the WorkPaper npm check, benchmark artifact, limits, and open questions.
+description: A plain maintainer note for Bilig with the WorkPaper npm check, compatibility limits, and open questions.
 tags: typescript, node, spreadsheet, mcp, workpaper
 canonical_url: https://proompteng.github.io/bilig/show-hn-formula-workbooks-node-services.html
 cover_image: https://raw.githubusercontent.com/proompteng/bilig/main/docs/assets/github-social-preview.png
@@ -69,23 +69,19 @@ The API is built around a `WorkPaper` object because the workbook state is the
 artifact under test. Saved-file tools are useful when an existing workbook file
 is the contract, but the product is the WorkPaper runtime.
 
-## Current numbers
+## Current proof surface
 
-The checked benchmark artifact currently says Bilig wins `100/100` comparable
-workloads on mean latency against the HyperFormula-style baseline. It wins
-`100/100` on both mean and p95.
-
-The worst p95 row is not hidden: `sheet-rename-dependencies` is the current worst p95 row at `0.792x`.
-Browser grid rendering is not part of this benchmark.
-
-Read the benchmark note:
-[what the WorkPaper benchmark proves](what-workpaper-benchmark-proves.md).
+The useful proof is workbook behavior: edit an input, recalculate dependent
+formulas, persist the WorkPaper document, restore it, and read back the same
+formula result. Saved XLSX files are a separate contract and should be checked
+with the compatibility report and Excel oracle fixtures before production use.
 
 ## What this is not
 
 Bilig is not Excel in Node. It does not run macros, preserve every workbook
 artifact, cover every Excel formula, do collaborative editing, or prove future
 p95 cases without adding them to the checked suite.
+Known limits stay explicit.
 
 If you mainly need a mature broad formula engine, start with HyperFormula. If
 the problem is XLSX reading, writing, or styling, start with SheetJS or ExcelJS.
@@ -115,7 +111,7 @@ Before adopting it, verify the narrow path you need:
   WorkPaper state.
 - `bilig-evaluate --door agent-mcp --json` passes for tool discovery, write,
   readback, export, and restore.
-- The benchmark page matches the checked artifact instead of an isolated number.
+- The compatibility page and evaluator output match the workflow instead of an isolated claim.
 - The compatibility page rules out any Excel-only feature your workflow needs.
 - Any real blocked workbook is reduced into a fixture before it becomes an
   accuracy claim.

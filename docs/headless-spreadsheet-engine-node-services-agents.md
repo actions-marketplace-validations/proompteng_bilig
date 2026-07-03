@@ -166,7 +166,7 @@ when the boundary is not obvious.
 - [Google Sheets API boundary](google-sheets-api-alternative-node-workpaper.md)
 - [SheetJS and ExcelJS boundary](sheetjs-exceljs-alternative-formula-workbook-api.md)
 - [HyperFormula alternative notes](hyperformula-alternative-headless-workpaper.md)
-- [What the benchmark proves](what-workpaper-benchmark-proves.md)
+- [Where bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 - [Compatibility limits](where-bilig-is-not-excel-compatible-yet.md)
 
 Repository and release notes:

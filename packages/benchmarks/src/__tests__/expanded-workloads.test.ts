@@ -1,10 +1,8 @@
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { ENGINE_COUNTER_KEYS, type EngineCounterKey } from '../../../core/src/perf/engine-counters.js'
-import { DEFAULT_COMPETITIVE_WARMUP_COUNT } from '../benchmark-workpaper-vs-hyperformula.js'
 import {
   EXPANDED_COMPARATIVE_WORKLOAD_SCORECARD_LANE,
   EXPANDED_COMPARATIVE_WORKLOADS,
@@ -191,7 +189,6 @@ const expectedExpandedWorkloads: ExpandedComparativeBenchmarkWorkload[] = [
 
 const benchmarkDir = dirname(fileURLToPath(import.meta.url))
 const repoRoot = join(benchmarkDir, '..', '..', '..', '..')
-const expandedBaselinePath = join(benchmarkDir, '..', '..', 'baselines', 'workpaper-vs-hyperformula.json')
 const emptyConfidenceCounts = {
   decisiveWorkpaperWins: 0,
   decisiveHyperFormulaWins: 0,
@@ -258,114 +255,6 @@ function familyEligibility(family: ExpandedCompetitiveFamily): { scorecardEligib
           family === 'dynamic-array' ? 'Unsupported-capability support lane; not an apples-to-apples performance scorecard input.' : null,
       }
   }
-}
-
-function readExpandedBaselineWorkloads(path: string): string[] {
-  const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'))
-  if (
-    parsed === null ||
-    typeof parsed !== 'object' ||
-    !('results' in parsed) ||
-    !Array.isArray(parsed.results) ||
-    !parsed.results.every(
-      (result) => result !== null && typeof result === 'object' && 'workload' in result && typeof result.workload === 'string',
-    )
-  ) {
-    throw new Error(`Unexpected expanded baseline format: ${path}`)
-  }
-  return parsed.results.map((result) => result.workload)
-}
-
-function readExpandedBaselineReport(path: string): {
-  families: unknown
-  scorecard: unknown
-  results: ExpandedComparativeBenchmarkResult[]
-} {
-  const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'))
-  const results = parsed !== null && typeof parsed === 'object' && 'results' in parsed ? parsed.results : undefined
-  if (
-    parsed === null ||
-    typeof parsed !== 'object' ||
-    !('families' in parsed) ||
-    !('scorecard' in parsed) ||
-    !Array.isArray(results) ||
-    !results.every(isExpandedComparativeBenchmarkResult)
-  ) {
-    throw new Error(`Unexpected expanded baseline report format: ${path}`)
-  }
-  return {
-    families: parsed.families,
-    scorecard: parsed.scorecard,
-    results,
-  }
-}
-
-function readExpandedBaselineBenchmarkSettings(path: string): { sampleCount: unknown; warmupCount: unknown } {
-  const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'))
-  const benchmark =
-    parsed !== null &&
-    typeof parsed === 'object' &&
-    'benchmark' in parsed &&
-    parsed.benchmark !== null &&
-    typeof parsed.benchmark === 'object'
-      ? parsed.benchmark
-      : undefined
-  if (!benchmark || !('sampleCount' in benchmark) || !('warmupCount' in benchmark)) {
-    throw new Error(`Unexpected expanded baseline benchmark settings: ${path}`)
-  }
-  return {
-    sampleCount: benchmark.sampleCount,
-    warmupCount: benchmark.warmupCount,
-  }
-}
-
-function countRawBenchmarkSampleArrays(value: unknown): number {
-  if (Array.isArray(value)) {
-    return value.reduce((count, child) => count + countRawBenchmarkSampleArrays(child), 0)
-  }
-  if (value === null || typeof value !== 'object') {
-    return 0
-  }
-
-  return Object.entries(value).reduce((count, [key, child]) => {
-    if (key === 'samples' && Array.isArray(child) && child.every((entry) => typeof entry === 'number')) {
-      return count + 1
-    }
-    return count + countRawBenchmarkSampleArrays(child)
-  }, 0)
-}
-
-function isExpandedComparativeBenchmarkResult(value: unknown): value is ExpandedComparativeBenchmarkResult {
-  if (value === null || typeof value !== 'object') {
-    return false
-  }
-  return (
-    'workload' in value &&
-    typeof value.workload === 'string' &&
-    'category' in value &&
-    typeof value.category === 'string' &&
-    'comparable' in value &&
-    typeof value.comparable === 'boolean' &&
-    'fixture' in value &&
-    value.fixture !== null &&
-    typeof value.fixture === 'object' &&
-    'engines' in value &&
-    value.engines !== null &&
-    typeof value.engines === 'object'
-  )
-}
-
-function normalizeCompetitiveReportValue(value: unknown): unknown {
-  if (typeof value === 'number') {
-    return Number(value.toPrecision(12))
-  }
-  if (Array.isArray(value)) {
-    return value.map((item) => normalizeCompetitiveReportValue(item))
-  }
-  if (value !== null && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeCompetitiveReportValue(item)]))
-  }
-  return value
 }
 
 function comparableBenchmarkResult(
@@ -440,29 +329,6 @@ describe('expanded comparative benchmark workloads', () => {
     )
 
     expect(scorecardEligibleWorkloads).toHaveLength(100)
-  })
-
-  it('checked-in expanded baseline covers every expanded workload exactly once', () => {
-    expect(readExpandedBaselineWorkloads(expandedBaselinePath)).toEqual(expectedExpandedWorkloads)
-  })
-
-  it('keeps checked-in expanded baseline summaries derived from raw workload results', () => {
-    const baseline = readExpandedBaselineReport(expandedBaselinePath)
-    const expectedReport = buildExpandedCompetitiveFamilyReport(baseline.results)
-
-    expect(normalizeCompetitiveReportValue(baseline.families)).toEqual(normalizeCompetitiveReportValue(expectedReport.families))
-    expect(normalizeCompetitiveReportValue(baseline.scorecard)).toEqual(normalizeCompetitiveReportValue(expectedReport.scorecard))
-  })
-
-  it('keeps checked-in expanded baseline on the default 200-sample proof settings', () => {
-    expect(readExpandedBaselineBenchmarkSettings(expandedBaselinePath)).toEqual({
-      sampleCount: DEFAULT_EXPANDED_COMPETITIVE_SAMPLE_COUNT,
-      warmupCount: DEFAULT_COMPETITIVE_WARMUP_COUNT,
-    })
-  })
-
-  it('keeps checked-in expanded baseline compact instead of storing raw timing sample arrays', () => {
-    expect(countRawBenchmarkSampleArrays(JSON.parse(readFileSync(expandedBaselinePath, 'utf8')))).toBe(0)
   })
 
   it('assigns every expanded workload to exactly one family', () => {

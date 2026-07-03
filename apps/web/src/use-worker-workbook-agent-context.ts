@@ -42,30 +42,6 @@ function expandProjectionViewport(viewport: Viewport): Viewport {
 
 const MAX_AGENT_RENDERED_CONTEXT_CELLS = 200
 
-type BiligSameCorpusRenderedRangeProof = Pick<
-  NonNullable<WorkbookAgentUiContext['rendered']>,
-  'batchId' | 'capturedAtUnixMs' | 'capturedRevision' | 'visibleSceneProof'
-> & {
-  readonly range: WorkbookAgentRenderedRange | null
-}
-
-interface BiligSameCorpusProofApi {
-  readonly readSheetIdentity: (sheetName: string) => { readonly sheetId: number } | null
-  readonly readRange: (sheetName: string, startAddress: string, endAddress?: string | null) => BiligSameCorpusRenderedRangeProof
-}
-
-export interface SameCorpusProofApiExposureArgs {
-  readonly benchmarkApiEnabled?: string | undefined
-  readonly dev?: boolean | undefined
-  readonly search: string
-}
-
-declare global {
-  interface Window {
-    __biligSameCorpusProof?: BiligSameCorpusProofApi
-  }
-}
-
 function normalizeCellRangeRef(range: CellRangeRef): CellRangeRef & {
   readonly startRow: number
   readonly endRow: number
@@ -237,34 +213,6 @@ function readWorkbookAgentVisibleSceneProof(): WorkbookAgentRenderedVisibleScene
   }
 }
 
-function canExposeSameCorpusProofApi(): boolean {
-  if (typeof window === 'undefined') {
-    return false
-  }
-  return resolveSameCorpusProofApiExposure({
-    benchmarkApiEnabled: import.meta.env['VITE_BILIG_BENCHMARK_PROOF_API'],
-    dev: import.meta.env.DEV,
-    search: window.location.search,
-  })
-}
-
-export function resolveSameCorpusProofApiExposure(args: SameCorpusProofApiExposureArgs): boolean {
-  if (!new URLSearchParams(args.search).has('benchmarkCorpus')) {
-    return false
-  }
-  if (args.dev === true) {
-    return true
-  }
-  const configured = args.benchmarkApiEnabled
-  if (configured === '1' || configured === 'true') {
-    return true
-  }
-  if (configured === undefined || configured.length === 0 || configured === '0' || configured === 'false') {
-    return false
-  }
-  throw new Error(`VITE_BILIG_BENCHMARK_PROOF_API must be "1", "true", "0", or "false" when set, got ${configured}`)
-}
-
 export function useWorkerWorkbookAgentContext(input: {
   selection: WorkerRuntimeSelection
   selectionRangeRef: MutableRefObject<CellRangeRef>
@@ -312,35 +260,6 @@ export function useWorkerWorkbookAgentContext(input: {
       },
     })
   }, [selectionRangeRef, selectionSnapshotRef, workerHandleRef])
-
-  useEffect(() => {
-    if (!canExposeSameCorpusProofApi()) {
-      return
-    }
-    const api: BiligSameCorpusProofApi = {
-      readSheetIdentity: (sheetName: string) => readViewportStoreSheetIdentity(workerHandleRef.current?.viewportStore, sheetName),
-      readRange: (sheetName: string, startAddress: string, endAddress?: string | null) => {
-        const viewportStore = workerHandleRef.current?.viewportStore
-        return {
-          batchId: viewportStore?.getLastMetrics().batchId ?? null,
-          capturedAtUnixMs: Date.now(),
-          capturedRevision: viewportStore?.getLastAuthoritativeRevision() ?? null,
-          range: buildRenderedRangeSnapshot(viewportStore, {
-            sheetName,
-            startAddress,
-            endAddress: endAddress?.trim() ? endAddress : startAddress,
-          }),
-          visibleSceneProof: readWorkbookAgentVisibleSceneProof(),
-        }
-      },
-    }
-    window.__biligSameCorpusProof = api
-    return () => {
-      if (window.__biligSameCorpusProof === api) {
-        delete window.__biligSameCorpusProof
-      }
-    }
-  }, [workerHandleRef])
 
   const rememberCurrentRenderedAgentContext = useCallback(() => {
     const context = buildCurrentAgentContext()

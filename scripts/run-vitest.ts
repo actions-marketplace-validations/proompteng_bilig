@@ -4,13 +4,11 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { assertLocalCiResourceGuardAllowsRun } from './ci-local-resource-guard.ts'
 import { ensureWasmKernelArtifact } from './ensure-wasm-kernel.js'
 
 const DEFAULT_CI_FILE_CHUNK_SIZE = 3
 const DEFAULT_ALL_FILE_CHUNK_SIZE = 16
 const DEFAULT_CI_BATCH_COOLDOWN_MS = 1_000
-const BROAD_CORPUS_FILE_THRESHOLD = 4
 
 export function buildVitestArgs(args: readonly string[], env: NodeJS.ProcessEnv = process.env): string[] {
   if (!shouldUseBoundedVitestDefaults(args, env)) {
@@ -48,22 +46,6 @@ export function readVitestBatchCooldownMs(env: NodeJS.ProcessEnv = process.env):
   return readNonNegativeInt(env['BILIG_VITEST_BATCH_COOLDOWN_MS']) ?? DEFAULT_CI_BATCH_COOLDOWN_MS
 }
 
-export function isBroadCorpusVitestRun(args: readonly string[]): boolean {
-  const runIndex = args.indexOf('--run')
-  if (runIndex < 0) {
-    return false
-  }
-
-  const runFiles = args.slice(runIndex + 1).filter((arg) => !arg.startsWith('-'))
-  const publicCorpusTestFiles = runFiles.filter((arg) => arg.includes('public-workbook-corpus'))
-  if (publicCorpusTestFiles.length >= BROAD_CORPUS_FILE_THRESHOLD) {
-    return true
-  }
-
-  const excelCorpusTestFiles = runFiles.filter((arg) => arg.includes('packages/excel-import/src/__tests__/xlsx-'))
-  return publicCorpusTestFiles.length > 0 && excelCorpusTestFiles.length > 0
-}
-
 function splitVitestRunArgsForCi(args: readonly string[], env: NodeJS.ProcessEnv, defaultRunFiles: readonly string[] = []): string[][] {
   const runIndex = args.indexOf('--run')
   if (runIndex < 0) {
@@ -82,8 +64,7 @@ function splitVitestRunArgsForCi(args: readonly string[], env: NodeJS.ProcessEnv
   }
 
   const chunkSize =
-    readPositiveInt(env['BILIG_VITEST_FILE_CHUNK_SIZE']) ??
-    (isBroadCorpusVitestRun(args) ? runArgs.length : isDefaultAllFileRun ? DEFAULT_ALL_FILE_CHUNK_SIZE : DEFAULT_CI_FILE_CHUNK_SIZE)
+    readPositiveInt(env['BILIG_VITEST_FILE_CHUNK_SIZE']) ?? (isDefaultAllFileRun ? DEFAULT_ALL_FILE_CHUNK_SIZE : DEFAULT_CI_FILE_CHUNK_SIZE)
   const environmentGroups = splitRunFilesByVitestEnvironment(runArgs)
   if (environmentGroups.length === 1 && runArgs.length <= chunkSize) {
     return isDefaultAllFileRun ? [[...prefixArgs, ...runArgs]] : [[...args]]
@@ -185,9 +166,6 @@ function sleepSync(ms: number): void {
 function main(): never {
   const rootDir = fileURLToPath(new URL('..', import.meta.url))
   const requestedArgs = process.argv.slice(2)
-  if (isBroadCorpusVitestRun(requestedArgs)) {
-    assertLocalCiResourceGuardAllowsRun(rootDir, process.env, { runLabel: 'public workbook corpus Vitest lane' })
-  }
 
   const vitestBin = resolveVitestBin(rootDir)
   ensureWasmKernelArtifact()

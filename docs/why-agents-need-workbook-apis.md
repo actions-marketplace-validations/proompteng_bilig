@@ -220,12 +220,9 @@ parity. It does not claim every benchmark p95 row is faster than HyperFormula.
 
 The current public claim is narrower: `@bilig/workpaper` exposes a WorkPaper API
 for programmatic workbook creation, formulas, structural operations,
-persistence, and checked-in benchmark evidence. The evidence note records
-WorkPaper `100/100` mean wins on scorecard-eligible comparable workloads against
-HyperFormula-style workloads, with the p95 evidence documented separately.
-
-Read the benchmark note here:
-[`docs/headless-workpaper-benchmark-evidence.md`](headless-workpaper-benchmark-evidence.md).
+persistence, and evaluator-backed readback. Saved XLSX files remain a separate
+compatibility contract and should be checked before a service trusts imported
+formula outputs.
 
 ## Try It
 

@@ -32,7 +32,7 @@ describe('public claim check', () => {
   it('blocks public broad claims', () => {
     const repoRoot = makeTempRepo({
       'README.md': 'Bilig is 10x better than Google Sheets.',
-      'docs/index.html': '<h1>Scoped benchmark evidence</h1>',
+      'docs/index.html': '<h1>Scoped compatibility evidence</h1>',
     })
 
     const report = buildPublicClaimCheckReport({ repoRoot })

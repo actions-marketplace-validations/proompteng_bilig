@@ -23,7 +23,7 @@ const verifyMaxRssBytes = capVerifyMaxRssBytes(readMegabytesArg('--verify-max-rs
 const stopSelfRssGuard = startSelfRssGuard(verifyMaxRssBytes, 'Workbook verification worker')
 
 try {
-  const cacheDir = readStringArg('--cache-dir', '.cache/research-public-workbook-corpus')
+  const cacheDir = readStringArg('--cache-dir', '.cache/xlsx-import-memory-gate')
   const artifactId = readStringArg('--artifact-id', '')
   if (!artifactId) {
     throw new Error('Expected --artifact-id for verify-artifact-worker')
@@ -196,7 +196,7 @@ async function readWorkerArtifact(artifactId: string): Promise<PublicWorkbookArt
     }
     return artifact
   }
-  const manifestPath = readStringArg('--manifest', '.cache/research-public-workbook-corpus/manifest.json')
+  const manifestPath = readStringArg('--manifest', '.cache/xlsx-import-memory-gate/manifest.json')
   const { parsePublicWorkbookManifestJson } = await import('./public-workbook-corpus-json.ts')
   const manifest = parsePublicWorkbookManifestJson(JSON.parse(readFileSync(manifestPath, 'utf8')))
   return manifest.artifacts.find((entry) => entry.id === artifactId)

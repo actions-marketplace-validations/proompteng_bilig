@@ -130,85 +130,19 @@ It answers this narrower question:
 That is helpful for triage and regression reduction. It is not enough to claim
 Excel accuracy.
 
-## Public Corpus Timing Budgets
+## Deterministic Fixture Budget
 
-The public workbook corpus verifier records `elapsedMs`, `phaseTimings`, and
-isolated worker `peakRssBytes` on each scorecard case. Use those fields to keep
-slow real workbooks visible in the JSON artifact, not only in a progress log.
-
-The regression budget for
-`workbook-364f955dd990c3d4`
-(`command-manning-summary-as-of-21-mar-2025.xlsx`, 394 KB, 60,738 cells, 2,219
-formula cells) is 30 seconds for the current headless verification path. Enable
-the optional focused test with:
+The checked reduction corpus is intentionally small and tracked in the repo.
+When a new real workbook exposes a regression, reduce it to a deterministic
+fixture under `packages/headless/fixtures/xlsx-corpus` and refresh the fixture
+manifest:
 
 ```sh
-BILIG_COMMAND_MANNING_MANIFEST=/path/to/manifest-business-recent.json \
-BILIG_COMMAND_MANNING_CACHE_DIR=/path/to/recent-workbook-corpus \
-pnpm exec vitest run scripts/__tests__/public-workbook-corpus.test.ts -t command-manning
+pnpm workpaper:xlsx-corpus:fixtures:generate
+pnpm workpaper:xlsx-corpus:fixtures:check
 ```
 
-The scorecard phase split identifies whether time is spent in cache reads,
-footprint inspection, XLSX import, formula oracle comparison, round-trip, or
-structural smoke work before changing runtime code.
-
-## Recent Complex Public Corpus
-
-The 2025-2026 recent-complex lane tracks public workbooks separately from the
-checked-in reduction corpus:
-
-```sh
-pnpm research:public-corpus:recent-complex:plan
-pnpm research:public-corpus:discover-recent-complex-github
-pnpm research:public-corpus:discover-recent-complex-zenodo
-pnpm research:public-corpus:discover-recent-complex-figshare
-pnpm research:public-corpus:fetch-recent-complex
-pnpm research:public-corpus:verify-recent-complex
-pnpm research:public-corpus:headless-recent-complex
-```
-
-The default CKAN discovery set includes national and regional open-data portals
-that have produced qualifying recent workbook evidence, including Ontario,
-Alberta, British Columbia, and HDX, alongside the broader GitHub and Zenodo
-discovery lanes. The Figshare lane uses public article search and article file
-metadata, requires usable license evidence, and prioritizes result/analysis/model
-queries before broad `.xlsx` searches.
-
-Latest local evidence from May 20, 2026 UTC, using local source
-`@bilig/headless` 0.37.2 rebased on `origin/main` commit `969ecd119`:
-
-```json
-{
-  "targetWorkbookCount": 500,
-  "headlessPackageVersion": "0.37.2",
-  "sourceCommit": "969ecd119",
-  "manifestSourceCount": 6210,
-  "manifestArtifactCount": 4531,
-  "publicScorecardCaseCount": 4531,
-  "publicPassingRecentComplexCount": 533,
-  "headlessFileCount": 500,
-  "headlessOkFileCount": 500,
-  "headlessComparableFormulaFileCount": 500,
-  "endToEndPassingWorkbookCount": 500,
-  "remainingToTarget": 0,
-  "failedErrors": 0,
-  "failedTimeouts": 0,
-  "formulaCells": 428311,
-  "comparableFormulaCells": 427264,
-  "matchingFormulaCells": 427264,
-  "mismatchedFormulaCells": 0,
-  "skippedFormulaCells": 1047,
-  "elapsedMs": 439179.77
-}
-```
-
-The end-to-end count intentionally requires at least one comparable headless
-formula cell per selected workbook. Workbooks that only produce stale-cache-risk
-formula audit evidence without comparable headless formulas remain useful
-compatibility signals, but they do not count toward the 500-workbook target.
-The verifier also records worksheet formulas found by bilig's XLSX formula audit
-when SheetJS drops empty-cache formula cells, so those files are reported as
-skipped formula coverage instead of being misread as formula-free workbooks.
+This keeps CI focused on product behavior instead of external corpus status.
 
 ## Checked-in fixture result
 

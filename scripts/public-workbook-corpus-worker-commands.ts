@@ -1,138 +1,17 @@
 import { readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import { readXlsxFormulaCacheCellsFromFile } from '@bilig/xlsx/formula-cache-reader'
 import { buildWorkbookCompatibilityReportFromFile } from '@bilig/xlsx/workbook-compatibility-report'
 import { readXlsxZipEntriesLazyFromByteSource } from '@bilig/xlsx/zip-reader'
 import { tryInspectLargeSimpleXlsxHeadless } from '../packages/excel-import/src/xlsx-large-simple-headless-inspect.js'
 import type { LargeSimpleXlsxImportStats } from '../packages/excel-import/src/xlsx-large-simple-import.js'
 import { startSelfRssGuard } from './public-workbook-corpus-process.ts'
-import {
-  fingerprintLargeSimpleDataOnlyWorkbookSource,
-  fingerprintFormulaFreeWorkbookFootprint,
-  fingerprintWorkbookBytes,
-  inspectWorkbookFootprintForWorker,
-  sha256HexSync,
-  type WorkbookFootprint,
-} from './public-workbook-corpus-workbook.ts'
+import { inspectWorkbookFootprintForWorker, type WorkbookFootprint } from './public-workbook-corpus-workbook.ts'
 import type { PublicWorkbookFeatureCounts } from './public-workbook-corpus-types.ts'
 import { FileBackedXlsxZipByteSource, isZipWorkbookSource } from './public-workbook-corpus-xlsx-byte-source.ts'
 import { inspectXlsxWorkbookFootprintLowMemoryFromByteSource } from './public-workbook-corpus-xlsx-footprint.ts'
 
 const publicWorkbookCorpusWorkerMaterializedBytesFallbackLimit = 1_000_000
-
-export async function writeFingerprintArtifactResult(args: {
-  readonly filePath: string
-  readonly fileName: string
-  readonly fingerprintTimeoutMs: number
-  readonly fingerprintMaxRssBytes: number
-}): Promise<void> {
-  if (!args.filePath) {
-    throw new Error('Expected --file for fingerprint-artifact')
-  }
-  const { fingerprintWorkbookFileIsolated } = await import('./public-workbook-corpus-fetch.ts')
-  const workbookFingerprint = await fingerprintWorkbookFileIsolated(resolve(args.filePath), args.fileName, args.fingerprintTimeoutMs, {
-    maxRssBytes: args.fingerprintMaxRssBytes,
-    rssCheckIntervalMs: 250,
-  })
-  process.stdout.write(`${JSON.stringify({ workbookFingerprint })}\n`)
-}
-
-export function writeFingerprintArtifactWorkerResult(args: {
-  readonly filePath: string
-  readonly fileName: string
-  readonly fingerprintMaxRssBytes: number
-}): void {
-  const stopSelfRssGuard = startSelfRssGuard(args.fingerprintMaxRssBytes, 'Workbook fingerprinting worker')
-  try {
-    if (!args.filePath) {
-      throw new Error('Expected --file for fingerprint-artifact-worker')
-    }
-    const filePath = resolve(args.filePath)
-    const workbookFingerprint = tryFingerprintWorkbookFromFile(filePath, args.fileName)
-    if (workbookFingerprint) {
-      process.stdout.write(`${JSON.stringify({ workbookFingerprint })}\n`)
-      return
-    }
-    assertMaterializedWorkbookFallbackWithinLimit(filePath, 'Workbook fingerprinting worker')
-    const fallbackFingerprint = fingerprintWorkbookBytes(readFileSync(filePath), args.fileName)
-    process.stdout.write(`${JSON.stringify({ workbookFingerprint: fallbackFingerprint })}\n`)
-  } catch (error) {
-    process.stderr.write(`${formatWorkerError(error)}\n`)
-    process.exitCode = 1
-  } finally {
-    stopSelfRssGuard()
-  }
-}
-
-function tryFingerprintWorkbookFromFile(filePath: string, fileName: string): string | null {
-  return (
-    tryFingerprintLargeSimpleWorkbookFromFile(filePath, fileName) ??
-    tryFingerprintFormulaFreeWorkbookFromFile(filePath, fileName) ??
-    tryFingerprintFormulaWorkbookFromFile(filePath, fileName)
-  )
-}
-
-function tryFingerprintLargeSimpleWorkbookFromFile(filePath: string, fileName: string): string | null {
-  const source = new FileBackedXlsxZipByteSource(filePath)
-  try {
-    return isZipWorkbookSource(source) ? fingerprintLargeSimpleDataOnlyWorkbookSource(source, fileName) : null
-  } catch {
-    return null
-  } finally {
-    source.release()
-  }
-}
-
-function tryFingerprintFormulaFreeWorkbookFromFile(filePath: string, fileName: string): string | null {
-  const source = new FileBackedXlsxZipByteSource(filePath)
-  try {
-    if (!isZipWorkbookSource(source)) {
-      return null
-    }
-    const footprint = inspectXlsxWorkbookFootprintLowMemoryFromByteSource(source, fileName)
-    return footprint ? fingerprintFormulaFreeWorkbookFootprint(footprint) : null
-  } catch {
-    return null
-  } finally {
-    source.release()
-  }
-}
-
-function tryFingerprintFormulaWorkbookFromFile(filePath: string, fileName: string): string | null {
-  try {
-    const report = buildWorkbookCompatibilityReportFromFile(filePath, {
-      fileName,
-      inspectLimit: 1,
-    })
-    if (report.workbook.formulaCellCount === 0) {
-      return null
-    }
-    const formulaScan = readXlsxFormulaCacheCellsFromFile(filePath, {
-      inspectLimit: 'all',
-    })
-    if (formulaScan.formulaCellCount === 0) {
-      return null
-    }
-    const counts = featureCountsFromCompatibilityReport(report.workbook)
-    const metadata = {
-      workbookName: fileName.replace(/\.(xlsx|xlsm|csv)$/iu, '') || fileName,
-      sheetNames: report.workbook.sheetNames,
-      dimensions: [],
-    }
-    const formulaShapes = formulaScan.cells.map((cell) => `${cell.target}:${cell.formula}`).toSorted()
-    return sha256HexSync(Buffer.from(JSON.stringify({ counts, metadata, formulaShapes })))
-  } catch {
-    return null
-  }
-}
-
-function formatWorkerError(error: unknown): string {
-  if (error instanceof Error) {
-    return `${error.name}: ${error.message}`
-  }
-  return String(error)
-}
 
 export async function writeFootprintWorkerResult(args: {
   readonly filePath: string

@@ -10,16 +10,7 @@ const excelImportRuntimeXlsxImportAllowlist = new Set([
   'packages/excel-import/src/xlsx-export.ts',
   'packages/excel-import/src/xlsx-sheetjs-import.ts',
 ])
-const liveScorecardFixtureScripts = [
-  'scripts/gen-google-sheets-live-calculation-scorecard.ts',
-  'scripts/gen-google-sheets-live-recalculation-scorecard.ts',
-  'scripts/gen-google-sheets-live-structural-scorecard.ts',
-  'scripts/gen-microsoft-excel-live-calculation-scorecard.ts',
-  'scripts/gen-microsoft-excel-live-recalculation-scorecard.ts',
-  'scripts/gen-microsoft-excel-live-structural-scorecard.ts',
-] as const
 const nativeXlsxFixtureScripts = [
-  ...liveScorecardFixtureScripts,
   'e2e/tests/web-shell-import.pw.ts',
   'scripts/gen-import-export-fidelity-scorecard.ts',
   'scripts/gen-workpaper-xlsx-corpus-fixtures.ts',
@@ -28,11 +19,6 @@ const nativeXlsxCorpusProofScripts = ['scripts/check-workpaper-xlsx-corpus.ts', 
 const nativeXlsxCorpusProofTests = [
   'scripts/__tests__/workpaper-xlsx-corpus-no-formula.test.ts',
   'scripts/__tests__/workpaper-xlsx-corpus.test.ts',
-] as const
-const nativeXlsxPublicWorkbookCorpusTests = [
-  'scripts/__tests__/public-workbook-corpus-links.test.ts',
-  'scripts/__tests__/public-workbook-corpus.test.ts',
-  'scripts/__tests__/public-workbook-corpus-workbook.test.ts',
 ] as const
 const nativeXlsxExampleScripts = [
   'examples/recalc-bridge-workflows/smoke.mjs',
@@ -307,24 +293,12 @@ describe('repository dependency policy', () => {
   it('keeps WorkPaper XLSX corpus materialization small-workbook only by default', () => {
     const corpus = readFileSync(join(repoRoot, 'scripts/check-workpaper-xlsx-corpus.ts'), 'utf8')
     const corpusCli = readFileSync(join(repoRoot, 'scripts/workpaper-xlsx-corpus-cli.ts'), 'utf8')
-    const recentComplex = readFileSync(join(repoRoot, 'scripts/public-workbook-corpus-recent-complex.ts'), 'utf8')
 
     expect(corpus).toContain('const defaultMaxFileBytes = 1_000_000')
     expect(corpus).toContain('options.allowLargeWorkPaperMaterialization !== true')
     expect(corpus).toContain('--allow-large-workpaper-materialization')
     expect(corpusCli).toContain("const allowLargeWorkPaperMaterializationFlag = '--allow-large-workpaper-materialization'")
     expect(corpusCli).toContain('Default: 1000000.')
-    expect(recentComplex).toContain('const defaultWorkPaperHeadlessMaxFileBytes = 1_000_000')
-    expect(recentComplex).toContain("readFlagArg('--allow-large-workpaper-materialization')")
-    expect(recentComplex).not.toContain("maxFileBytes: readNumberArg('--max-file-bytes', 50 * 1024 * 1024)")
-  })
-
-  it('keeps public workbook corpus test fixtures on @bilig/xlsx instead of SheetJS', () => {
-    const violations = nativeXlsxPublicWorkbookCorpusTests.filter((path) =>
-      hasRuntimeXlsxImport(readFileSync(join(repoRoot, path), 'utf8')),
-    )
-
-    expect(violations).toEqual([])
   })
 
   it('keeps recalculation bridge examples on @bilig/xlsx instead of SheetJS fixture edits', () => {
@@ -429,7 +403,6 @@ describe('repository dependency policy', () => {
     const formulaCacheReader = readFileSync(join(repoRoot, 'packages/xlsx/src/formula-cache-reader.ts'), 'utf8')
     const nativeInspect = readFileSync(join(repoRoot, 'packages/xlsx/src/streaming-native-inspect.ts'), 'utf8')
     const reportSource = readFileSync(join(repoRoot, 'packages/xlsx/src/workbook-compatibility-report.ts'), 'utf8')
-    const nativePublicCorpus = readFileSync(join(repoRoot, 'scripts/xlsx-native-recalc-public-corpus.ts'), 'utf8')
 
     expect(cliApi).toContain('const defaultInspectFormulaLimit = 2000')
     expect(cliApi).not.toContain("const defaultInspectFormulaLimit = 'all'")
@@ -440,7 +413,6 @@ describe('repository dependency policy', () => {
     expect(nativeInspect).toContain('export const defaultStreamingNativeXlsxCacheInspectionLimit: StreamingNativeXlsxCacheInspectionLimit')
     expect(nativeInspect).not.toContain("options.inspectLimit ?? 'all'")
     expect(reportSource).toContain('const defaultFileInspectLimit: XlsxCacheInspectionLimit = 2000')
-    expect(nativePublicCorpus).toContain("readXlsxFormulaCacheCellsFromFile(inputPath, { inspectLimit: 'all' })")
   })
 
   it('keeps file-backed native inspection and reports on the unified workbook core', () => {
@@ -654,27 +626,6 @@ describe('repository dependency policy', () => {
     expect(sourceCopy).toContain('writeSync(fd, chunk, chunkOffset, chunk.byteLength - chunkOffset)')
   })
 
-  it('keeps the native recalc public corpus runner manual and off canonical cache paths', () => {
-    const manifest = packageManifest('.')
-    const scripts = objectField(manifest, 'scripts')
-    const defaultScript = scripts['xlsx-native-recalc:public-corpus']
-    const script = stringField(scripts, 'research:xlsx-native-recalc:public-corpus')
-
-    expect(defaultScript).toBeUndefined()
-    expect(script).toContain('bun scripts/xlsx-native-recalc-public-corpus.ts')
-    expect(script).toContain('--limit 50')
-    expect(script).toContain('--max-rss-mb 350')
-    expect(script).toContain('--require-formula-workbook-count 50')
-    expect(script).toContain('--require-passed-formula-workbook-count 50')
-    expect(script).toContain('--require-passed')
-    expect(script).toContain('--corpus .cache/research-public-workbook-corpus/manifest.json .cache/research-public-workbook-corpus')
-    expect(script).toContain(
-      '--corpus .cache/research-public-workbook-corpus-financial/manifest.json .cache/research-public-workbook-corpus-financial',
-    )
-    expect(script).not.toMatch(/\.cache\/public-workbook-corpus/u)
-    expect(script).not.toContain('--dry-run')
-  })
-
   it('keeps required CI and default correctness scripts free of research corpus and same-corpus workflow dependencies', () => {
     const manifest = packageManifest('.')
     const scripts = objectField(manifest, 'scripts')
@@ -708,7 +659,7 @@ describe('repository dependency policy', () => {
       forbiddenPatterns.filter((pattern) => pattern.test(source)).map((pattern) => `${name}: ${String(pattern)}`),
     )
 
-    expect(stringField(scripts, 'research:public-corpus:test')).toContain('scripts/__tests__/public-workbook-corpus')
+    expect(scripts['research:public-corpus:test']).toBeUndefined()
     expect(stringField(scripts, 'test:correctness:xlsx')).not.toContain('scripts/__tests__/public-workbook-corpus')
     expect(violations).toEqual([])
   })
@@ -881,43 +832,6 @@ describe('repository dependency policy', () => {
     expect(largeFileGuardIndex).toBeGreaterThan(-1)
     expect(readBytesIndex).toBeGreaterThan(largeFileGuardIndex)
     expect(workPaperIndex).toBeGreaterThan(readBytesIndex)
-  })
-
-  it('keeps public corpus workers on native file-backed scanners before materialized fallback', () => {
-    const workerCommands = readFileSync(join(repoRoot, 'scripts/public-workbook-corpus-worker-commands.ts'), 'utf8')
-    const workbookHelpers = readFileSync(join(repoRoot, 'scripts/public-workbook-corpus-workbook.ts'), 'utf8')
-    const publicCorpusProofHelpers = [
-      'scripts/public-workbook-corpus-large-simple-compact.ts',
-      'scripts/public-workbook-corpus-verify.ts',
-      'scripts/public-workbook-corpus-verify-worker.ts',
-      'scripts/public-workbook-corpus-worker-commands.ts',
-      'scripts/public-workbook-corpus-workbook.ts',
-      'scripts/public-workbook-corpus-xlsx-byte-source.ts',
-      'scripts/public-workbook-corpus-xlsx-footprint.ts',
-      'scripts/public-workbook-corpus-xlsx-worksheet-footprint.ts',
-    ]
-    const fallbackGuardIndex = workerCommands.indexOf('assertMaterializedWorkbookFallbackWithinLimit(filePath')
-    const fingerprintReadIndex = workerCommands.indexOf('fingerprintWorkbookBytes(readFileSync(filePath)')
-    const footprintReadIndex = workerCommands.indexOf('const bytes = filePath ? readFileSync(filePath) : readFileSync(0)')
-
-    expect(workerCommands).toContain('const publicWorkbookCorpusWorkerMaterializedBytesFallbackLimit = 1_000_000')
-    expect(workerCommands).toContain("from '@bilig/xlsx/formula-cache-reader'")
-    expect(workerCommands).toContain("from '@bilig/xlsx/workbook-compatibility-report'")
-    expect(workerCommands).toContain("from '@bilig/xlsx/zip-reader'")
-    expect(workbookHelpers).toContain("from '@bilig/xlsx/zip-reader'")
-    expect(workerCommands).toContain('tryFingerprintFormulaWorkbookFromFile(filePath, fileName)')
-    expect(workerCommands).toContain('tryInspectNativeCompatibilityFootprintFromFile(filePath, fileName)')
-    expect(fallbackGuardIndex).toBeGreaterThan(-1)
-    expect(fingerprintReadIndex).toBeGreaterThan(fallbackGuardIndex)
-    expect(footprintReadIndex).toBeGreaterThan(fallbackGuardIndex)
-    expect(workbookHelpers).toContain('nativeOnly: true')
-    expect(workbookHelpers).toContain('SheetJS fallback is disabled for corpus verification.')
-    expect(workbookHelpers).not.toContain('createRequire(import.meta.url)')
-    expect(workbookHelpers).not.toContain("requireModule('xlsx')")
-    expect(workbookHelpers).not.toContain('loadOptionalSheetJs')
-    for (const path of publicCorpusProofHelpers) {
-      expect(readFileSync(join(repoRoot, path), 'utf8')).not.toContain('../packages/excel-import/src/xlsx-zip.js')
-    }
   })
 
   it('keeps external XLSX stress public import small-workbook only before materialized reads', () => {

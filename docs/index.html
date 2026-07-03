@@ -148,7 +148,7 @@
           <a href="#runtime">Runtime</a>
           <a href="#install">Install</a>
           <a href="#mcp">MCP</a>
-          <a href="#benchmark">Benchmark</a>
+          <a href="#compatibility">Compatibility</a>
           <a href="#docs">Docs</a>
           <a href="https://github.com/proompteng/bilig">GitHub</a>
         </nav>
@@ -437,74 +437,73 @@ console.log({ answer, restored: restored.getCellDisplayValue(outputCell) })
         </div>
       </section>
 
-      <section id="benchmark" class="section proof-section" aria-labelledby="benchmark-title">
+      <section id="compatibility" class="section proof-section" aria-labelledby="compatibility-title">
         <div class="wrap">
           <div class="proof-layout">
             <div class="proof-intro">
-              <p class="kicker">Benchmark</p>
-              <h2 id="benchmark-title">The benchmark artifact is public.</h2>
+              <p class="kicker">Compatibility</p>
+              <h2 id="compatibility-title">Compatibility stays explicit.</h2>
               <p>
-                The checked artifact compares WorkPaper against HyperFormula on deterministic workbook workloads.
-                <span>Coverage boundaries stay visible.</span>
+                WorkPaper is the source of truth for workbook-shaped service logic.
+                <span>Saved XLSX files still need import and recalculation checks before production use.</span>
               </p>
             </div>
 
-            <div class="proof-board" aria-label="Benchmark evidence">
+            <div class="proof-board" aria-label="Compatibility evidence">
               <div class="proof-board-head">
-                <span>workpaper-vs-hyperformula.json</span>
-                <strong>HyperFormula</strong>
+                <span>workbook behavior gates</span>
+                <strong>Deterministic</strong>
               </div>
 
               <div class="proof-result">
                 <div class="proof-metric">
-                  <span class="proof-label">mean+p95 rows</span>
-                  <strong>100/100</strong>
+                  <span class="proof-label">import/recalc/export</span>
+                  <strong>checked</strong>
                 </div>
                 <p>
-                  100/100 comparable workloads win on both mean and p95 in the checked HyperFormula artifact.
-                  <span>100 of 100 comparable mean-latency rows are faster in the checked HyperFormula file.</span>
-                  sheet-rename-dependencies is the current worst p95 row:
-                  <code>0.792x</code>. Browser UI rendering is not part of this benchmark.
+                  Workbook behavior is gated by deterministic fixtures and evaluator readback.
+                  <span>External spreadsheet engines are comparison tools, not public proof counters.</span>
+                  Import risks stay visible before a service trusts a saved workbook.
                 </p>
               </div>
 
               <dl class="proof-facts">
                 <div class="proof-fact proof-command">
-                  <dt>Command</dt>
-                  <dd><code>pnpm workpaper:bench:competitive:check</code></dd>
+                  <dt>Oracle</dt>
+                  <dd>Excel oracle harness</dd>
                 </div>
                 <div class="proof-fact proof-row-code">
-                  <dt>Artifact</dt>
+                  <dt>Report</dt>
                   <dd>
-                    <code>packages/benchmarks/baselines/<wbr />workpaper-vs-hyperformula.json</code>
+                    <a href="./workbook-compatibility-report.html">Workbook Compatibility Report</a>
                   </dd>
                 </div>
                 <div class="proof-fact">
-                  <dt>Comparator</dt>
-                  <dd>HyperFormula.</dd>
+                  <dt>Files</dt>
+                  <dd>XLSX formula recalculation</dd>
                 </div>
                 <div class="proof-fact">
-                  <dt>Worst p95</dt>
-                  <dd>sheet-rename-dependencies is the current worst p95 row: <code>0.792x</code>.</dd>
+                  <dt>Bugs</dt>
+                  <dd>Formula bug clinic</dd>
                 </div>
                 <div class="proof-fact">
-                  <dt>Out of scope</dt>
-                  <dd>UI rendering, Excel file compatibility, and workbook shapes this suite does not cover.</dd>
+                  <dt>Limits</dt>
+                  <dd>Compatibility gaps stay documented.</dd>
                 </div>
               </dl>
 
-              <div class="proof-links" aria-label="Benchmark evidence links">
-                <a href="./what-workpaper-benchmark-proves.html">
-                  <span>Read</span>
-                  <strong>Benchmark notes</strong>
+              <div class="proof-links" aria-label="Compatibility evidence links">
+                <a href="./workbook-compatibility-report.html">
+                  <span>Inspect</span>
+                  <strong>Workbook report</strong>
                 </a>
                 <a href="./where-bilig-is-not-excel-compatible-yet.html">
                   <span>Check</span>
                   <strong>Compatibility gaps</strong>
                 </a>
-                <a href="https://github.com/proompteng/bilig/issues?q=is%3Aissue%20state%3Aopen%20label%3Afirst-timers-only">
-                  <span>Help</span>
-                  <strong>Starter issues</strong>
+                <a href="./xlsx-formula-recalculation-node.html">
+                  <span>Run</span>
+                  <strong>XLSX recalculation</strong>
                 </a>
               </div>
             </div>
@@ -683,7 +682,7 @@ console.log({ answer, restored: restored.getCellDisplayValue(outputCell) })
                 <li><a href="./node-spreadsheet-formula-engine.html">Node spreadsheet formula engine</a></li>
                 <li><a href="./show-hn-formula-workbooks-node-services.html">maintainer proof note</a></li>
                 <li><a href="./production-adoption-checklist-headless-workpaper.html">production adoption checklist</a></li>
-                <li><a href="./what-workpaper-benchmark-proves.html">what the benchmark proves</a></li>
+                <li><a href="./workbook-compatibility-report.html">workbook compatibility report</a></li>
                 <li><a href="./headless-spreadsheet-engine-comparison.html">engine comparison</a></li>
                 <li><a href="./where-bilig-is-not-excel-compatible-yet.html">compatibility limits</a></li>
                 <li><a href="./sheetjs-exceljs-alternative-formula-workbook-api.html">SheetJS and ExcelJS boundary</a></li>

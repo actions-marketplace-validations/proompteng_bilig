@@ -167,13 +167,10 @@ persistence.
 
 ## Current evidence
 
-The benchmark claim is deliberately narrow. The checked artifact currently
-records `100/100` mean-latency wins against HyperFormula-style comparable
-workloads and `100/100` workloads winning both mean and p95. The worst p95 row
-is called out instead of hidden.
-
-Benchmark note:
-<https://github.com/proompteng/bilig/blob/main/docs/what-workpaper-benchmark-proves.md>
+The public evidence is workbook behavior: evaluator readback, persistence,
+restore, formula compatibility snapshots, and XLSX import/export checks. Treat
+performance comparisons as workload-specific research, not the default product
+proof.
 
 Compatibility limits:
 <https://github.com/proompteng/bilig/blob/main/docs/where-bilig-is-not-excel-compatible-yet.md>

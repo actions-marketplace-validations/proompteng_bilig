@@ -37,8 +37,6 @@ on:
       - 'scripts/gen-formula-compatibility-snapshot.ts'
       - 'scripts/gen-workpaper-benchmark-baseline.ts'
       - 'scripts/gen-workpaper-hyperformula-audit.ts'
-      - 'scripts/gen-workpaper-vs-hyperformula-benchmark.ts'
-      - 'scripts/gen-workpaper-vs-hyperformula-expanded-benchmark.ts'
       - 'scripts/next-runtime-release-version.ts'
       - 'scripts/plan-runtime-release.ts'
       - 'scripts/check-runtime-npm-provisioning.ts'
@@ -206,11 +204,6 @@ jobs:
         run: |
           set -euo pipefail
           pnpm formula:compatibility:check
-
-      - name: Check WorkPaper competitive benchmark artifact shape
-        run: |
-          set -euo pipefail
-          pnpm workpaper:bench:competitive:check
 
       - name: Run WorkPaper external-consumer smoke test
         run: |
@@ -862,8 +855,6 @@ jobs:
             --version "${TARGET_VERSION}" \
             --notes-file build/runtime-release-notes.md
 
-          bun scripts/sync-public-evidence.ts
-          pnpm docs:benchmark-card:generate
           bun scripts/sync-agent-discovery-docs.ts
 
           ensure_workflow_sha_is_current "before release metadata diffing"
@@ -875,7 +866,6 @@ jobs:
             gemini-extension.json
             docs
             docs/headless-package-footprint.json
-            docs/public-evidence.json
             examples/huggingface-workpaper-space/package.json
             examples/huggingface-workpaper-space/README.md
             examples/huggingface-workpaper-space/workpaper_proof.mjs
