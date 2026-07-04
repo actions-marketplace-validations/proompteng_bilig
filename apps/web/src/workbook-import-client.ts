@@ -10,9 +10,9 @@ import {
   type WorkbookImportContentType,
   type WorkbookLoadedResponse,
 } from '@bilig/agent-api'
-import type { ImportedWorkbookPreview } from '@bilig/excel-import'
-import { resolveWorkbookNavigationUrl } from './workbook-navigation.js'
+import type { ImportedWorkbookPreview } from '@bilig/excel-import/browser'
 import { logDebug } from './runtime-logger.js'
+import { resolveWorkbookNavigationUrl } from './workbook-navigation.js'
 
 interface WorkbookImportPreviewSuccess {
   type: 'success'

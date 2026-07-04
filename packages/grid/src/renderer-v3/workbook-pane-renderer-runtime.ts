@@ -199,7 +199,7 @@ export class WorkbookPaneRendererRuntimeV3 {
       ...state,
     }
     if (state.tilePanes && state.tilePanes !== previousTilePanes && hasDirtyTilePaneResources(nextTilePanes)) {
-      this.scheduler.noteInputSignal()
+      this.requestDraw()
     }
     this.syncStoreSubscriptions()
   }

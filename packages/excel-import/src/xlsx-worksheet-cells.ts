@@ -1,4 +1,4 @@
-import { decodeCellAddress, encodeCellAddress } from '@bilig/xlsx'
+import { decodeCellAddress, encodeCellAddress } from '@bilig/xlsx/browser'
 import type { SheetJsWorkSheet } from './xlsx-sheetjs-types.js'
 
 export interface WorksheetCellEntry {

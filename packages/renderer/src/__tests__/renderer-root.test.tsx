@@ -1,11 +1,29 @@
-import React from 'react'
+import React, { act, type ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { SpreadsheetEngine } from '@bilig/core'
 import { Cell, Sheet, Workbook } from '../components.js'
 import { createWorkbookRendererRoot } from '../renderer-root.js'
 
+type TestWorkbookRendererRoot = ReturnType<typeof createWorkbookRendererRoot>
+
 function PassthroughWrapper({ children }: { children?: React.ReactNode }) {
   return <>{children}</>
+}
+
+async function renderRoot(root: TestWorkbookRendererRoot, element: ReactNode): Promise<void> {
+  let renderPromise: Promise<void> | undefined
+  act(() => {
+    renderPromise = root.render(element)
+  })
+  await renderPromise
+}
+
+async function unmountRoot(root: TestWorkbookRendererRoot): Promise<void> {
+  let unmountPromise: Promise<void> | undefined
+  act(() => {
+    unmountPromise = root.unmount()
+  })
+  await unmountPromise
 }
 
 describe('createWorkbookRendererRoot', () => {
@@ -14,7 +32,8 @@ describe('createWorkbookRendererRoot', () => {
     await engine.ready()
     const root = createWorkbookRendererRoot(engine)
 
-    await root.render(
+    await renderRoot(
+      root,
       <Workbook name="test">
         <Sheet name="Sheet1">
           <Cell addr="A1" value={10} format="currency-usd" />
@@ -26,7 +45,7 @@ describe('createWorkbookRendererRoot', () => {
     expect(engine.getCell('Sheet1', 'A1').format).toBe('currency-usd')
     expect(engine.getCellValue('Sheet1', 'B1')).toEqual({ tag: 1, value: 20 })
 
-    await root.unmount()
+    await unmountRoot(root)
 
     expect(engine.getCellValue('Sheet1', 'A1')).toEqual({ tag: 0 })
   })
@@ -51,14 +70,14 @@ describe('createWorkbookRendererRoot', () => {
       </React.StrictMode>
     )
 
-    await root.render(tree)
-    await root.render(tree)
+    await renderRoot(root, tree)
+    await renderRoot(root, tree)
 
     expect(engine.getCellValue('Sheet1', 'B1')).toEqual({ tag: 1, value: 20 })
     expect(batches).toHaveLength(1)
 
     unsubscribe()
-    await root.unmount()
+    await unmountRoot(root)
   })
 
   it('rejects invalid workbook DSL trees without mutating the engine', async () => {
@@ -91,7 +110,8 @@ describe('createWorkbookRendererRoot', () => {
     await engine.ready()
     const root = createWorkbookRendererRoot(engine)
 
-    await root.render(
+    await renderRoot(
+      root,
       <>
         <Workbook name="book">
           <React.Fragment>
@@ -103,7 +123,8 @@ describe('createWorkbookRendererRoot', () => {
       </>,
     )
 
-    await root.render(
+    await renderRoot(
+      root,
       <Workbook name="book-renamed">
         <Sheet name="Renamed">
           <Cell addr="B2" value={21} />
@@ -131,7 +152,8 @@ describe('createWorkbookRendererRoot', () => {
     await engine.ready()
     const root = createWorkbookRendererRoot(engine)
 
-    await root.render(
+    await renderRoot(
+      root,
       <Workbook name="valid">
         <Sheet name="Sheet1">
           <Cell addr="A1" value={10} />
@@ -216,7 +238,8 @@ describe('createWorkbookRendererRoot', () => {
     await engine.ready()
     const root = createWorkbookRendererRoot(engine)
 
-    await root.render(
+    await renderRoot(
+      root,
       <Workbook name="clearable">
         <Sheet name="Sheet1">
           <Cell addr="A1" value={10} />
@@ -224,7 +247,7 @@ describe('createWorkbookRendererRoot', () => {
       </Workbook>,
     )
 
-    await root.render(null)
+    await renderRoot(root, null)
 
     expect(engine.exportSnapshot()).toEqual({
       version: 1,
@@ -242,7 +265,8 @@ describe('createWorkbookRendererRoot', () => {
       return <>{children}</>
     })
 
-    await root.render(
+    await renderRoot(
+      root,
       React.createElement(
         PassthroughWrapper,
         null,

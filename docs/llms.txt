@@ -46,7 +46,7 @@ well-known llms.txt: https://proompteng.github.io/bilig/.well-known/llms.txt
 well-known llms-full.txt: https://proompteng.github.io/bilig/.well-known/llms-full.txt
 host handoff checklist: https://proompteng.github.io/bilig/agent-adoption-kit.html
 host rule chooser: https://proompteng.github.io/bilig/agent-rule-chooser.html
-tool-host proof matrix: https://proompteng.github.io/bilig/agent-proof-matrix.html
+tool-host evaluator matrix: https://proompteng.github.io/bilig/agent-proof-matrix.html
 MCP spreadsheet formula server for tool hosts: https://proompteng.github.io/bilig/mcp-spreadsheet-formula-server-for-coding-agents.html
 Vercel AI SDK formula readback: https://proompteng.github.io/bilig/vercel-ai-sdk-spreadsheet-tool-formula-readback.html
 ExcelJS formula result boundary: https://proompteng.github.io/bilig/exceljs-formula-result-not-updating-after-node-edits.html
@@ -117,7 +117,7 @@ openssf scorecard: https://scorecard.dev/viewer/?uri=github.com/proompteng/bilig
   https://proompteng.github.io/bilig/eval-workpaper-service.html
 - Evaluator for MCP workbook tools:
   https://proompteng.github.io/bilig/eval-agent-mcp.html
-- Tool-host proof matrix:
+- Tool-host evaluator matrix:
   https://proompteng.github.io/bilig/agent-proof-matrix.html
   https://github.com/proompteng/bilig/blob/main/docs/agent-proof-matrix.md
   Use this to choose among WorkPaper service, MCP, provider-backed MCP,

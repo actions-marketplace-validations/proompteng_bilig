@@ -1,6 +1,6 @@
-import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
+import { decodeCellAddress, decodeCellRange, encodeCellAddress, encodeCellRange, encodeColumnAddress } from '@bilig/xlsx/browser'
 import { XMLParser } from 'fast-xml-parser'
-import { decodeCellAddress, decodeCellRange, encodeCellAddress, encodeCellRange, encodeColumnAddress } from '@bilig/xlsx'
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 
 import {
   formatStructuredReferenceColumnSpecifier,

@@ -9,14 +9,14 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
 describe('calculation semantics contract', () => {
   it('covers every committed canonical and workbook-semantics fixture', () => {
-    const scorecard = buildCalculationSemanticsContract()
+    const contract = buildCalculationSemanticsContract()
 
-    expect(scorecard.summary.allCommittedFormulaSemanticsCovered).toBe(true)
-    expect(scorecard.summary.canonicalFormulaFixtureCount).toBeGreaterThan(0)
-    expect(scorecard.summary.coveredCanonicalFixtureCount).toBe(scorecard.summary.canonicalFormulaFixtureCount)
-    expect(scorecard.summary.workbookSemanticsFixtureCount).toBe(12)
-    expect(scorecard.summary.coveredWorkbookSemanticsFixtureCount).toBe(12)
-    expect(scorecard.summary.coveredWorkbookSemanticsCategories).toEqual([
+    expect(contract.summary.allCommittedFormulaSemanticsCovered).toBe(true)
+    expect(contract.summary.canonicalFormulaFixtureCount).toBeGreaterThan(0)
+    expect(contract.summary.coveredCanonicalFixtureCount).toBe(contract.summary.canonicalFormulaFixtureCount)
+    expect(contract.summary.workbookSemanticsFixtureCount).toBe(12)
+    expect(contract.summary.coveredWorkbookSemanticsFixtureCount).toBe(12)
+    expect(contract.summary.coveredWorkbookSemanticsCategories).toEqual([
       'defined-names',
       'cross-sheet-references',
       'structured-references',
@@ -24,11 +24,11 @@ describe('calculation semantics contract', () => {
       'dynamic-array-spills',
       'error-semantics',
     ])
-    expect(scorecard.summary.missingCanonicalFixtureIds).toEqual([])
-    expect(scorecard.summary.missingWorkbookSemanticsFixtureIds).toEqual([])
-    expect(scorecard.summary.fixtureRegistryAligned).toBe(true)
-    expect(scorecard.coverage.stableFormulaFixtureIds).toContain('lookup-reference:offset-basic')
-    expect(scorecard.coverage.deterministicVolatileFixtureIds).toEqual([
+    expect(contract.summary.missingCanonicalFixtureIds).toEqual([])
+    expect(contract.summary.missingWorkbookSemanticsFixtureIds).toEqual([])
+    expect(contract.summary.fixtureRegistryAligned).toBe(true)
+    expect(contract.coverage.stableFormulaFixtureIds).toContain('lookup-reference:offset-basic')
+    expect(contract.coverage.deterministicVolatileFixtureIds).toEqual([
       'date-time:now-volatile',
       'date-time:today-volatile',
       'volatile:rand-basic',

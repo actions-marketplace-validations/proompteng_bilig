@@ -6,8 +6,10 @@ import { WorkbookTablesPanel } from '../WorkbookTablesPanel.js'
 
 const roots: Array<{ unmount: () => void }> = []
 
-afterEach(() => {
-  roots.splice(0).forEach((root) => root.unmount())
+afterEach(async () => {
+  await act(async () => {
+    roots.splice(0).forEach((root) => root.unmount())
+  })
 })
 
 describe('WorkbookTablesPanel', () => {

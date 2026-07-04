@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { act, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { SpreadsheetEngine } from '@bilig/core'
 import type { WorkbookContainer } from '../host-config.js'
 import { createFiberRoot, updateFiberRoot } from '../compat.js'
 import { Cell, Sheet, Workbook } from '../components.js'
 import { createWorkbookRendererRoot } from '../renderer-root.js'
+
+type TestWorkbookRendererRoot = ReturnType<typeof createWorkbookRendererRoot>
 
 function createContainer(engine: SpreadsheetEngine): WorkbookContainer {
   return {
@@ -14,6 +16,22 @@ function createContainer(engine: SpreadsheetEngine): WorkbookContainer {
     shouldSyncSheetOrders: false,
     lastError: null,
   }
+}
+
+async function renderRoot(root: TestWorkbookRendererRoot, element: ReactNode): Promise<void> {
+  let renderPromise: Promise<void> | undefined
+  act(() => {
+    renderPromise = root.render(element)
+  })
+  await renderPromise
+}
+
+async function unmountRoot(root: TestWorkbookRendererRoot): Promise<void> {
+  let unmountPromise: Promise<void> | undefined
+  act(() => {
+    unmountPromise = root.unmount()
+  })
+  await unmountPromise
 }
 
 describe('renderer root', () => {
@@ -41,7 +59,8 @@ describe('renderer root', () => {
       { __biligRendererKind: 'Cell' as const },
     )
 
-    await root.render(
+    await renderRoot(
+      root,
       React.createElement(
         MinifiedWorkbook,
         { name: 'Book' },
@@ -57,7 +76,7 @@ describe('renderer root', () => {
     expect(engine.getCellValue('Sheet1', 'A1')).toEqual({ tag: 1, value: 10 })
     expect(engine.getCellValue('Sheet1', 'B1')).toEqual({ tag: 1, value: 20 })
 
-    await root.unmount()
+    await unmountRoot(root)
   })
 
   it('renders, updates, clears, and unmounts workbook trees through the public root', async () => {
@@ -65,7 +84,8 @@ describe('renderer root', () => {
     await engine.ready()
     const root = createWorkbookRendererRoot(engine)
 
-    await root.render(
+    await renderRoot(
+      root,
       React.createElement(
         Workbook,
         { name: 'Book' },
@@ -84,7 +104,8 @@ describe('renderer root', () => {
 
     expect(engine.getCellValue('Sheet1', 'B1')).toEqual({ tag: 1, value: 6 })
 
-    await root.render(
+    await renderRoot(
+      root,
       React.createElement(
         Workbook,
         { name: 'Book' },
@@ -107,10 +128,10 @@ describe('renderer root', () => {
     expect(engine.getCell('Sheet1', 'C1').format).toBe('currency-usd')
     expect(engine.getCellValue('Sheet2', 'A1')).toMatchObject({ tag: 3, value: 'ready' })
 
-    await root.render(null)
+    await renderRoot(root, null)
     expect(engine.exportSnapshot().sheets).toEqual([])
 
-    await root.unmount()
+    await unmountRoot(root)
     expect(engine.exportSnapshot().sheets).toEqual([])
   })
 
@@ -164,7 +185,8 @@ describe('renderer root', () => {
     await engine.ready()
     const root = createWorkbookRendererRoot(engine)
 
-    await root.render(
+    await renderRoot(
+      root,
       React.createElement(
         Workbook,
         { name: 'Book' },
@@ -177,7 +199,7 @@ describe('renderer root', () => {
     )
     expect(engine.getCellValue('Sheet1', 'A1')).toEqual({ tag: 1, value: 4 })
 
-    await root.render(false)
+    await renderRoot(root, false)
     expect(engine.exportSnapshot().sheets).toEqual([])
   })
 
@@ -195,10 +217,11 @@ describe('renderer root', () => {
     await engine.ready()
     const root = createWorkbookRendererRoot(engine)
 
-    await expect(root.render(React.createElement(React.StrictMode, null, false, undefined, null))).resolves.toBeUndefined()
+    await renderRoot(root, React.createElement(React.StrictMode, null, false, undefined, null))
     expect(engine.exportSnapshot().sheets).toEqual([])
 
-    await root.render(
+    await renderRoot(
+      root,
       React.createElement(
         React.StrictMode,
         null,

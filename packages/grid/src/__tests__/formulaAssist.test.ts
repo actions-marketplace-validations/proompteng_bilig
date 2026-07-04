@@ -13,6 +13,17 @@ describe('formula assist helpers', () => {
     expect(state.suggestions.some((entry) => entry.kind === 'function' && entry.name === 'SUM')).toBe(true)
   })
 
+  it('deduplicates generated function suggestions by function name', () => {
+    const state = resolveFormulaAssistState({
+      value: '=sc',
+      caret: 3,
+    })
+    const functionNames = state.suggestions.filter((entry) => entry.kind === 'function').map((entry) => entry.name)
+
+    expect(functionNames).toContain('SCAN')
+    expect(new Set(functionNames).size).toBe(functionNames.length)
+  })
+
   it('surfaces Google Sheets SORTN help without generic fallback text', () => {
     const state = resolveFormulaAssistState({
       value: '=sortn(',

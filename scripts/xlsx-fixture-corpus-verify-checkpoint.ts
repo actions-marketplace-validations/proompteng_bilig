@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-import { parseXlsxFixtureCorpusCase, parseXlsxFixtureCorpusScorecardJson } from './xlsx-fixture-corpus-json.ts'
+import { parseXlsxFixtureCorpusCase, parseXlsxFixtureCorpusContractReportJson } from './xlsx-fixture-corpus-json.ts'
 import type { XlsxFixtureArtifact, XlsxFixtureCorpusCase, XlsxFixtureManifest } from './xlsx-fixture-corpus-types.ts'
 
 interface XlsxFixtureCorpusVerificationCheckpoint {
@@ -38,15 +38,15 @@ export function readReusableXlsxFixtureCorpusCases(paths: readonly string[]): Xl
       cases.push(...parsed.cases.map((entry) => normalizeReusableXlsxFixtureCorpusCase(parseXlsxFixtureCorpusCase(entry))))
       continue
     }
-    if (isXlsxFixtureCorpusScorecardPayload(parsed)) {
-      const scorecardCases = Reflect.get(parsed, 'cases')
-      if (!Array.isArray(scorecardCases)) {
-        throw new Error('XLSX fixture corpus scorecard is missing cases')
+    if (isXlsxFixtureCorpusContractReportPayload(parsed)) {
+      const contractReportCases = Reflect.get(parsed, 'cases')
+      if (!Array.isArray(contractReportCases)) {
+        throw new Error('XLSX fixture corpus contract report is missing cases')
       }
-      cases.push(...scorecardCases.map((entry) => normalizeReusableXlsxFixtureCorpusCase(parseXlsxFixtureCorpusCase(entry))))
+      cases.push(...contractReportCases.map((entry) => normalizeReusableXlsxFixtureCorpusCase(parseXlsxFixtureCorpusCase(entry))))
       continue
     }
-    cases.push(...parseXlsxFixtureCorpusScorecardJson(parsed).cases.map((entry) => normalizeReusableXlsxFixtureCorpusCase(entry)))
+    cases.push(...parseXlsxFixtureCorpusContractReportJson(parsed).cases.map((entry) => normalizeReusableXlsxFixtureCorpusCase(entry)))
   }
   return cases
 }
@@ -167,7 +167,7 @@ function isVerificationCheckpoint(value: unknown): value is XlsxFixtureCorpusVer
   )
 }
 
-function isXlsxFixtureCorpusScorecardPayload(value: unknown): boolean {
+function isXlsxFixtureCorpusContractReportPayload(value: unknown): boolean {
   return (
     typeof value === 'object' &&
     value !== null &&

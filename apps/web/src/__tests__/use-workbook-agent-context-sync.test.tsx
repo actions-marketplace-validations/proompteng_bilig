@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import type { WorkbookAgentThreadSnapshot, WorkbookAgentUiContext } from '@bilig/contracts'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useWorkbookAgentContextSync } from '../use-workbook-agent-context-sync.js'
+import { captureExpectedConsoleDebug } from './expected-console.js'
 
 function createContext(address: string): WorkbookAgentUiContext {
   return {
@@ -53,12 +54,14 @@ function createSnapshot(status: WorkbookAgentThreadSnapshot['status'] = 'idle'):
 afterEach(() => {
   document.body.innerHTML = ''
   vi.useRealTimers()
+  vi.restoreAllMocks()
 })
 
 describe('useWorkbookAgentContextSync', () => {
   it('backs off failed context sync retries while preserving the latest pending context', async () => {
     ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
     vi.useFakeTimers()
+    const contextSyncDebug = captureExpectedConsoleDebug('Failed to sync agent context update')
 
     const syncThreadContext = vi.fn(async () => {
       if (syncThreadContext.mock.calls.length === 1) {
@@ -133,6 +136,7 @@ describe('useWorkbookAgentContextSync', () => {
         'thr-1',
         expect.objectContaining({ selection: { sheetName: 'Sheet1', address: 'A4' } }),
       )
+      contextSyncDebug.expectLogCount(1)
     } finally {
       await act(async () => {
         root.unmount()

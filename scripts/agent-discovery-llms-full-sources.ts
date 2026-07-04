@@ -16,7 +16,7 @@ const llmsFullSourceSpecs = [
   ['WorkPaper Host Handoff', 'docs/agent-adoption-kit.md'],
   ['Host Rule Chooser', 'docs/agent-rule-chooser.md'],
   ['Evaluate Bilig As An MCP Workbook Tool', 'docs/eval-agent-mcp.md'],
-  ['WorkPaper Proof Matrix', 'docs/agent-proof-matrix.md'],
+  ['WorkPaper Evaluator Matrix', 'docs/agent-proof-matrix.md'],
   ['WorkPaper Package README', 'packages/workpaper/README.md'],
   ['WorkPaper Host Handbook', 'docs/headless-workpaper-agent-handbook.md'],
   ['Agent Workbook Challenge', 'docs/agent-workbook-challenge.md'],

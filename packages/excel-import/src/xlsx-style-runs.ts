@@ -1,4 +1,4 @@
-import { encodeCellAddress } from '@bilig/xlsx'
+import { encodeCellAddress } from '@bilig/xlsx/browser'
 
 import type { SheetStyleRangeSnapshot } from '@bilig/protocol'
 

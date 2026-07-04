@@ -1,5 +1,3 @@
-import { inflateSync, strFromU8, unzipSync, type Unzipped } from 'fflate'
-import { Inflate } from 'fflate-stream'
 import {
   forEachInflatedXlsxZipEntryChunk as forEachCoreInflatedXlsxZipEntryChunk,
   forEachInflatedXlsxZipEntryChunkAsync as forEachCoreInflatedXlsxZipEntryChunkAsync,
@@ -15,6 +13,8 @@ import {
   releaseLazyXlsxZipSource as releaseCoreLazyXlsxZipSource,
   replaceLazyXlsxZipSource as replaceCoreLazyXlsxZipSource,
 } from '@bilig/xlsx/zip-reader'
+import { inflateSync, strFromU8, unzipSync, type Unzipped } from 'fflate'
+import { Inflate } from 'fflate-stream'
 
 export type XlsxZipEntries = Unzipped
 export type XlsxZipSource = Uint8Array | XlsxZipEntries
@@ -534,52 +534,36 @@ async function inflateCentralDirectoryEntryChunksAsync(
   ) {
     return
   }
-  if (await inflateCentralDirectoryEntryChunksWithNodeZlibAsync(source, dataStart, dataEnd, onChunk, options.chunkSize)) {
-    return
-  }
-  const inflated = inflateCentralDirectoryEntry(source, localHeaderOffset, compressedSize, compressionMethod)
-  await emitInflatedChunksAsync(inflated, options.chunkSize, onChunk)
-}
-
-async function inflateCentralDirectoryEntryChunksWithNodeZlibAsync(
-  source: XlsxZipByteSource,
-  dataStart: number,
-  dataEnd: number,
-  onChunk: XlsxZipAsyncChunkConsumer,
-  chunkSize: number,
-): Promise<boolean> {
-  try {
-    const [{ createInflateRaw }, { Readable }] = await Promise.all([import('node:zlib'), import('node:stream')])
-    let offset = dataStart
-    const compressedChunkSize = Math.max(1, Math.trunc(chunkSize))
-    const compressedStream = new Readable({
-      read() {
-        if (offset >= dataEnd) {
-          this.push(null)
-          return
-        }
-        const end = Math.min(dataEnd, offset + compressedChunkSize)
-        this.push(source.readRange(offset, end))
-        offset = end
-      },
-    })
-    const inflate = createInflateRaw()
-    try {
-      for await (const chunk of compressedStream.pipe(inflate)) {
-        const bytes = chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk)
-        if (!(await emitInflatedChunksAsync(bytes, chunkSize, onChunk))) {
-          compressedStream.destroy()
-          inflate.destroy()
-          return true
-        }
-      }
-    } finally {
-      compressedStream.destroy()
-      inflate.destroy()
+  let stopped = false
+  let inflatedChunks: Uint8Array[] = []
+  const inflate = new Inflate((chunk) => {
+    if (!stopped) {
+      inflatedChunks.push(chunk)
     }
-    return true
-  } catch {
-    return false
+  })
+  const compressedChunkSize = Math.max(1, Math.trunc(options.chunkSize))
+  const compressedChunkScratch = source.readRangeInto ? new Uint8Array(compressedChunkSize) : undefined
+  for (let offset = 0; offset < compressedSize; offset += compressedChunkSize) {
+    const end = Math.min(compressedSize, offset + compressedChunkSize)
+    inflatedChunks = []
+    inflate.push(readSourceRange(source, dataStart + offset, dataStart + end, compressedChunkScratch), end === compressedSize)
+    for (const chunk of inflatedChunks) {
+      // oxlint-disable-next-line eslint(no-await-in-loop) -- ZIP stream chunks must preserve order and backpressure.
+      if (!(await emitInflatedChunksAsync(chunk, options.chunkSize, onChunk))) {
+        stopped = true
+        return
+      }
+    }
+  }
+  if (compressedSize === 0) {
+    inflatedChunks = []
+    inflate.push(source.readRange(dataStart, dataEnd), true)
+    for (const chunk of inflatedChunks) {
+      // oxlint-disable-next-line eslint(no-await-in-loop) -- ZIP stream chunks must preserve order and backpressure.
+      if (!(await emitInflatedChunksAsync(chunk, options.chunkSize, onChunk))) {
+        return
+      }
+    }
   }
 }
 

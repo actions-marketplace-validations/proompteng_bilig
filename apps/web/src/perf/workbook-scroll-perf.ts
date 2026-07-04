@@ -69,6 +69,13 @@ interface WorkbookScrollPerfSamples {
   readonly mutationToVisibleMs: number[]
 }
 
+interface WorkbookScrollPerfLongTaskDetail {
+  readonly duration: number
+  readonly name: string
+  readonly startTime: number
+  readonly attribution: readonly string[]
+}
+
 interface WorkbookScrollPerfSummary {
   readonly min: number
   readonly median: number
@@ -81,6 +88,7 @@ export interface WorkbookScrollPerfReport {
   readonly workload: string
   readonly fixture: WorkbookScrollPerfFixture | null
   readonly samples: WorkbookScrollPerfSamples
+  readonly longTaskDetails: readonly WorkbookScrollPerfLongTaskDetail[]
   readonly summary: {
     readonly frameMs: WorkbookScrollPerfSummary
     readonly inputToDrawMs: WorkbookScrollPerfSummary
@@ -154,6 +162,7 @@ class WorkbookScrollPerfCollector {
   private baselineCounters: WorkbookScrollPerfCounters | null = null
   private frameSamples: number[] = []
   private longTaskSamples: number[] = []
+  private longTaskDetails: WorkbookScrollPerfLongTaskDetail[] = []
   private inputToDrawSamples: number[] = []
   private mutationToVisibleSamples: number[] = []
   private workload = 'idle'
@@ -373,6 +382,7 @@ class WorkbookScrollPerfCollector {
     this.workload = workload
     this.frameSamples = []
     this.longTaskSamples = []
+    this.longTaskDetails = []
     this.inputToDrawSamples = []
     this.mutationToVisibleSamples = []
     this.baselineCounters = null
@@ -403,6 +413,7 @@ class WorkbookScrollPerfCollector {
         longTasksMs: [...this.longTaskSamples],
         mutationToVisibleMs: [...this.mutationToVisibleSamples],
       },
+      longTaskDetails: [...this.longTaskDetails],
       summary: {
         frameMs: summarizeNumbers(this.frameSamples),
         inputToDrawMs: summarizeNumbers(this.inputToDrawSamples),
@@ -414,6 +425,7 @@ class WorkbookScrollPerfCollector {
     this.baselineCounters = null
     this.frameSamples = []
     this.longTaskSamples = []
+    this.longTaskDetails = []
     this.inputToDrawSamples = []
     this.mutationToVisibleSamples = []
     this.lastFrameAt = null
@@ -432,6 +444,7 @@ class WorkbookScrollPerfCollector {
             this.baselineCounters = cloneCounters(this.totalCounters)
             this.frameSamples = []
             this.longTaskSamples = []
+            this.longTaskDetails = []
             this.inputToDrawSamples = []
             this.mutationToVisibleSamples = []
             this.lastScrollInputAt = null
@@ -457,6 +470,14 @@ class WorkbookScrollPerfCollector {
         }
         for (const entry of list.getEntries()) {
           this.longTaskSamples.push(entry.duration)
+          if (this.longTaskDetails.length < 20) {
+            this.longTaskDetails.push({
+              attribution: resolveLongTaskAttribution(entry),
+              duration: entry.duration,
+              name: entry.name,
+              startTime: entry.startTime,
+            })
+          }
         }
       })
       this.observer.observe({ entryTypes: ['longtask'] })
@@ -468,6 +489,38 @@ class WorkbookScrollPerfCollector {
 
 function nowMs(): number {
   return performance.now()
+}
+
+function resolveLongTaskAttribution(entry: PerformanceEntry): readonly string[] {
+  const attributions = (entry as PerformanceEntry & { attribution?: readonly unknown[] }).attribution
+  if (!attributions || attributions.length === 0) {
+    return []
+  }
+  return attributions.slice(0, 5).map((attribution) => {
+    if (typeof attribution !== 'object' || attribution === null) {
+      return String(attribution)
+    }
+    if (!isRecord(attribution)) {
+      return ''
+    }
+    const fields = attribution
+    return [
+      typeof fields['name'] === 'string' ? fields['name'] : '',
+      typeof fields['containerType'] === 'string' ? fields['containerType'] : '',
+      typeof fields['containerName'] === 'string' ? fields['containerName'] : '',
+      typeof fields['containerId'] === 'string' ? fields['containerId'] : '',
+      typeof fields['scriptUrl'] === 'string' ? fields['scriptUrl'] : '',
+    ]
+      .filter((value) => value.length > 0)
+      .join(':')
+  })
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  return Object.getPrototypeOf(value) === Object.prototype
 }
 
 function cloneCounters(counters: WorkbookScrollPerfCounters): WorkbookScrollPerfCounters {

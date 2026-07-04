@@ -43,6 +43,10 @@
     "packageDir": "packages/excel-import",
     "sourceEntry": "packages/excel-import/src/index.ts"
   },
+  "@bilig/excel-import/browser": {
+    "packageDir": "packages/excel-import",
+    "sourceEntry": "packages/excel-import/src/browser.ts"
+  },
   "@bilig/exceljs-formula-recalc": {
     "packageDir": "packages/bilig-exceljs-formula-recalc",
     "sourceEntry": "packages/bilig-exceljs-formula-recalc/src/index.ts"
@@ -203,6 +207,10 @@
     "packageDir": "packages/xlsx",
     "sourceEntry": "packages/xlsx/src/address.ts"
   },
+  "@bilig/xlsx/browser": {
+    "packageDir": "packages/xlsx",
+    "sourceEntry": "packages/xlsx/src/browser.ts"
+  },
   "@bilig/xlsx/file-source": {
     "packageDir": "packages/xlsx",
     "sourceEntry": "packages/xlsx/src/file-source.ts"
@@ -222,6 +230,10 @@
   "@bilig/xlsx/source-preserving-zip": {
     "packageDir": "packages/xlsx",
     "sourceEntry": "packages/xlsx/src/source-preserving-zip.ts"
+  },
+  "@bilig/xlsx/source-preserving-zip-file": {
+    "packageDir": "packages/xlsx",
+    "sourceEntry": "packages/xlsx/src/source-preserving-zip-file.ts"
   },
   "@bilig/xlsx/streaming-native-inspect": {
     "packageDir": "packages/xlsx",

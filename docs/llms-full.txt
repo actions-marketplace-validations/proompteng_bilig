@@ -519,7 +519,7 @@ That evaluator starts the published WorkPaper tool server, discovers tools,
 edits an input, reads the dependent formula, exports JSON, restarts, restores,
 and returns `verified: true`. Use
 [`llms-install.md`](llms-install.md) when a host wants one install file, and use
-the [tool-host proof matrix](docs/agent-proof-matrix.md) when the host matters
+the [tool-host evaluator matrix](docs/agent-proof-matrix.md) when the host matters
 more than the package boundary.
 
 The published package also carries `AGENTS.md` and `SKILL.md` so hosts
@@ -569,7 +569,7 @@ Run one evaluator first. Then use the recipe that matches the platform boundary:
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | Node service formulas             | [Node service WorkPaper evaluator](docs/eval-workpaper-service.md)                                                                                                                                                                                                                                           | A starter writes one input, recalculates, persists JSON, restores, and prints `verified: true`.           |
 | MCP tool contract                 | [MCP workbook evaluator](docs/eval-agent-mcp.md)                                                                                                                                                                                                                                                             | MCP tool discovery, input edit, formula readback, persistence, and restart proof all pass.                |
-| Integration proof chooser         | [Tool-host proof matrix](docs/agent-proof-matrix.md), [MCP spreadsheet tool server](docs/mcp-spreadsheet-formula-server-for-coding-agents.md), and [Vercel AI SDK formula readback](docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md) | The integration path starts with the smallest verified proof and avoids write-only or UI-only claims.     |
+| Integration proof chooser         | [Tool-host evaluator matrix](docs/agent-proof-matrix.md), [MCP spreadsheet tool server](docs/mcp-spreadsheet-formula-server-for-coding-agents.md), and [Vercel AI SDK formula readback](docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md) | The integration path starts with the smallest verified proof and avoids write-only or UI-only claims.     |
 | Runtime intent adapters           | [Workbook runtime intent API](docs/workbook-runtime-intent-api.md) and [runtime intent example](https://github.com/proompteng/bilig/tree/main/examples/workbook-agent-model)                                                                                                                                 | A model prepares transport-neutral plan data, strict runtime proof, command receipts, and check evidence. |
 | Basic fit                         | [Why use Bilig?](docs/why-use-bilig.md)                                                                                                                                                                                                                                                                      | The problem is workbook-shaped business logic that needs API readback and persistence.                    |
 | Published npm package             | [90-second Node quickstart](docs/try-bilig-headless-in-node.md)                                                                                                                                                                                                                                              | `@bilig/workpaper` edits one input, recalculates, persists JSON, restores, and prints `verified: true`.   |
@@ -832,7 +832,7 @@ the [Node spreadsheet formula engine guide](docs/node-spreadsheet-formula-engine
 [OpenCode MCP setup](docs/opencode-workpaper-mcp.md),
 [Microsoft Agent Framework MCP tools](docs/microsoft-agent-framework-workpaper-mcp.md),
 [Goose MCP recipe](docs/goose-workpaper-mcp.md),
-[tool-host proof matrix](docs/agent-proof-matrix.md),
+[tool-host evaluator matrix](docs/agent-proof-matrix.md),
 [MCP spreadsheet formula server for tool hosts](docs/mcp-spreadsheet-formula-server-for-coding-agents.md),
 [Vercel AI SDK formula readback](docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md),
 [AI SDK and LangChain tools](docs/vercel-ai-sdk-langchain-spreadsheet-tool.md),
@@ -1807,7 +1807,7 @@ loop.
 
 - [MCP WorkPaper tool server](mcp-workpaper-tool-server.md)
 - [Workbook Compatibility Report](workbook-compatibility-report.md)
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [Stale formula readback chooser](stale-formula-readback-chooser.md)
 - [Where Bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)
 
@@ -2709,7 +2709,7 @@ npm create @bilig/workpaper@latest pricing-agent -- --agent
 - [OpenCode WorkPaper MCP setup](opencode-workpaper-mcp.md)
 - [Aider WorkPaper conventions](aider-workpaper-conventions.md)
 - [Goose WorkPaper MCP recipe](goose-workpaper-mcp.md)
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [WorkPaper agent handbook](headless-workpaper-agent-handbook.md)
 - [Evaluate Bilig as an agent MCP workbook tool](eval-agent-mcp.md)
 
@@ -2863,11 +2863,11 @@ no blind write-only success, and no missing persistence proof.
 
 ---
 
-## WorkPaper Proof Matrix
+## WorkPaper Evaluator Matrix
 
 Source: https://github.com/proompteng/bilig/blob/main/docs/agent-proof-matrix.md
 
-# Agent WorkPaper Proof Matrix
+# Agent WorkPaper Evaluator Matrix
 
 Use this page before an agent drives Excel, LibreOffice, Google Sheets, or a
 browser grid. Pick the smallest proof that writes an input, recalculates a
@@ -2906,9 +2906,9 @@ Expected invariants:
 }
 ```
 
-## Proof Matrix
+## Evaluator Matrix
 
-| Proof | Command or asset | Expected JSON field | What it proves | What it does not prove |
+| Evaluator or contract | Command or asset | Expected JSON field | What it verifies | Explicit limits |
 | --- | --- | --- | --- | --- |
 | WorkPaper service | `npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door workpaper-service --json` | `door: "workpaper-service"`, `verified: true` | Node can edit a WorkPaper input, recalculate a formula, export JSON, restore it, and verify readback. | MCP discovery, private workbook compatibility, macros, pivots, charts, or Excel UI behavior. |
 | Agent MCP evaluator | `npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json` | `door: "agent-mcp"`, `listedResourcesAndPrompts`, `restartReadbackMatchesAfter` | A coding agent or MCP client can discover workbook tools, write a cell, read a formula value, persist state, and restart from disk. | Hosted auth, arbitrary client UX, or full workbook compatibility. |
@@ -2936,7 +2936,7 @@ and restart state in one command.
 
 Use the Vercel AI SDK, OpenAI, LangGraph, Microsoft Agent Framework, Semantic
 Kernel, or Mastra examples only after the generic evaluator passes. Those
-examples prove host fit, not a stronger workbook runtime.
+examples verify host fit, not a stronger workbook runtime.
 
 Use the XLSX and ExcelJS paths when a saved file or ExcelJS object is already
 the contract. Do not force a WorkPaper model when the job is mostly workbook
@@ -4647,7 +4647,7 @@ before depending on it for production workbook imports.
 
 ## Related
 
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [MCP WorkPaper tool server](mcp-workpaper-tool-server.md)
 - [MCP client setup](mcp-client-setup.md)
 - [Spreadsheet MCP server comparison](spreadsheet-mcp-server-comparison.md)
@@ -5028,7 +5028,7 @@ agent continues.
 
 ## Related
 
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [Agent framework spreadsheet tools](vercel-ai-sdk-langchain-spreadsheet-tool.md)
 - [Workbook tools for agent frameworks](agent-framework-workbook-tools.md)
 - [Agent WorkPaper tool-calling recipe](agent-workpaper-tool-calling-recipe.md)
@@ -10681,7 +10681,7 @@ keeps the work on Bilig-owned docs instead of creating duplicate outreach.
 - [Agent WorkPaper handoff](agent-adoption-kit.md)
 - [Coding agent rule chooser](agent-rule-chooser.md)
 - [MCP WorkPaper tool server](mcp-workpaper-tool-server.md)
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [MCP directory status](mcp-spreadsheet-server-directory.md)
 
 ---
@@ -12892,7 +12892,7 @@ answer based on the recalculated formula result.
 - [ExcelJS formula recalculation in Node.js](exceljs-formula-recalculation-node.md)
 - [XLSX formula recalculation in Node.js](xlsx-formula-recalculation-node.md)
 - [SheetJS formula result not updating in Node.js](sheetjs-formula-result-not-updating-node.md)
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 
 ---
 

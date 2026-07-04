@@ -745,7 +745,7 @@ describe('WorkbookPaneRendererHostRuntimeV3', () => {
     animationFrames.restore()
   })
 
-  test('defers preload sync for dirty structural tile updates', () => {
+  test('syncs preload panes for dirty tile updates outside active scrolling', () => {
     const animationFrames = installManualAnimationFrames()
     const drawFrame = vi.fn<WorkbookPaneFrameDrawerV3>()
     const runtime = new WorkbookPaneRendererRuntimeV3(drawFrame)
@@ -774,7 +774,43 @@ describe('WorkbookPaneRendererHostRuntimeV3', () => {
     runtime.requestDraw()
     animationFrames.flushNextFrame()
 
-    expect(drawFrame).toHaveBeenCalledWith(expect.objectContaining({ syncPreloadPanes: false }))
+    expect(drawFrame).toHaveBeenCalledWith(expect.objectContaining({ syncPreloadPanes: true }))
+    runtime.dispose()
+    animationFrames.restore()
+  })
+
+  test('requests a visible frame when dirty tile panes arrive', () => {
+    const animationFrames = installManualAnimationFrames()
+    const drawFrame = vi.fn<WorkbookPaneFrameDrawerV3>(() => true)
+    const runtime = new WorkbookPaneRendererRuntimeV3(drawFrame)
+    const dirtyPane = createDirtyTilePane()
+
+    runtime.updateState(
+      withVisibleSceneProof({
+        active: true,
+        backend: {},
+        headerPanes: [],
+        overlay: null,
+        overlayBuilder: null,
+        preloadTilePanes: [dirtyPane],
+        scrollTransformStore: null,
+        surface: {
+          dpr: 1,
+          height: 360,
+          pixelHeight: 360,
+          pixelWidth: 640,
+          width: 640,
+        },
+        tilePanes: [dirtyPane],
+        webGpuReady: true,
+      }),
+    )
+
+    expect(drawFrame).not.toHaveBeenCalled()
+    animationFrames.flushNextFrame()
+
+    expect(drawFrame).toHaveBeenCalledTimes(1)
+    expect(drawFrame).toHaveBeenCalledWith(expect.objectContaining({ syncPreloadPanes: true }))
     runtime.dispose()
     animationFrames.restore()
   })

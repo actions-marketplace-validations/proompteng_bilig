@@ -118,7 +118,7 @@ export function resolveBrowserTestPhases(input: {
     phases.push(
       {
         label: 'browser perf tests',
-        args: ['--workers=1', '--grep', BROWSER_PERF_GREP, '--grep-invert', BROWSER_WEBGPU_GREP],
+        args: ['--workers=1', '--grep', BROWSER_PERF_GREP, '--grep-invert', [BROWSER_WEBGPU_GREP, BROWSER_SYNC_GREP].join('|')],
       },
       {
         label: 'browser webgpu perf tests',

@@ -131,7 +131,7 @@ agent continues.
 
 ## Related
 
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [Agent framework spreadsheet tools](vercel-ai-sdk-langchain-spreadsheet-tool.md)
 - [Workbook tools for agent frameworks](agent-framework-workbook-tools.md)
 - [Agent WorkPaper tool-calling recipe](agent-workpaper-tool-calling-recipe.md)

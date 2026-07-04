@@ -63,9 +63,9 @@ export function parseImportExportFidelityContract(value: unknown): ImportExportF
   }
 }
 
-export function validateImportExportFidelityContract(scorecard: ImportExportFidelityContract): void {
+export function validateImportExportFidelityContract(contract: ImportExportFidelityContract): void {
   for (const id of requiredCaseIds) {
-    const entry = requiredCase(scorecard.cases, id)
+    const entry = requiredCase(contract.cases, id)
     if (!entry.required) {
       throw new Error(`Import/export fidelity contract required case is not marked required: ${id}`)
     }
@@ -76,37 +76,37 @@ export function validateImportExportFidelityContract(scorecard: ImportExportFide
       throw new Error(`Import/export fidelity contract required case reports missing features: ${id}`)
     }
   }
-  if (!scorecard.summary.allRequiredCasesPassed) {
+  if (!contract.summary.allRequiredCasesPassed) {
     throw new Error('Import/export fidelity contract summary reports failed required cases')
   }
-  if (!scorecard.summary.csvRoundTripPassed || !scorecard.summary.xlsxImportPassed || !scorecard.summary.xlsxSnapshotRoundTripPassed) {
+  if (!contract.summary.csvRoundTripPassed || !contract.summary.xlsxImportPassed || !contract.summary.xlsxSnapshotRoundTripPassed) {
     throw new Error('Import/export fidelity contract summary is missing required CSV/XLSX pass coverage')
   }
-  validateSummaryCoveredFeatures(scorecard)
-  validateSemanticLedger(scorecard)
-  const unsupportedFeatures = importExportUnsupportedFeatures(scorecard.semanticLedger)
+  validateSummaryCoveredFeatures(contract)
+  validateSemanticLedger(contract)
+  const unsupportedFeatures = importExportUnsupportedFeatures(contract.semanticLedger)
   for (const feature of unsupportedFeatures) {
-    if (!scorecard.summary.unsupportedFeatures.includes(feature)) {
+    if (!contract.summary.unsupportedFeatures.includes(feature)) {
       throw new Error(`Import/export fidelity contract is missing unsupported feature disclosure: ${feature}`)
     }
   }
-  if (scorecard.summary.unsupportedFeatures.length !== unsupportedFeatures.length) {
+  if (contract.summary.unsupportedFeatures.length !== unsupportedFeatures.length) {
     throw new Error('Import/export fidelity contract reports unexpected unsupported import/export features')
   }
-  const declinedRuntimeFeatures = importExportDeclinedRuntimeFeatures(scorecard.semanticLedger)
+  const declinedRuntimeFeatures = importExportDeclinedRuntimeFeatures(contract.semanticLedger)
   for (const feature of declinedRuntimeFeatures) {
-    if (!scorecard.summary.declinedRuntimeFeatures.includes(feature)) {
+    if (!contract.summary.declinedRuntimeFeatures.includes(feature)) {
       throw new Error(`Import/export fidelity contract is missing declined runtime feature disclosure: ${feature}`)
     }
   }
 }
 
-function validateSemanticLedger(scorecard: ImportExportFidelityContract): void {
-  const expectedLedger = buildImportExportSemanticLedger(scorecard.summary.coveredFeatures)
-  if (JSON.stringify(scorecard.semanticLedger) !== JSON.stringify(expectedLedger)) {
+function validateSemanticLedger(contract: ImportExportFidelityContract): void {
+  const expectedLedger = buildImportExportSemanticLedger(contract.summary.coveredFeatures)
+  if (JSON.stringify(contract.semanticLedger) !== JSON.stringify(expectedLedger)) {
     throw new Error('Import/export fidelity semantic ledger is stale against the current feature evidence')
   }
-  const dispositions = new Set(scorecard.semanticLedger.map((entry) => entry.disposition))
+  const dispositions = new Set(contract.semanticLedger.map((entry) => entry.disposition))
   for (const requiredDisposition of ['preserved', 'declined-runtime'] satisfies ImportExportSemanticDisposition[]) {
     if (!dispositions.has(requiredDisposition)) {
       throw new Error(`Import/export fidelity semantic ledger is missing ${requiredDisposition} entries`)
@@ -114,9 +114,9 @@ function validateSemanticLedger(scorecard: ImportExportFidelityContract): void {
   }
 }
 
-function validateSummaryCoveredFeatures(scorecard: ImportExportFidelityContract): void {
-  const caseFeatures = new Set(scorecard.cases.flatMap((entry) => entry.coveredFeatures))
-  const summaryFeatures = new Set(scorecard.summary.coveredFeatures)
+function validateSummaryCoveredFeatures(contract: ImportExportFidelityContract): void {
+  const caseFeatures = new Set(contract.cases.flatMap((entry) => entry.coveredFeatures))
+  const summaryFeatures = new Set(contract.summary.coveredFeatures)
   for (const feature of caseFeatures) {
     if (!summaryFeatures.has(feature)) {
       throw new Error(`Import/export fidelity contract summary is missing covered feature: ${feature}`)

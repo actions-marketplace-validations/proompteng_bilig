@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
-import { importWorkbookFile } from '@bilig/excel-import'
-import type { ImportedWorkbookPreview } from '@bilig/excel-import'
 import type { WorkbookImportContentType } from '@bilig/agent-api'
+import type { ImportedWorkbookPreview } from '@bilig/excel-import/browser'
+import { importWorkbookFile } from '@bilig/excel-import/browser'
 
 declare const self: DedicatedWorkerGlobalScope
 

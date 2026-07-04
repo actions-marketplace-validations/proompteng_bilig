@@ -417,7 +417,7 @@ This package is released as part of the aligned bilig library package set.
 - docs(agent): add google adk workpaper proof (53fec737)
 - docs(agent): advertise ai sdk workpaper tools (02a829b9)
 - test(workpaper): copy external typecheck config (3eb87e55)
-- docs(agent): add workpaper proof matrix (99631461)
+- docs(agent): add workpaper evaluator matrix (99631461)
 - docs(agent): expand agent-start rule targets (aecbdcf0)
 - docs(agent): expand coding agent discovery (190e48a4)
 - docs(growth): add stale formula readback chooser (059d739a)
@@ -449,7 +449,7 @@ This package is released as part of the aligned bilig library package set.
 - docs(agent): add google adk workpaper proof (53fec737)
 - docs(agent): advertise ai sdk workpaper tools (02a829b9)
 - test(workpaper): copy external typecheck config (3eb87e55)
-- docs(agent): add workpaper proof matrix (99631461)
+- docs(agent): add workpaper evaluator matrix (99631461)
 - docs(agent): expand agent-start rule targets (aecbdcf0)
 - docs(agent): expand coding agent discovery (190e48a4)
 - docs(growth): add stale formula readback chooser (059d739a)
@@ -738,7 +738,7 @@ This package is released as part of the aligned bilig library package set.
 
 ## Internal runtime changes
 
-- chore(formula): refresh formula dominance snapshot (36eb1751)
+- chore(formula): refresh formula contract snapshot (36eb1751)
 
 ## 0.133.0
 
@@ -1384,9 +1384,9 @@ This package is released as part of the aligned bilig library package set.
 - fix(headless): preserve cross-sheet aggregate dependencies (99d8913a)
 - perf(core): index initial aggregate dependency checks (1f912d26)
 - fix(release): sync benchmark evidence before publish (7a3f6a59)
-- perf(headless): publish all-provider leadership proof (a1c26626)
+- perf(headless): publish all-provider benchmark report (a1c26626)
 - fix(release): install benchmark card renderer for publish (e9f1715d)
-- perf(headless): achieve all-provider benchmark leadership (94fa5896)
+- perf(headless): publish all-provider benchmark report (94fa5896)
 - fix(release): regenerate evidence after version bump (053a7134)
 - fix(release): keep benchmark checks stable across version bumps (e892b3cf)
 
@@ -1686,7 +1686,7 @@ This package is released as part of the aligned bilig library package set.
 - fix(headless): preserve cross-sheet aggregate dependencies (99d8913a)
 - perf(core): index initial aggregate dependency checks (1f912d26)
 - fix(release): sync benchmark evidence before publish (7a3f6a59)
-- perf(headless): publish all-provider leadership proof (a1c26626)
+- perf(headless): publish all-provider benchmark report (a1c26626)
 - fix(release): install benchmark card renderer for publish (e9f1715d)
 
 ## Internal runtime changes
@@ -8726,7 +8726,7 @@ This package is released as part of the aligned bilig library package set.
 - fix(headless): resolve real workbook import regressions (5ca9d46a)
 - fix(ci): keep workbook worker release budget green (9f2dbfe5)
 - fix(headless): restore dynamic spills from documents (2c57d688)
-- perf(workbook): harden headless engine leadership gates (b0e399e9)
+- perf(workbook): harden headless engine benchmark gates (b0e399e9)
 - fix(core): support literal leaf formula fast path (ebc51a7d)
 - fix(ci): build protocol before release metadata push (1694f56f)
 - fix(ci): tolerate mirrored github release push (ae7bcdce)
@@ -8754,7 +8754,7 @@ This package is released as part of the aligned bilig library package set.
 - fix(headless): resolve real workbook import regressions (5ca9d46a)
 - fix(ci): keep workbook worker release budget green (9f2dbfe5)
 - fix(headless): restore dynamic spills from documents (2c57d688)
-- perf(workbook): harden headless engine leadership gates (b0e399e9)
+- perf(workbook): harden headless engine benchmark gates (b0e399e9)
 - fix(core): support literal leaf formula fast path (ebc51a7d)
 - fix(ci): build protocol before release metadata push (1694f56f)
 - fix(ci): tolerate mirrored github release push (ae7bcdce)
@@ -8781,7 +8781,7 @@ This package is released as part of the aligned bilig library package set.
 - fix(headless): resolve real workbook import regressions (5ca9d46a)
 - fix(ci): keep workbook worker release budget green (9f2dbfe5)
 - fix(headless): restore dynamic spills from documents (2c57d688)
-- perf(workbook): harden headless engine leadership gates (b0e399e9)
+- perf(workbook): harden headless engine benchmark gates (b0e399e9)
 - fix(core): support literal leaf formula fast path (ebc51a7d)
 - fix(ci): build protocol before release metadata push (1694f56f)
 - fix(ci): tolerate mirrored github release push (ae7bcdce)
@@ -8807,7 +8807,7 @@ This package is released as part of the aligned bilig library package set.
 - fix(headless): resolve real workbook import regressions (5ca9d46a)
 - fix(ci): keep workbook worker release budget green (9f2dbfe5)
 - fix(headless): restore dynamic spills from documents (2c57d688)
-- perf(workbook): harden headless engine leadership gates (b0e399e9)
+- perf(workbook): harden headless engine benchmark gates (b0e399e9)
 - fix(core): support literal leaf formula fast path (ebc51a7d)
 - fix(ci): build protocol before release metadata push (1694f56f)
 - fix(ci): tolerate mirrored github release push (ae7bcdce)
@@ -8830,7 +8830,7 @@ This package is released as part of the aligned bilig library package set.
 - fix(headless): resolve real workbook import regressions (5ca9d46a)
 - fix(ci): keep workbook worker release budget green (9f2dbfe5)
 - fix(headless): restore dynamic spills from documents (2c57d688)
-- perf(workbook): harden headless engine leadership gates (b0e399e9)
+- perf(workbook): harden headless engine benchmark gates (b0e399e9)
 - fix(core): support literal leaf formula fast path (ebc51a7d)
 - fix(ci): build protocol before release metadata push (1694f56f)
 - fix(ci): tolerate mirrored github release push (ae7bcdce)
@@ -8852,7 +8852,7 @@ This package is released as part of the aligned bilig library package set.
 - fix(headless): resolve real workbook import regressions (5ca9d46a)
 - fix(ci): keep workbook worker release budget green (9f2dbfe5)
 - fix(headless): restore dynamic spills from documents (2c57d688)
-- perf(workbook): harden headless engine leadership gates (b0e399e9)
+- perf(workbook): harden headless engine benchmark gates (b0e399e9)
 - fix(core): support literal leaf formula fast path (ebc51a7d)
 - fix(ci): build protocol before release metadata push (1694f56f)
 

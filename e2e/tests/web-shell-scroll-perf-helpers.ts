@@ -84,6 +84,14 @@ export async function warmStartWorkbookScrollPerf(page: Page, workload: string, 
     }
     const surfaceCommits = Object.values(warmupReport.counters.surfaceCommits ?? {})
     const hasSurfaceCommitNoise = surfaceCommits.some((count) => count > 0)
+    const hasRendererDeltaNoise =
+      warmupReport.counters.damagePatches > 0 ||
+      warmupReport.counters.dirtyTilesMarked > 0 ||
+      warmupReport.counters.rendererDeltaBatches > 0 ||
+      warmupReport.counters.rendererDeltaMutations > 0 ||
+      warmupReport.counters.rendererVisibleDirtyTiles > 0 ||
+      warmupReport.counters.rendererWarmDirtyTiles > 0 ||
+      warmupReport.samples.mutationToVisibleMs.length > 0
     const hasTypeGpuWarmupNoise =
       warmupReport.counters.typeGpuAtlasUploadBytes > 0 ||
       warmupReport.counters.typeGpuBufferAllocations > 0 ||
@@ -98,6 +106,7 @@ export async function warmStartWorkbookScrollPerf(page: Page, workload: string, 
       warmupReport.counters.canvasSurfaceMounts > 0 ||
       warmupReport.counters.domSurfaceMounts > 0 ||
       hasSurfaceCommitNoise ||
+      hasRendererDeltaNoise ||
       hasTypeGpuWarmupNoise
     if (!hasRenderNoise) {
       return
@@ -125,10 +134,10 @@ export async function resetGridScroll(page: Page, input: { left?: number; top?: 
 
 export async function settleWorkbookScrollPerf(page: Page, frames = 4) {
   await page.evaluate(async (frameCount) => {
-    await Array.from({ length: frameCount }).reduce<Promise<void>>(async (previous) => {
-      await previous
-      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
-    }, Promise.resolve())
+    await Array.from({ length: frameCount }).reduce<Promise<void>>(
+      (previousFrame) => previousFrame.then(() => new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))),
+      Promise.resolve(),
+    )
   }, frames)
 }
 
@@ -141,7 +150,7 @@ export async function stopWorkbookScrollPerf(page: Page) {
             stopSampling?: () => {
               workload: string
               fixture: { id: string; materializedCellCount: number; sheetName: string } | null
-              samples: { frameMs: number[]; inputToDrawMs: number[]; longTasksMs: number[] }
+              samples: { frameMs: number[]; inputToDrawMs: number[]; longTasksMs: number[]; mutationToVisibleMs: number[] }
               summary: {
                 frameMs: { min: number; median: number; p95: number; p99: number; max: number }
                 inputToDrawMs: { min: number; median: number; p95: number; p99: number; max: number }
@@ -152,6 +161,9 @@ export async function stopWorkbookScrollPerf(page: Page) {
                 fullPatches: number
                 damagePatches: number
                 damageCells: number
+                dirtyTilesMarked: number
+                rendererDeltaBatches: number
+                rendererDeltaMutations: number
                 rendererTileInterestBatches: number
                 rendererTileExactHits: number
                 rendererTileStaleHits: number

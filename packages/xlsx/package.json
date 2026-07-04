@@ -39,6 +39,11 @@
       "import": "./dist/address.js",
       "default": "./dist/address.js"
     },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js",
+      "default": "./dist/browser.js"
+    },
     "./file-source": {
       "types": "./dist/file-source.d.ts",
       "import": "./dist/file-source.js",
@@ -63,6 +68,11 @@
       "types": "./dist/source-preserving-zip.d.ts",
       "import": "./dist/source-preserving-zip.js",
       "default": "./dist/source-preserving-zip.js"
+    },
+    "./source-preserving-zip-file": {
+      "types": "./dist/source-preserving-zip-file.d.ts",
+      "import": "./dist/source-preserving-zip-file.js",
+      "default": "./dist/source-preserving-zip-file.js"
     },
     "./source-preserving-literal-patches": {
       "types": "./dist/source-preserving-literal-patches.d.ts",

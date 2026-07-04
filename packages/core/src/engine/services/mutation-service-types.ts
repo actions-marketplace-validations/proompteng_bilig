@@ -1,16 +1,23 @@
+import type { CellRangeRef, CellSnapshot, LiteralInput } from '@bilig/protocol'
+import type { EngineOp, EngineOpBatch } from '@bilig/workbook'
 import type { Effect } from 'effect'
-import type { CellRangeRef, LiteralInput } from '@bilig/protocol'
-import type { EngineOp } from '@bilig/workbook'
 import type {
   EngineCellMutationRef,
   EngineExistingLiteralCellMutationRef,
   EngineExistingNumericCellMutationRef,
-  EngineExistingNumericCellMutationsRef,
   EngineExistingNumericCellMutationResult,
+  EngineExistingNumericCellMutationsRef,
 } from '../../cell-mutations-at.js'
 import type { CsvParseOptions } from '../../csv.js'
-import type { CommitOp, TransactionRecord } from '../runtime-state.js'
+import type { WorkbookStore } from '../../workbook-store.js'
 import type { EngineMutationError } from '../errors.js'
+import type {
+  CommitOp,
+  EngineRuntimeState,
+  PreparedCellAddress,
+  RuntimeStructuralFormulaSourceTransform,
+  TransactionRecord,
+} from '../runtime-state.js'
 
 export interface EngineMutationService {
   readonly executeTransactionNow: (record: TransactionRecord, source: 'local' | 'restore' | 'undo' | 'redo') => void
@@ -114,4 +121,67 @@ export interface EngineMutationService {
   readonly moveRange: (source: CellRangeRef, target: CellRangeRef) => Effect.Effect<void, EngineMutationError>
   readonly importSheetCsv: (sheetName: string, csv: string, options?: CsvParseOptions) => Effect.Effect<void, EngineMutationError>
   readonly renderCommit: (ops: CommitOp[]) => Effect.Effect<void, EngineMutationError>
+}
+
+export interface CreateEngineMutationServiceArgs {
+  readonly state: Pick<
+    EngineRuntimeState,
+    | 'replicaState'
+    | 'batchListeners'
+    | 'formulas'
+    | 'undoStack'
+    | 'redoStack'
+    | 'counters'
+    | 'trackReplicaVersions'
+    | 'getSyncClientConnection'
+    | 'getTransactionReplayDepth'
+    | 'setTransactionReplayDepth'
+  > & {
+    readonly workbook: WorkbookStore
+  }
+  readonly captureSheetCellState: (sheetName: string) => EngineOp[]
+  readonly captureRowRangeCellState: (sheetName: string, start: number, count: number) => EngineOp[]
+  readonly captureColumnRangeCellState: (sheetName: string, start: number, count: number) => EngineOp[]
+  readonly captureStoredCellOps: (cellIndex: number, sheetName: string, address: string) => EngineOp[]
+  readonly restoreCellOps: (sheetName: string, address: string) => EngineOp[]
+  readonly getCellByIndex: (cellIndex: number) => CellSnapshot
+  readonly getFormulaFamilyStructuralSourceTransform?: (cellIndex: number) => RuntimeStructuralFormulaSourceTransform | undefined
+  readonly hasFormulaFamilyStructuralSourceTransforms?: () => boolean
+  readonly readRangeCells: (range: CellRangeRef) => CellSnapshot[][]
+  readonly toCellStateOps: (
+    sheetName: string,
+    address: string,
+    snapshot: CellSnapshot,
+    sourceSheetName?: string,
+    sourceAddress?: string,
+  ) => EngineOp[]
+  readonly applyBatchNow: (
+    batch: EngineOpBatch,
+    source: 'local' | 'restore' | 'undo' | 'redo',
+    potentialNewCells?: number,
+    preparedCellAddressesByOpIndex?: readonly (PreparedCellAddress | null)[],
+    options?: { readonly emitTracked?: boolean },
+  ) => void
+  readonly applyLocalSingleStructuralAxisOpWithoutBatchNow?: (
+    op: Extract<EngineOp, { kind: 'insertRows' | 'insertColumns' }>,
+    options?: { readonly emitTracked?: boolean; readonly recordHistory?: boolean },
+  ) => boolean
+  readonly applyCellMutationsAtBatchNow: (
+    refs: readonly EngineCellMutationRef[],
+    batch: EngineOpBatch | null,
+    source: 'local' | 'restore' | 'undo' | 'redo',
+    potentialNewCells?: number,
+  ) => void
+  readonly applyExistingNumericCellMutationsAtBatchNow?: (
+    record: Extract<TransactionRecord, { kind: 'existing-numeric-cell-mutations' }>,
+    batch: EngineOpBatch | null,
+    source: 'local' | 'restore' | 'undo' | 'redo',
+  ) => boolean
+  readonly applyExistingNumericCellMutationAtNow?: (
+    request: EngineExistingNumericCellMutationRef,
+  ) => EngineExistingNumericCellMutationResult | null
+  readonly applyExistingLiteralCellMutationAtNow?: (
+    request: EngineExistingLiteralCellMutationRef,
+  ) => EngineExistingNumericCellMutationResult | null
+  readonly hasExternallyVisibleLocalMutationObservers?: () => boolean
 }

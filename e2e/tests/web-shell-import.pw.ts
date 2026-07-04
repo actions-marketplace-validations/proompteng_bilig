@@ -1,5 +1,3 @@
-import { readFile, writeFile } from 'node:fs/promises'
-import { expect, type Page, test } from '@playwright/test'
 import {
   decodeCellAddress,
   encodeCellAddress,
@@ -9,6 +7,8 @@ import {
   type SimpleXlsxMergeRange,
   type SimpleXlsxSheet,
 } from '@bilig/xlsx'
+import { expect, test, type Page } from '@playwright/test'
+import { readFile, writeFile } from 'node:fs/promises'
 import { getProductColumnWidth, gotoWorkbookShell, waitForWorkbookReady } from './web-shell-helpers.js'
 
 const XLSX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -254,7 +254,7 @@ for (const fixture of generatedFixtures) {
     await page.getByRole('tab', { name: fixture.expectation.activeSheetName }).click()
     await expect.poll(async () => await getProductColumnWidth(page, 0), { timeout: 15_000 }).toBe(fixture.expectation.expectedColumnWidth)
     for (const cell of fixture.expectation.cells) {
-      // oxlint-disable-next-line eslint(no-await-in-loop)
+      // oxlint-disable-next-line eslint(no-await-in-loop) -- imports must verify cells sequentially against workbook UI state
       await expectImportedCell(page, cell.sheetName, cell.address, cell.value)
     }
   })

@@ -99,7 +99,7 @@ export async function requireAgentRuleChooserDiscovery(input: {
     'https://zed.dev/docs/ai/tool-permissions',
     'https://junie.jetbrains.com/docs/junie-plugin-mcp-settings.html',
     'https://junie.jetbrains.com/docs/guidelines-and-memory.html',
-    '[Agent WorkPaper proof matrix](agent-proof-matrix.md)',
+    '[Agent WorkPaper evaluator matrix](agent-proof-matrix.md)',
   ] as const) {
     requireIncludes(agentRuleChooser, required, 'docs/agent-rule-chooser.md')
   }

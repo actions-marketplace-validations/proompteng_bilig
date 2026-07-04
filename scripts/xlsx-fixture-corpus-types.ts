@@ -133,7 +133,7 @@ export interface XlsxFixtureCorpusCase {
   readonly evidence: readonly string[]
 }
 
-export interface XlsxFixtureCorpusScorecard {
+export interface XlsxFixtureCorpusContractReport {
   readonly schemaVersion: 1
   readonly suite: 'xlsx-fixture-corpus'
   readonly generatedAt: string
@@ -166,7 +166,7 @@ export interface FormulaOracleValidationResult {
   readonly mismatches: readonly string[]
 }
 
-export interface BuildScorecardArgs {
+export interface BuildContractReportArgs {
   readonly manifest: XlsxFixtureManifest
   readonly cacheDir: string
   readonly generatedAt?: string

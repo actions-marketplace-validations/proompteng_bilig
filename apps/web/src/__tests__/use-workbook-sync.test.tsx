@@ -488,7 +488,7 @@ describe('useWorkbookSync', () => {
       await Promise.resolve()
     })
     expect(replacementSetRowHeight).toHaveBeenCalledTimes(1)
-    expect(replacementSetRowHeight).toHaveBeenCalledWith('SheetB', 6, 44)
+    expect(replacementSetRowHeight).toHaveBeenCalledWith('SheetB', 6, 44, { emitLocalDelta: false })
     await act(async () => {
       frames.flushNext()
       await stableStorePromise
@@ -1067,7 +1067,11 @@ describe('useWorkbookSync', () => {
     }
     const activeSync = sync
 
-    const firstPersisted = activeSync.invokeMutation('setCellValue', 'Sheet1', 'D12', 'delete-undo-redo')
+    let firstPersisted!: Promise<void>
+    await act(async () => {
+      firstPersisted = activeSync.invokeMutation('setCellValue', 'Sheet1', 'D12', 'delete-undo-redo')
+      await Promise.resolve()
+    })
     await vi.waitFor(() => {
       expect(runtimeController.invoke).toHaveBeenCalledWith('enqueuePendingMutation', {
         method: 'setCellValue',
@@ -1075,18 +1079,23 @@ describe('useWorkbookSync', () => {
       })
     })
 
-    const undoApplied = activeSync.undoLocalChange()
-    await Promise.resolve()
+    let undoApplied!: Promise<boolean>
+    await act(async () => {
+      undoApplied = activeSync.undoLocalChange()
+      await Promise.resolve()
+    })
     expect(runtimeController.invoke).not.toHaveBeenCalledWith('undoLocalChange')
 
-    resolveFirstMutation?.({
-      ...createPendingMutation(),
-      id: 'pending-1',
-      localSeq: 1,
-      args: ['Sheet1', 'D12', 'delete-undo-redo'],
+    await act(async () => {
+      resolveFirstMutation?.({
+        ...createPendingMutation(),
+        id: 'pending-1',
+        localSeq: 1,
+        args: ['Sheet1', 'D12', 'delete-undo-redo'],
+      })
+      await firstPersisted
+      await undoApplied
     })
-    await firstPersisted
-    await undoApplied
 
     const invokedMethods = runtimeController.invoke.mock.calls.map(([method]) => method)
     expect(invokedMethods).toEqual(['enqueuePendingMutation', 'undoLocalChange'])

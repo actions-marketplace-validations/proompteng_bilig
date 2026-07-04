@@ -141,7 +141,7 @@ That evaluator starts the published WorkPaper tool server, discovers tools,
 edits an input, reads the dependent formula, exports JSON, restarts, restores,
 and returns `verified: true`. Use
 [`llms-install.md`](llms-install.md) when a host wants one install file, and use
-the [tool-host proof matrix](docs/agent-proof-matrix.md) when the host matters
+the [tool-host evaluator matrix](docs/agent-proof-matrix.md) when the host matters
 more than the package boundary.
 
 The published package also carries `AGENTS.md` and `SKILL.md` so hosts
@@ -191,7 +191,7 @@ Run one evaluator first. Then use the recipe that matches the platform boundary:
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | Node service formulas             | [Node service WorkPaper evaluator](docs/eval-workpaper-service.md)                                                                                                                                                                                                                                           | A starter writes one input, recalculates, persists JSON, restores, and prints `verified: true`.           |
 | MCP tool contract                 | [MCP workbook evaluator](docs/eval-agent-mcp.md)                                                                                                                                                                                                                                                             | MCP tool discovery, input edit, formula readback, persistence, and restart proof all pass.                |
-| Integration proof chooser         | [Tool-host proof matrix](docs/agent-proof-matrix.md), [MCP spreadsheet tool server](docs/mcp-spreadsheet-formula-server-for-coding-agents.md), and [Vercel AI SDK formula readback](docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md) | The integration path starts with the smallest verified proof and avoids write-only or UI-only claims.     |
+| Integration proof chooser         | [Tool-host evaluator matrix](docs/agent-proof-matrix.md), [MCP spreadsheet tool server](docs/mcp-spreadsheet-formula-server-for-coding-agents.md), and [Vercel AI SDK formula readback](docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md) | The integration path starts with the smallest verified proof and avoids write-only or UI-only claims.     |
 | Runtime intent adapters           | [Workbook runtime intent API](docs/workbook-runtime-intent-api.md) and [runtime intent example](https://github.com/proompteng/bilig/tree/main/examples/workbook-agent-model)                                                                                                                                 | A model prepares transport-neutral plan data, strict runtime proof, command receipts, and check evidence. |
 | Basic fit                         | [Why use Bilig?](docs/why-use-bilig.md)                                                                                                                                                                                                                                                                      | The problem is workbook-shaped business logic that needs API readback and persistence.                    |
 | Published npm package             | [90-second Node quickstart](docs/try-bilig-headless-in-node.md)                                                                                                                                                                                                                                              | `@bilig/workpaper` edits one input, recalculates, persists JSON, restores, and prints `verified: true`.   |
@@ -454,7 +454,7 @@ the [Node spreadsheet formula engine guide](docs/node-spreadsheet-formula-engine
 [OpenCode MCP setup](docs/opencode-workpaper-mcp.md),
 [Microsoft Agent Framework MCP tools](docs/microsoft-agent-framework-workpaper-mcp.md),
 [Goose MCP recipe](docs/goose-workpaper-mcp.md),
-[tool-host proof matrix](docs/agent-proof-matrix.md),
+[tool-host evaluator matrix](docs/agent-proof-matrix.md),
 [MCP spreadsheet formula server for tool hosts](docs/mcp-spreadsheet-formula-server-for-coding-agents.md),
 [Vercel AI SDK formula readback](docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md),
 [AI SDK and LangChain tools](docs/vercel-ai-sdk-langchain-spreadsheet-tool.md),

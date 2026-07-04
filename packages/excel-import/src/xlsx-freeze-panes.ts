@@ -1,10 +1,10 @@
-import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
+import { decodeCellAddress, encodeCellAddress } from '@bilig/xlsx/browser'
 import { XMLParser } from 'fast-xml-parser'
-import { decodeCellAddress, encodeCellAddress } from '@bilig/xlsx'
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 
 import type { WorkbookFreezePaneActivePane, WorkbookFreezePaneSnapshot, WorkbookSnapshot } from '@bilig/protocol'
-import { readXlsxZipEntries, type XlsxZipSource } from './xlsx-zip.js'
 import { workbookSheetPathEntriesFromSource } from './xlsx-workbook-sheet-paths.js'
+import { readXlsxZipEntries, type XlsxZipSource } from './xlsx-zip.js'
 
 type ZipEntries = Record<string, Uint8Array>
 

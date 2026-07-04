@@ -1,5 +1,5 @@
+import { decodeCellRange } from '@bilig/xlsx/browser'
 import type { Unzipped } from 'fflate'
-import { decodeCellRange } from '@bilig/xlsx'
 
 const textDecoder = new TextDecoder()
 

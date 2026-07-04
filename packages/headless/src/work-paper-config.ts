@@ -1,5 +1,5 @@
-import { MAX_COLS, MAX_ROWS, type WorkbookCalculationSettingsSnapshot } from '@bilig/protocol'
 import { normalizeWorkbookCalculationSettings } from '@bilig/core/headless-runtime'
+import { MAX_COLS, MAX_ROWS, type WorkbookCalculationSettingsSnapshot } from '@bilig/protocol'
 import {
   WorkPaperConfigValueTooBigError,
   WorkPaperConfigValueTooSmallError,
@@ -181,6 +181,14 @@ export function cloneConfig(config: WorkPaperConfig): WorkPaperConfig {
     cloned.timeFormats = [...config.timeFormats]
   }
   return cloned
+}
+
+export function resolveConfiguredWorkPaperConfig(configInput: WorkPaperConfig): WorkPaperConfig {
+  validateWorkPaperConfig(configInput)
+  return {
+    ...cloneConfig(DEFAULT_CONFIG),
+    ...cloneConfig(configInput),
+  }
 }
 
 export function normalizeConfiguredWorkPaperCalculationSettings(

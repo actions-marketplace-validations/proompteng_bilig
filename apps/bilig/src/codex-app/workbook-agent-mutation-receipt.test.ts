@@ -1,4 +1,3 @@
-import { SpreadsheetEngine } from '@bilig/core'
 import {
   createWorkbookAgentCommandBundle,
   type CodexDynamicToolCallResult,
@@ -7,16 +6,17 @@ import {
   type WorkbookAgentExecutionRecord,
 } from '@bilig/agent-api'
 import type { WorkbookAgentUiContext } from '@bilig/contracts'
+import { SpreadsheetEngine } from '@bilig/core'
 import { ValueTag } from '@bilig/protocol'
 import type { AuthoritativeWorkbookEventBatch } from '@bilig/zero-sync'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { applyWorkbookAgentCommandBundleWithUndoCapture } from '../zero/workbook-agent-apply.js'
+import type { WorkbookRuntime } from '../workbook-runtime/runtime-manager.js'
 import { buildWorkbookSourceProjectionFromEngine } from '../zero/projection.js'
 import type { ZeroSyncService } from '../zero/service.js'
+import { applyWorkbookAgentCommandBundleWithUndoCapture } from '../zero/workbook-agent-apply.js'
 import type { WorkbookChangeRecord } from '../zero/workbook-change-store.js'
-import type { WorkbookRuntime } from '../workbook-runtime/runtime-manager.js'
-import { buildWorkbookAgentVerificationReport, stageWorkbookAgentCommandResult } from './workbook-agent-mutation-receipt.js'
+import { stageWorkbookAgentCommandResult } from './workbook-agent-mutation-receipt.js'
 import { buildWorkbookAgentVisibleCommitBarrierOutcome } from './workbook-agent-visible-commit-barrier.js'
 
 async function createEngine(): Promise<SpreadsheetEngine> {
@@ -393,7 +393,7 @@ const appliedPayloadSchema = z.object({
   }),
 })
 
-describe('workbook agent mutation receipt helpers', () => {
+describe('workbook agent mutation receipt applied and staged proofs', () => {
   it('returns a review-queued staged payload when the stage command only produces a bundle', async () => {
     const engine = await createEngine()
     const { zeroSyncService } = createZeroSyncHarness(engine)
@@ -1388,245 +1388,5 @@ describe('workbook agent mutation receipt helpers', () => {
       })
       .parse(parsePayload(result))
     expect(payload.mutationReceipt.warnings).toEqual([])
-  })
-
-  it('rejects applied status when rendered proof comes from a stale TypeGPU scene', async () => {
-    const engine = await createEngine()
-    const command: WorkbookAgentCommand = {
-      kind: 'writeRange',
-      sheetName: 'Sheet1',
-      startAddress: 'B2',
-      values: [['Visible value']],
-    }
-    const bundle = createBundle(command, 'bundle-stale-scene-proof')
-    const undoBundle = applyWorkbookAgentCommandBundleWithUndoCapture(engine, bundle)
-    const { zeroSyncService } = createZeroSyncHarness(engine, {
-      headRevision: 2,
-      calculatedRevision: 2,
-      changes: [
-        {
-          revision: 2,
-          actorUserId: 'alex@example.com',
-          clientMutationId: null,
-          eventKind: 'applyAgentCommandBundle',
-          summary: 'Write cells in Sheet1!B2',
-          sheetId: null,
-          sheetName: 'Sheet1',
-          anchorAddress: 'B2',
-          range: {
-            sheetName: 'Sheet1',
-            startAddress: 'B2',
-            endAddress: 'B2',
-          },
-          rangeInvalid: false,
-          undoBundle,
-          revertedByRevision: null,
-          revertsRevision: null,
-          createdAtUnixMs: 2,
-        },
-      ],
-    })
-
-    const result = await stageWorkbookAgentCommandResult(
-      {
-        documentId: 'doc-1',
-        session: { userID: 'alex@example.com', roles: ['editor'] },
-        uiContext: createRenderedContext({
-          address: 'B2',
-          value: 'Visible value',
-          capturedRevision: 2,
-          sceneProof: {
-            presentedSceneOwnershipSignature: 'scene-1',
-            visibleSceneOwnershipMatchesPresentedFrame: false,
-          },
-        }),
-        zeroSyncService,
-        stageCommand: async () => ({
-          bundle,
-          executionRecord: createExecutionRecord({
-            bundle,
-            appliedRevision: 2,
-            afterInput: 'Visible value',
-          }),
-        }),
-      },
-      command,
-      'writeRange',
-    )
-
-    const payload = z
-      .object({
-        applied: z.literal(false),
-        status: z.literal('verification_incomplete'),
-        summary: z.string(),
-        mutationReceipt: z.object({
-          status: z.literal('verification_incomplete'),
-          authoritativeReadback: z.object({
-            matched: z.literal(true),
-          }),
-          renderedReadback: z.object({
-            matched: z.null(),
-            stale: z.literal(true),
-            visibleSceneProof: z.object({
-              matched: z.literal(false),
-              visibleSceneOwnershipMatchesPresentedFrame: z.literal(false),
-              invalidReasons: z.array(z.string()),
-            }),
-          }),
-          warnings: z.array(z.string()),
-        }),
-      })
-      .parse(parsePayload(result))
-    expect(payload.summary).toContain('Verification incomplete')
-    expect(payload.mutationReceipt.renderedReadback.visibleSceneProof.invalidReasons).toContain(
-      'Presented visible-scene ownership does not match the current scene.',
-    )
-    expect(payload.mutationReceipt.warnings).toContain('Rendered TypeGPU visible-scene proof is incomplete or stale.')
-  })
-
-  it('rejects applied status when a rendered proof presents an older semantic mutation ownership', async () => {
-    const engine = await createEngine()
-    const command: WorkbookAgentCommand = {
-      kind: 'writeRange',
-      sheetName: 'Sheet1',
-      startAddress: 'B2',
-      values: [['Visible value']],
-    }
-    const bundle = createBundle(command, 'bundle-stale-semantic-proof')
-    const undoBundle = applyWorkbookAgentCommandBundleWithUndoCapture(engine, bundle)
-    const { zeroSyncService } = createZeroSyncHarness(engine, {
-      headRevision: 2,
-      calculatedRevision: 2,
-      changes: [
-        {
-          revision: 2,
-          actorUserId: 'alex@example.com',
-          clientMutationId: null,
-          eventKind: 'applyAgentCommandBundle',
-          summary: 'Write cells in Sheet1!B2',
-          sheetId: null,
-          sheetName: 'Sheet1',
-          anchorAddress: 'B2',
-          range: {
-            sheetName: 'Sheet1',
-            startAddress: 'B2',
-            endAddress: 'B2',
-          },
-          rangeInvalid: false,
-          undoBundle,
-          revertedByRevision: null,
-          revertsRevision: null,
-          createdAtUnixMs: 2,
-        },
-      ],
-    })
-
-    const result = await stageWorkbookAgentCommandResult(
-      {
-        documentId: 'doc-1',
-        session: { userID: 'alex@example.com', roles: ['editor'] },
-        uiContext: createRenderedContext({
-          address: 'B2',
-          value: 'Visible value',
-          capturedRevision: 2,
-          sceneProof: {
-            presentedSemanticMutationRevision: '1',
-          },
-        }),
-        zeroSyncService,
-        stageCommand: async () => ({
-          bundle,
-          executionRecord: createExecutionRecord({
-            bundle,
-            appliedRevision: 2,
-            afterInput: 'Visible value',
-          }),
-        }),
-      },
-      command,
-      'writeRange',
-    )
-
-    const payload = z
-      .object({
-        applied: z.literal(false),
-        status: z.literal('verification_incomplete'),
-        mutationReceipt: z.object({
-          status: z.literal('verification_incomplete'),
-          authoritativeReadback: z.object({
-            matched: z.literal(true),
-          }),
-          renderedReadback: z.object({
-            matched: z.null(),
-            stale: z.literal(true),
-            visibleSceneProof: z.object({
-              matched: z.literal(false),
-              visibleSemanticMutationRevisionMatchesPresentedFrame: z.literal(false),
-              invalidReasons: z.array(z.string()),
-            }),
-          }),
-        }),
-      })
-      .parse(parsePayload(result))
-    expect(payload.mutationReceipt.renderedReadback.visibleSceneProof.invalidReasons).toContain(
-      'Presented semantic mutation revision does not match the current authoritative scene.',
-    )
-  })
-
-  it('builds verification reports with matching rendered readback and optional audits disabled', async () => {
-    const engine = await createEngine()
-    const { zeroSyncService } = createZeroSyncHarness(engine, {
-      headRevision: 3,
-      calculatedRevision: 3,
-    })
-
-    const report = await buildWorkbookAgentVerificationReport({
-      context: {
-        documentId: 'doc-1',
-        session: { userID: 'alex@example.com', roles: ['editor'] },
-        uiContext: createRenderedContext({
-          address: 'C3',
-          value: 'Verified value',
-          capturedRevision: 3,
-        }),
-        zeroSyncService,
-        stageCommand: async () =>
-          createBundle(
-            {
-              kind: 'writeRange',
-              sheetName: 'Sheet1',
-              startAddress: 'C3',
-              values: [['unused']],
-            },
-            'bundle-unused',
-          ),
-      },
-      revision: 3,
-      ranges: [
-        {
-          sheetName: 'Sheet1',
-          startAddress: 'C3',
-          endAddress: 'C3',
-        },
-      ],
-      includeFormulaIssues: false,
-      includeInvariants: false,
-    })
-
-    expect(report.appliedRevision).toBe(3)
-    expect(report.recalculationStatus.upToDate).toBe(true)
-    expect(report.authoritativeReadback).toHaveLength(1)
-    expect(report.renderedReadback).toEqual([
-      expect.objectContaining({
-        requested: true,
-        available: true,
-        matched: true,
-        stale: false,
-        capturedRevision: 3,
-        incompleteReason: null,
-      }),
-    ])
-    expect(report.formulaIssues).toBeNull()
-    expect(report.invariants).toBeNull()
   })
 })

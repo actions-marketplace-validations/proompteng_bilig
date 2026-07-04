@@ -1,20 +1,23 @@
-import { workbookSheetPathEntriesForSource } from '@bilig/xlsx'
 import type { CellStyleRecord, WorkbookRichTextCellSnapshot, WorkbookSnapshot, WorkbookTableSnapshot } from '@bilig/protocol'
+import { workbookSheetPathEntriesForSource } from '@bilig/xlsx/browser'
 import { normalizeWorkbookName } from './workbook-import-helpers.js'
+import { readImportedWorkbookCalculationSettings } from './xlsx-calculation-settings.js'
+import { readImportedWorkbookCellMetadataPart } from './xlsx-cell-metadata.js'
+import { legacyCommentThreadSignature, readImportedWorkbookLegacyCommentVmlFromSheetSources } from './xlsx-comment-vml.js'
 import {
   readImportedSheetConditionalFormatArtifactsFromElementXml,
   readImportedSheetConditionalFormatArtifactsFromWorksheetXml,
   readImportedSheetConditionalFormatsFromElementXml,
   readImportedSheetConditionalFormatsFromWorksheetXml,
 } from './xlsx-conditional-formats.js'
-import { readImportedWorkbookCellMetadataPart } from './xlsx-cell-metadata.js'
-import { legacyCommentThreadSignature, readImportedWorkbookLegacyCommentVmlFromSheetSources } from './xlsx-comment-vml.js'
 import { readImportedWorkbookControlArtifactsFromSheetSources } from './xlsx-control-artifacts.js'
 import { isDataModelPackagePartPath, readImportedWorkbookDataModelArtifacts } from './xlsx-data-model-artifacts.js'
-import { readImportedWorkbookExternalConnections } from './xlsx-external-connections.js'
 import { readImportedWorkbookDrawingArtifactsFromWorksheetRelationships } from './xlsx-drawing-artifacts.js'
+import { readImportedWorkbookExternalConnections } from './xlsx-external-connections.js'
 import { readImportedWorkbookExternalLinkArtifacts } from './xlsx-external-link-artifacts.js'
 import { readImportedSheetAutoFilters } from './xlsx-filters.js'
+import { readImportedWorkbookFormulaAudit } from './xlsx-formula-audit.js'
+import { readImportedWorksheetFormulaManifests } from './xlsx-formulas.js'
 import { readImportedWorkbookChartDrawingArtifacts } from './xlsx-import-chart-drawing-artifacts.js'
 import {
   externalPivotCachesWarning,
@@ -22,16 +25,43 @@ import {
   readImportedFormulaAuditWarnings,
   unsupportedCellStylesWarning,
 } from './xlsx-import-warnings.js'
-import { readImportedWorkbookCalculationSettings } from './xlsx-calculation-settings.js'
-import { readImportedWorkbookFormulaAudit } from './xlsx-formula-audit.js'
-import { readImportedWorksheetFormulaManifests } from './xlsx-formulas.js'
-import { readWorkbookDefinedNames } from './xlsx-large-simple-defined-names.js'
-import { readLargeSimpleSheetHyperlinks, resolveLargeSimpleSheetHyperlinks } from './xlsx-large-simple-hyperlinks.js'
-import { LargeSimpleXlsxImportPhaseRecorder } from './xlsx-large-simple-import-telemetry.js'
-import { buildLargeSimpleImportResult } from './xlsx-large-simple-import-result.js'
+import type { ImportedWorksheetCellScan } from './xlsx-large-simple-arena.js'
+import {
+  buildParsedWorksheet,
+  lazySheetCellMaterializationNumberFormatThreshold,
+  lazySheetCellMaterializationThreshold,
+} from './xlsx-large-simple-build-parsed-worksheet.js'
 import { appendLargeSimpleConditionalFormats } from './xlsx-large-simple-conditional-format-helpers.js'
+import { readWorkbookDefinedNames } from './xlsx-large-simple-defined-names.js'
+import { collectLargeSimpleImportGarbage } from './xlsx-large-simple-garbage.js'
+import { importedWorksheetCellScanFromHeadless } from './xlsx-large-simple-headless-cell-scan.js'
+import { parseHeadlessLargeSimpleWorksheetFromChunks } from './xlsx-large-simple-headless-worksheet-scanner.js'
+import { readLargeSimpleSheetHyperlinks, resolveLargeSimpleSheetHyperlinks } from './xlsx-large-simple-hyperlinks.js'
+import * as importConstants from './xlsx-large-simple-import-constants.js'
+import { buildLargeSimpleImportResult } from './xlsx-large-simple-import-result.js'
+import { LargeSimpleXlsxImportPhaseRecorder } from './xlsx-large-simple-import-telemetry.js'
+import type {
+  LargeSimpleSheetMetadataInput,
+  LargeSimpleXlsxImportOptions,
+  LargeSimpleXlsxImportResult,
+  LargeSimpleXlsxImportSource,
+  ParsedWorksheet,
+  ScannedWorksheet,
+} from './xlsx-large-simple-import-types.js'
+import { mergeWorkbookRichTextCells } from './xlsx-large-simple-lazy-rich-text-cells.js'
+import {
+  drawingRelationshipIdForScannedWorksheet,
+  sheetPivotArtifactsWithStreamedDefinitions,
+} from './xlsx-large-simple-materialization-helpers.js'
 import { internLargeSimpleWorksheetMetadata } from './xlsx-large-simple-metadata-interning.js'
 import { prepareLargeSimplePackageArtifactsForZipRelease } from './xlsx-large-simple-package-artifact-release.js'
+import {
+  largeSimpleControlArtifactSheetSources,
+  largeSimpleLegacyCommentVmlSheetSources,
+  largeSimpleSlicerConnectionRelationshipSheetNames,
+  largeSimpleSlicerConnectionSheetSources,
+} from './xlsx-large-simple-package-artifact-sources.js'
+import { hasExternalLargeSimplePivotCaches } from './xlsx-large-simple-pivot-warnings.js'
 import { readLargeSimpleSheetPrintMetadata, readLargeSimpleSheetPrintPageSetup } from './xlsx-large-simple-printer-settings.js'
 import {
   readAllLargeSimpleSharedStrings,
@@ -43,54 +73,33 @@ import {
   LargeSimpleSharedStringIndexCollector,
   type LargeSimpleSharedStringIndexSet,
 } from './xlsx-large-simple-shared-string-indexes.js'
+import { shouldUseSharedStringlessFastPathBytes } from './xlsx-large-simple-shared-stringless-fast-path.js'
 import {
   collectReferencedLargeSimpleRichSharedStringIndexes,
   createLargeSimpleSharedStringSubset,
   type LargeSimpleSharedStrings,
 } from './xlsx-large-simple-shared-strings.js'
-import { shouldUseSharedStringlessFastPathBytes } from './xlsx-large-simple-shared-stringless-fast-path.js'
-import { readLargeSimpleWorkbookStyleArtifactsFromChunks } from './xlsx-large-simple-styles.js'
+import { forEachLargeSimpleInflatedZipEntryChunk } from './xlsx-large-simple-stream-garbage.js'
+import { ImportedWorkbookStringPool } from './xlsx-large-simple-string-pool.js'
 import {
   maxPreallocatedWorksheetCells,
   prepareLargeSimpleStyleIndexForWorksheet,
   releaseLargeSimpleStyleIndexes,
   shouldDeferLargeSimpleStyleCoordinates,
 } from './xlsx-large-simple-style-coordinate-rescan.js'
-import { collectLargeSimpleImportGarbage } from './xlsx-large-simple-garbage.js'
-import { forEachLargeSimpleInflatedZipEntryChunk } from './xlsx-large-simple-stream-garbage.js'
-import {
-  drawingRelationshipIdForScannedWorksheet,
-  sheetPivotArtifactsWithStreamedDefinitions,
-} from './xlsx-large-simple-materialization-helpers.js'
-import {
-  buildParsedWorksheet,
-  lazySheetCellMaterializationNumberFormatThreshold,
-  lazySheetCellMaterializationThreshold,
-} from './xlsx-large-simple-build-parsed-worksheet.js'
-import { mergeWorkbookRichTextCells } from './xlsx-large-simple-lazy-rich-text-cells.js'
-import { hasExternalLargeSimplePivotCaches } from './xlsx-large-simple-pivot-warnings.js'
-import { ImportedWorkbookStringPool } from './xlsx-large-simple-string-pool.js'
+import { readLargeSimpleWorkbookStyleArtifactsFromChunks } from './xlsx-large-simple-styles.js'
 import { readWorkbookSheets } from './xlsx-large-simple-workbook-metadata.js'
-import type { ImportedWorksheetCellScan } from './xlsx-large-simple-arena.js'
-import {
-  largeSimpleControlArtifactSheetSources,
-  largeSimpleLegacyCommentVmlSheetSources,
-  largeSimpleSlicerConnectionRelationshipSheetNames,
-  largeSimpleSlicerConnectionSheetSources,
-} from './xlsx-large-simple-package-artifact-sources.js'
-import { parseHeadlessLargeSimpleWorksheetFromChunks } from './xlsx-large-simple-headless-worksheet-scanner.js'
-import { importedWorksheetCellScanFromHeadless } from './xlsx-large-simple-headless-cell-scan.js'
-import {
-  hasUnsupportedLargeSimpleWorksheetTags,
-  needsLargeSimpleWorksheetMetadataXml,
-  readLargeSimpleWorksheetMetadataXml,
-  parseLargeSimpleWorksheetCells,
-} from './xlsx-large-simple-worksheet-scanner.js'
-import { parseLargeSimpleWorksheetCellsFromChunks } from './xlsx-large-simple-worksheet-stream-scanner.js'
 import {
   withoutLargeSimpleConditionalFormattingXml,
   type LargeSimpleWorksheetScannedMetadata,
 } from './xlsx-large-simple-worksheet-metadata.js'
+import {
+  hasUnsupportedLargeSimpleWorksheetTags,
+  needsLargeSimpleWorksheetMetadataXml,
+  parseLargeSimpleWorksheetCells,
+  readLargeSimpleWorksheetMetadataXml,
+} from './xlsx-large-simple-worksheet-scanner.js'
+import { parseLargeSimpleWorksheetCellsFromChunks } from './xlsx-large-simple-worksheet-stream-scanner.js'
 import { readImportedPivotArtifacts } from './xlsx-pivot-artifacts.js'
 import { readImportedWorkbookSlicerConnectionArtifactsFromSheets } from './xlsx-slicer-connection-artifacts.js'
 import { readImportedSheetTablesFromRelationshipIds, readImportedSheetTablesFromWorksheetXml } from './xlsx-tables.js'
@@ -104,15 +113,6 @@ import {
   replaceLazyXlsxZipSource,
   type XlsxZipEntries,
 } from './xlsx-zip.js'
-import type {
-  LargeSimpleSheetMetadataInput,
-  LargeSimpleXlsxImportOptions,
-  LargeSimpleXlsxImportResult,
-  LargeSimpleXlsxImportSource,
-  ParsedWorksheet,
-  ScannedWorksheet,
-} from './xlsx-large-simple-import-types.js'
-import * as importConstants from './xlsx-large-simple-import-constants.js'
 
 export type {
   LargeSimpleXlsxImportOptions,

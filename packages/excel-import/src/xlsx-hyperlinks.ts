@@ -1,5 +1,5 @@
+import { decodeCellAddress } from '@bilig/xlsx/browser'
 import { unzipSync, zipSync } from 'fflate'
-import { decodeCellAddress } from '@bilig/xlsx'
 import type { SheetJsWorkSheet } from './xlsx-sheetjs-types.js'
 
 import type { SheetMetadataSnapshot, WorkbookHyperlinkSnapshot, WorkbookSnapshot } from '@bilig/protocol'

@@ -1,5 +1,5 @@
+import { decodeCellAddress, decodeCellRange, encodeCellAddress, encodeCellRange, type XlsxCellRange } from '@bilig/xlsx/browser'
 import { unzipSync, zipSync } from 'fflate'
-import { decodeCellAddress, decodeCellRange, encodeCellAddress, encodeCellRange, type XlsxCellRange } from '@bilig/xlsx'
 import type { SheetJsWorkSheet } from './xlsx-sheetjs-types.js'
 
 import { readRuntimeImage } from '@bilig/core'
@@ -11,7 +11,8 @@ import type {
   WorkbookSpillSnapshot,
 } from '@bilig/protocol'
 import { ValueTag, formatErrorCode } from '@bilig/protocol'
-import { getZipText, normalizeZipPath, readXlsxZipEntries, type XlsxZipEntries, type XlsxZipSource } from './xlsx-zip.js'
+import { addMissingCellsToSheetXml } from './xlsx-cell-insertion.js'
+import { encodeFormulaForXlsx } from './xlsx-formula-translation.js'
 import {
   addContentTypeOverride,
   buildRelationshipsXml,
@@ -20,9 +21,8 @@ import {
   parseRelationships,
   setZipText,
 } from './xlsx-pivot-artifacts.js'
-import { addMissingCellsToSheetXml } from './xlsx-cell-insertion.js'
-import { encodeFormulaForXlsx } from './xlsx-formula-translation.js'
 import { workbookSheetPathEntriesFromSource } from './xlsx-workbook-sheet-paths.js'
+import { getZipText, normalizeZipPath, readXlsxZipEntries, type XlsxZipEntries, type XlsxZipSource } from './xlsx-zip.js'
 
 const cellElementPattern = /<c\b(?<attributes>[^>]*)>(?<body>[\s\S]*?)<\/c>/gu
 const formulaElementPattern = /<f\b[^>]*(?:\/>|>[\s\S]*?<\/f>)/u

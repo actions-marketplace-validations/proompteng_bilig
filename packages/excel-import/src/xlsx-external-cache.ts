@@ -1,12 +1,12 @@
 import {
   getZipText,
-  readXmlAttribute,
   readXlsxZipEntries,
+  readXmlAttribute,
   workbookSheetPathEntriesFromSource,
   worksheetCellElementPattern,
   worksheetCellOpeningTagPattern,
   type XlsxZipEntries,
-} from '@bilig/xlsx'
+} from '@bilig/xlsx/browser'
 
 import type { LiteralInput, WorkbookExternalWorkbookReferenceSnapshot, WorkbookSnapshot } from '@bilig/protocol'
 import type {

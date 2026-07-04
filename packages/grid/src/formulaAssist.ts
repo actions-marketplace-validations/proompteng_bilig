@@ -478,6 +478,7 @@ function buildFunctionSuggestions(prefix: string): readonly FunctionSuggestion[]
       }
       return left.name.localeCompare(right.name)
     })
+    .filter((entry, index, entries) => entries.findIndex((candidate) => candidate.name === entry.name) === index)
     .map((entry) => ({
       kind: 'function' as const,
       name: entry.name,

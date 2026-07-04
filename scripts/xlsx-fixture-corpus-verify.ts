@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import type { XlsxZipByteSource } from '@bilig/xlsx/zip-reader'
 import {
   externalPivotCachesWarning,
   externalWorkbookReferencesWarning,
@@ -13,51 +14,60 @@ import {
 } from '../packages/excel-import/src/index.js'
 import { importXlsxFromZipByteSource } from '../packages/excel-import/src/xlsx-byte-source-import.js'
 import { detachImportedXlsxSourceBytes } from '../packages/excel-import/src/xlsx-source-bytes.js'
-import type { XlsxZipByteSource } from '@bilig/xlsx/zip-reader'
 import type { WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import { validateXlsxFixtureManifest } from './xlsx-fixture-corpus-json.ts'
+import { buildXlsxFixtureCorpusContractReportFromCases } from './xlsx-fixture-corpus-contract-report.ts'
+import {
+  hasFormulaOracleCacheUnsupportedClassifications,
+  hasImportWarningUnsupportedClassifications,
+  hasPivotUnsupportedClassifications,
+  hasResourceLimitUnsupportedClassifications,
+  xlsxFixtureFormulaOracleCacheClassifierEvidence,
+  xlsxFixtureImportWarningClassifierEvidence,
+  xlsxFixturePivotClassifierEvidence,
+  xlsxFixtureResourceLimitClassifierEvidence,
+} from './xlsx-fixture-corpus-evidence.ts'
+import { summarizeExternalWorkbookReferences, unsupportedWorkbookMetadataEvidence } from './xlsx-fixture-corpus-external-links.ts'
+import { inspectWorkbookFootprintIsolated, type XlsxFixtureCorpusWorkerOptions } from './xlsx-fixture-corpus-footprint.ts'
 import {
   classifyUnsupportedLocaleDecimalCommaFormulaOracle,
   localeDecimalCommaFormulaOracleUnsupportedClassification,
   type FormulaOracleMismatchDetail,
 } from './xlsx-fixture-corpus-formula-oracle-classifiers.ts'
-import {
-  hasImportWarningUnsupportedClassifications,
-  hasFormulaOracleCacheUnsupportedClassifications,
-  hasPivotUnsupportedClassifications,
-  hasResourceLimitUnsupportedClassifications,
-  xlsxFixtureImportWarningClassifierEvidence,
-  xlsxFixtureFormulaOracleCacheClassifierEvidence,
-  xlsxFixturePivotClassifierEvidence,
-  xlsxFixtureResourceLimitClassifierEvidence,
-} from './xlsx-fixture-corpus-evidence.ts'
+import { validateXlsxFixtureManifest } from './xlsx-fixture-corpus-json.ts'
 import {
   shouldUseCompactLargeSimpleVerification,
   verifyLargeSimpleWorkbookCompact,
   verifyLargeSimpleWorkbookCompactPreflight,
 } from './xlsx-fixture-corpus-large-simple-compact.ts'
-import { inspectWorkbookFootprintIsolated, type XlsxFixtureCorpusWorkerOptions } from './xlsx-fixture-corpus-footprint.ts'
 import {
-  importResourceLimitPreflight,
   formulaOracleFormulaCountResourceLimitPreflight,
   formulaOracleResourceLimitPreflight,
-  type ResourceLimitPreflight,
+  importResourceLimitPreflight,
   roundTripResourceLimitPreflight,
   structuralSmokeResourceLimitPreflight,
   unsupportedPreflightResourceLimitCase,
   unsupportedResourceLimitCase,
+  type ResourceLimitPreflight,
 } from './xlsx-fixture-corpus-resource-limits.ts'
-import { buildXlsxFixtureCorpusScorecardFromCases } from './xlsx-fixture-corpus-scorecard.ts'
-import { indexReusableXlsxFixtureCorpusCases } from './xlsx-fixture-corpus-verify-checkpoint.ts'
-import { artifactBaseEvidence, failedCase } from './xlsx-fixture-corpus-verify-cases.ts'
-import { verifyCachedWorkbookArtifactIsolated } from './xlsx-fixture-corpus-verify-isolated.ts'
-import { summarizeExternalWorkbookReferences, unsupportedWorkbookMetadataEvidence } from './xlsx-fixture-corpus-external-links.ts'
+import type {
+  BuildContractReportArgs,
+  FormulaOracle,
+  FormulaOracleValidationResult,
+  XlsxFixtureArtifact,
+  XlsxFixtureCaseStatus,
+  XlsxFixtureCorpusCase,
+  XlsxFixtureCorpusContractReport,
+  XlsxFixtureFeatureCounts,
+  XlsxFixtureValidationSummary,
+} from './xlsx-fixture-corpus-types.ts'
 import {
   startVerificationRuntimeMetrics,
   timeVerificationPhase,
   withVerificationRuntimeMetrics,
 } from './xlsx-fixture-corpus-verification-metrics.ts'
-import { FileBackedXlsxZipByteSource, sha256XlsxZipByteSourceHex } from './xlsx-fixture-corpus-xlsx-byte-source.ts'
+import { artifactBaseEvidence, failedCase } from './xlsx-fixture-corpus-verify-cases.ts'
+import { indexReusableXlsxFixtureCorpusCases } from './xlsx-fixture-corpus-verify-checkpoint.ts'
+import { verifyCachedWorkbookArtifactIsolated } from './xlsx-fixture-corpus-verify-isolated.ts'
 import {
   cellValuesMatchOracle,
   countImportedWorkbookFeatures,
@@ -69,19 +79,10 @@ import {
   isUnsupportedCycleOracleMismatch,
   sha256HexSync,
 } from './xlsx-fixture-corpus-workbook.ts'
-import type {
-  BuildScorecardArgs,
-  FormulaOracle,
-  FormulaOracleValidationResult,
-  XlsxFixtureArtifact,
-  XlsxFixtureCaseStatus,
-  XlsxFixtureCorpusCase,
-  XlsxFixtureCorpusScorecard,
-  XlsxFixtureFeatureCounts,
-  XlsxFixtureValidationSummary,
-} from './xlsx-fixture-corpus-types.ts'
+import { FileBackedXlsxZipByteSource, sha256XlsxZipByteSourceHex } from './xlsx-fixture-corpus-xlsx-byte-source.ts'
 
 export { verifyCachedWorkbookArtifactIsolated } from './xlsx-fixture-corpus-verify-isolated.ts'
+export { localeDecimalCommaFormulaOracleUnsupportedClassification }
 
 declare const Bun:
   | {
@@ -103,7 +104,6 @@ const macroRoundTripSkipEvidence = 'Round-trip projection skipped because macro 
 export const rawPivotPartUnsupportedClassification = 'xlsx.pivots.rawPartNotSemanticallyImported'
 export const externalPivotCacheUnsupportedClassification = 'xlsx.pivots.externalCacheNotSemanticallyImported'
 export const staleFormulaCacheUnsupportedClassification = 'xlsx.xlsxFixtureCorpus.formulaOracleCache:independentRecalcMatched'
-export { localeDecimalCommaFormulaOracleUnsupportedClassification }
 export const externalLinkTransitiveFormulaUnsupportedClassification = 'xlsx.externalLinks.transitiveFormulaDependenciesUnsupported'
 export const nativeFormulaOracleUnavailableUnsupportedClassification = 'xlsx.xlsxFixtureCorpus.formulaOracle:nativeXmlCacheUnavailable'
 
@@ -120,7 +120,7 @@ interface UnsupportedFormulaOracleCacheClassification {
   readonly evidence: readonly string[]
 }
 
-export async function buildXlsxFixtureCorpusScorecard(args: BuildScorecardArgs): Promise<XlsxFixtureCorpusScorecard> {
+export async function buildXlsxFixtureCorpusContractReport(args: BuildContractReportArgs): Promise<XlsxFixtureCorpusContractReport> {
   validateXlsxFixtureManifest(args.manifest)
   const structuralSmokeSampleLimit = args.structuralSmokeSampleLimit ?? 50
   const verifyConcurrency = Math.max(1, Math.trunc(args.verifyConcurrency ?? defaultVerifyConcurrency))
@@ -170,7 +170,7 @@ export async function buildXlsxFixtureCorpusScorecard(args: BuildScorecardArgs):
           })
     return verifiedCasePromise.then(reportVerifiedCase)
   })
-  return buildXlsxFixtureCorpusScorecardFromCases({
+  return buildXlsxFixtureCorpusContractReportFromCases({
     manifest: args.manifest,
     generatedAt: args.generatedAt,
     cases,

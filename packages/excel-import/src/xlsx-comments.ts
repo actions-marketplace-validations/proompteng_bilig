@@ -1,4 +1,4 @@
-import { decodeCellAddress, encodeCellAddress } from '@bilig/xlsx'
+import { decodeCellAddress, encodeCellAddress } from '@bilig/xlsx/browser'
 import type { SheetJsCellObject, SheetJsComment, SheetJsWorkSheet } from './xlsx-sheetjs-types.js'
 
 import type { WorkbookCommentThreadSnapshot } from '@bilig/protocol'

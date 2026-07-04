@@ -7,7 +7,7 @@ import { buildLocalFixedRenderTiles } from '../renderer-v3/local-render-tile-mat
 import { buildFixedRenderTilePaneStates } from '../renderer-v3/render-tile-pane-builder.js'
 import type { GridRenderTile, GridRenderTileSceneChange, GridRenderTileSource } from '../renderer-v3/render-tile-source.js'
 import type { WorkbookRenderTilePaneState } from '../renderer-v3/render-tile-pane-state.js'
-import type { WorkbookDeltaBatchLikeV3 } from '../renderer-v3/tile-damage-index.js'
+import type { DirtyTileLocalSpanV3, WorkbookDeltaBatchLikeV3 } from '../renderer-v3/tile-damage-index.js'
 import type { TileKey53 } from '../renderer-v3/tile-key.js'
 import type { GridTileInterestBatchV3, GridTileReadinessSnapshotV3 } from './gridTileCoordinator.js'
 import type { GridRuntimeHost } from './gridRuntimeHost.js'
@@ -38,6 +38,14 @@ import {
   tileProjectionRevisionIsBehind,
   tileSatisfiesRequiredProjectedRevision,
 } from './gridRenderTileRevision.js'
+import {
+  appendLocalDirtySpans,
+  appendLocalTextDirtySpan,
+  dirtySpansFromTile,
+  fullTextDirtySpanForTile,
+  mergeLocalDirtySpans,
+  textDirtySpanForCell,
+} from './gridRenderTilePaneRuntimeDirtySpans.js'
 import { hasCompleteRenderTileGrid, tileSelectedTextNeedsLocalRefresh } from './gridRenderTileTrust.js'
 import { GridVisibleTextRefreshCache } from './gridVisibleTextRefreshCache.js'
 
@@ -782,6 +790,7 @@ export class GridRenderTilePaneRuntime {
 
     const remoteTiles = new Map<number, GridRenderTile>()
     const dirtyBaseTiles = new Map<number, GridRenderTile>()
+    const localDirtySpansByTile = new Map<number, DirtyTileLocalSpanV3[]>()
     const dirtyTileKeys: number[] = []
     const visibleTileKeys = new Set(resolveRenderTileInterestTileKeys(input))
     const selectedCellTileKey = input.selectedCell
@@ -846,10 +855,25 @@ export class GridRenderTilePaneRuntime {
         shouldLocalizeEditingCellText
       ) {
         if (
-          (shouldLocalizeDirty || shouldLocalizeSelectedCellText || shouldLocalizeVisibleText || shouldLocalizeEditingCellText) &&
+          (shouldLocalizeDirty ||
+            shouldLocalizeProjectedRevision ||
+            shouldLocalizeSelectedCellText ||
+            shouldLocalizeVisibleText ||
+            shouldLocalizeEditingCellText) &&
           tile &&
           hasCompleteRenderTileGrid(tile)
         ) {
+          appendLocalDirtySpans(localDirtySpansByTile, tileKey, dirtySpansFromTile(tile))
+          if (shouldLocalizeSelectedCellText) {
+            appendLocalTextDirtySpan(localDirtySpansByTile, tileKey, textDirtySpanForCell(tile, input.selectedCell))
+          }
+          if (shouldLocalizeEditingCellText) {
+            appendLocalTextDirtySpan(
+              localDirtySpansByTile,
+              tileKey,
+              editingCellTileKey === tileKey ? textDirtySpanForCell(tile, input.editingCell) : fullTextDirtySpanForTile(tile),
+            )
+          }
           dirtyBaseTiles.set(tileKey, tile)
         }
         dirtyTileKeys.push(tileKey)
@@ -868,7 +892,8 @@ export class GridRenderTilePaneRuntime {
       buildLocalFixedRenderTiles({
         cameraSeq: input.gridRuntimeHost.snapshot().camera.seq,
         columnWidths: input.columnWidths,
-        dirtySpansForTile: (tileId) => input.gridRuntimeHost.tiles.dirtyTiles.getSpans(tileId),
+        dirtySpansForTile: (tileId) =>
+          mergeLocalDirtySpans(input.gridRuntimeHost.tiles.dirtyTiles.getSpans(tileId), localDirtySpansByTile.get(tileId)),
         dprBucket: input.dprBucket,
         editingCell: input.editingCell ?? null,
         engine: input.engine,

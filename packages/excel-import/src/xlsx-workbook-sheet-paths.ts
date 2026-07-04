@@ -1,8 +1,8 @@
-import { XMLParser } from 'fast-xml-parser'
 import {
   workbookSheetPathEntriesForSource as coreWorkbookSheetPathEntriesForSource,
   workbookSheetPathEntriesFromSource as coreWorkbookSheetPathEntriesFromSource,
-} from '@bilig/xlsx'
+} from '@bilig/xlsx/browser'
+import { XMLParser } from 'fast-xml-parser'
 import type { SheetJsWorkBook } from './xlsx-sheetjs-types.js'
 
 import { parseRelationships, resolveTargetPath } from './xlsx-pivot-artifacts.js'

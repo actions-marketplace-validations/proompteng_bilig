@@ -1,5 +1,5 @@
+import { normalizeCellAddress } from '@bilig/xlsx/browser'
 import { toLiteralInput } from './workbook-import-helpers.js'
-import { normalizeCellAddress } from '@bilig/xlsx'
 import { decodeExcelEscapedText } from './xlsx-escaped-text.js'
 import { workbookSheetPath } from './xlsx-workbook-sheet-paths.js'
 import { getZipText, readXlsxZipEntries, type XlsxZipSource } from './xlsx-zip.js'

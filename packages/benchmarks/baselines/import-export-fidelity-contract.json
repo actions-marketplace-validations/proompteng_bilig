@@ -465,7 +465,7 @@
       "passed": true,
       "coveredFeatures": ["xlsx.runtimeFeaturePolicyWarnings"],
       "missingFeatures": [],
-      "evidence": "Scorecard separates import/export compatibility from unsafe runtime execution surfaces: preserved manual calculation metadata emits the expected stale-cache warning, while native macro execution is disclosed as a declined runtime feature."
+      "evidence": "Contract report separates import/export compatibility from unsafe runtime execution surfaces: preserved manual calculation metadata emits the expected stale-cache warning, while native macro execution is disclosed as a declined runtime feature."
     }
   ]
 }

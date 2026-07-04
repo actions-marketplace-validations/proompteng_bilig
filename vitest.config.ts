@@ -30,6 +30,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globalSetup: join(workspaceRootDir, 'scripts/vitest-global-setup.ts'),
+    setupFiles: [join(workspaceRootDir, 'scripts/vitest-setup.ts')],
     testTimeout: resolveTestTimeoutMs(),
     include: [
       'packages/*/src/**/*.test.ts',
@@ -57,8 +58,9 @@ export default defineConfig({
         'packages/renderer/src/index.ts',
       ],
       thresholds: {
-        lines: 91,
-        statements: 91,
+        // Package line coverage is enforced by scripts/coverage-contracts.ts after
+        // the V8 report is written; keep Vitest responsible for the global shape
+        // metrics it can enforce without blocking that package-aware contract.
         functions: 91,
         branches: 70,
       },

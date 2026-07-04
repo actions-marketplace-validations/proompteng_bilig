@@ -110,6 +110,6 @@ loop.
 
 - [MCP WorkPaper tool server](mcp-workpaper-tool-server.md)
 - [Workbook Compatibility Report](workbook-compatibility-report.md)
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [Stale formula readback chooser](stale-formula-readback-chooser.md)
 - [Where Bilig is not Excel-compatible yet](where-bilig-is-not-excel-compatible-yet.md)

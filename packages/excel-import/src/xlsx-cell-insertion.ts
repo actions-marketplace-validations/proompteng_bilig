@@ -1,4 +1,4 @@
-import { decodeCellAddress, decodeCellRange, encodeCellRange, type XlsxCellRange } from '@bilig/xlsx'
+import { decodeCellAddress, decodeCellRange, encodeCellRange, type XlsxCellRange } from '@bilig/xlsx/browser'
 import { escapeXmlAttribute } from './xlsx-export-xml.js'
 
 interface MissingCellXml {

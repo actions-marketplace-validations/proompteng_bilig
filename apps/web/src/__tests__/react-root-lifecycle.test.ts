@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { createRoot as createReactRoot } from 'react-dom/client'
 import { describe, expect, it, vi } from 'vitest'
 import type { Root } from 'react-dom/client'
 import { getOrCreateReactRoot, type ReactRootHotContext } from '../react-root-lifecycle.js'
@@ -16,7 +15,10 @@ function createHotContext(): ReactRootHotContext & { callbacks: ((data: ReactRoo
 }
 
 function createRootStub(): Root {
-  return createReactRoot(document.createElement('div'))
+  return {
+    render: vi.fn(),
+    unmount: vi.fn(),
+  }
 }
 
 function createContainerStub(id: string): Element {

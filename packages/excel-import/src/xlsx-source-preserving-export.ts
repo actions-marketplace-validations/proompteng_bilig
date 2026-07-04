@@ -5,7 +5,7 @@ import {
   exportXlsxSourceLiteralPatchesToFileAsync as exportBiligXlsxSourceLiteralPatchesToFileAsync,
   type XlsxSourceLiteralPatchExportInput as BiligXlsxSourceLiteralPatchExportInput,
   type XlsxSourceTextPatch,
-} from '@bilig/xlsx'
+} from '@bilig/xlsx/source-preserving-literal-patches'
 
 import { applyExportCalculationSettingsToWorkbookXml } from './xlsx-calculation-settings.js'
 import { readImportedXlsxSourceCellPatches, type ImportedXlsxSourceCellPatch, type ImportedXlsxSourceReader } from './xlsx-source-bytes.js'

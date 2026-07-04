@@ -50,16 +50,20 @@ function FormulaBarHarness(props: {
 }
 
 function dispatchInputValue(input: HTMLInputElement, value: string) {
-  flushSync(() => {
-    setNativeTextControlValue(input, value)
-    input.dispatchEvent(new Event('input', { bubbles: true }))
+  act(() => {
+    flushSync(() => {
+      setNativeTextControlValue(input, value)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
   })
 }
 
 function dispatchTextControlValue(input: HTMLInputElement | HTMLTextAreaElement, value: string) {
-  flushSync(() => {
-    setNativeTextControlValue(input, value)
-    input.dispatchEvent(new Event('input', { bubbles: true }))
+  act(() => {
+    flushSync(() => {
+      setNativeTextControlValue(input, value)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
   })
 }
 
@@ -69,10 +73,18 @@ function dispatchTextControlValueAtSelection(
   selectionStart: number,
   selectionEnd = selectionStart,
 ) {
-  flushSync(() => {
-    setNativeTextControlValue(input, value)
-    input.setSelectionRange(selectionStart, selectionEnd)
-    input.dispatchEvent(new Event('input', { bubbles: true }))
+  act(() => {
+    flushSync(() => {
+      setNativeTextControlValue(input, value)
+      input.setSelectionRange(selectionStart, selectionEnd)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+  })
+}
+
+function focusTextControl(input: HTMLInputElement | HTMLTextAreaElement) {
+  act(() => {
+    input.focus()
   })
 }
 
@@ -244,7 +256,9 @@ describe('FormulaBar', () => {
     const nameBox = host.querySelector<HTMLInputElement>("[data-testid='name-box']")
     expect(formulaInput).not.toBeNull()
     expect(nameBox).not.toBeNull()
-    formulaInput?.focus()
+    if (formulaInput) {
+      focusTextControl(formulaInput)
+    }
 
     await act(async () => {
       formulaInput?.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', ctrlKey: true, bubbles: true, cancelable: true }))
@@ -331,7 +345,7 @@ describe('FormulaBar', () => {
 
     expect(onAddressCommitSuccess).not.toHaveBeenCalled()
 
-    nameBox.focus()
+    focusTextControl(nameBox)
     dispatchInputValue(nameBox, 'C4')
     await act(async () => {
       nameBox.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
@@ -364,7 +378,7 @@ describe('FormulaBar', () => {
       throw new Error('Expected formula input')
     }
 
-    formulaInput.focus()
+    focusTextControl(formulaInput)
     await act(async () => {
       formulaInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     })
@@ -417,7 +431,7 @@ describe('FormulaBar', () => {
     }
 
     await act(async () => {
-      formulaInput.focus()
+      focusTextControl(formulaInput)
       dispatchTextControlValue(formulaInput, 'fast blur draft')
     })
     await act(async () => {
@@ -468,7 +482,7 @@ describe('FormulaBar', () => {
       throw new Error('Expected formula input')
     }
 
-    formulaInput.focus()
+    focusTextControl(formulaInput)
     await act(async () => {
       formulaInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
     })
@@ -517,7 +531,7 @@ describe('FormulaBar', () => {
       throw new Error('Expected formula input')
     }
 
-    formulaInput.focus()
+    focusTextControl(formulaInput)
     await act(async () => {
       formulaInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
     })
@@ -561,7 +575,7 @@ describe('FormulaBar', () => {
       throw new Error('Expected name box input')
     }
 
-    nameBox.focus()
+    focusTextControl(nameBox)
     dispatchInputValue(nameBox, 'D4')
 
     await act(async () => {
@@ -682,8 +696,10 @@ describe('FormulaBar', () => {
       throw new Error('Expected formula input')
     }
 
-    input.focus()
-    input.setSelectionRange(input.value.length, input.value.length)
+    act(() => {
+      input.focus()
+      input.setSelectionRange(input.value.length, input.value.length)
+    })
     await act(async () => {
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', altKey: true, bubbles: true, cancelable: true }))
     })
@@ -905,7 +921,7 @@ describe('FormulaBar', () => {
       throw new Error('Expected formula input')
     }
 
-    input.focus()
+    focusTextControl(input)
     await act(async () => {
       root.render(
         <FormulaBar

@@ -1,11 +1,10 @@
-import { closeSync, openSync, readSync, writeSync } from 'node:fs'
-import { deflateRawSync } from 'node:zlib'
+import { Deflate } from 'fflate-stream'
 
 import { readLazyXlsxZipEntryCompressedSource, type XlsxZipByteSource, type XlsxZipEntryCompressedSource } from './zip-reader.js'
 
-type SourcePreservingZip = Record<string, Uint8Array>
+export type SourcePreservingZip = Record<string, Uint8Array>
 
-interface SourcePreservingZipEntryRecord {
+export interface SourcePreservingZipEntryRecord {
   readonly pathBytes: Uint8Array
   readonly utf8: boolean
   readonly flags: number
@@ -42,7 +41,7 @@ export interface SourcePreservingZipOptions {
 const zipLocalFileHeaderSignature = 0x04034b50
 const zipCentralDirectoryFileHeaderSignature = 0x02014b50
 const zipEndOfCentralDirectorySignature = 0x06054b50
-const zipDeflateCompressionMethod = 8
+export const zipDeflateCompressionMethod = 8
 const zipVersionNeeded = 20
 const zipSourceCopyChunkSize = 1024 * 1024
 const zipTextEncoder = new TextEncoder()
@@ -86,7 +85,7 @@ function getCrc32Table(): Uint32Array {
   return table
 }
 
-function crc32(bytes: Uint8Array): number {
+export function crc32(bytes: Uint8Array): number {
   return crc32Finalize(crc32Update(0xffffffff, bytes))
 }
 
@@ -103,11 +102,24 @@ export function crc32Finalize(crc: number): number {
   return (crc ^ 0xffffffff) >>> 0
 }
 
-function deflateZipEntry(bytes: Uint8Array): Uint8Array {
-  return deflateRawSync(bytes)
+export function deflateZipEntry(bytes: Uint8Array): Uint8Array {
+  const chunks: Uint8Array[] = []
+  const deflate = new Deflate((chunk) => {
+    if (chunk.byteLength > 0) {
+      chunks.push(chunk)
+    }
+  })
+  deflate.push(bytes, true)
+  const output = new Uint8Array(totalByteLength(chunks))
+  let offset = 0
+  for (const chunk of chunks) {
+    output.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return output
 }
 
-function encodeZipPath(path: string): { readonly bytes: Uint8Array; readonly utf8: boolean } {
+export function encodeZipPath(path: string): { readonly bytes: Uint8Array; readonly utf8: boolean } {
   const bytes = zipTextEncoder.encode(path)
   if (bytes.byteLength > 0xffff) {
     throw new Error('XLSX ZIP entry path is too long')
@@ -115,13 +127,13 @@ function encodeZipPath(path: string): { readonly bytes: Uint8Array; readonly utf
   return { bytes, utf8: bytes.byteLength !== path.length }
 }
 
-function assertZip32Size(value: number): void {
+export function assertZip32Size(value: number): void {
   if (!Number.isSafeInteger(value) || value < 0 || value > 0xffffffff) {
     throw new Error('XLSX ZIP entry is too large for source-preserving export')
   }
 }
 
-function totalByteLength(chunks: readonly Uint8Array[]): number {
+export function totalByteLength(chunks: readonly Uint8Array[]): number {
   let total = 0
   for (const chunk of chunks) {
     total += chunk.byteLength
@@ -129,7 +141,7 @@ function totalByteLength(chunks: readonly Uint8Array[]): number {
   return total
 }
 
-function readUnmaterializedSourceEntry(zip: SourcePreservingZip, path: string): XlsxZipEntryCompressedSource | null {
+export function readUnmaterializedSourceEntry(zip: SourcePreservingZip, path: string): XlsxZipEntryCompressedSource | null {
   const descriptor = Object.getOwnPropertyDescriptor(zip, path)
   if (!descriptor || typeof descriptor.get !== 'function') {
     return null
@@ -137,7 +149,7 @@ function readUnmaterializedSourceEntry(zip: SourcePreservingZip, path: string): 
   return readLazyXlsxZipEntryCompressedSource(zip, path)
 }
 
-function compressedSourceEntryChunks(entry: XlsxZipEntryCompressedSource): Uint8Array[] {
+export function compressedSourceEntryChunks(entry: XlsxZipEntryCompressedSource): Uint8Array[] {
   if (entry.dataEnd - entry.dataStart !== entry.compressedSize) {
     throw new Error('Invalid XLSX source ZIP compressed data length')
   }
@@ -160,7 +172,7 @@ function readSourceRange(source: XlsxZipByteSource, start: number, end: number, 
   return chunk
 }
 
-function copyCompressedSourceEntryToZipOutput(entry: XlsxZipEntryCompressedSource, pushOutput: (chunk: Uint8Array) => void): void {
+export function copyCompressedSourceEntryToZipOutput(entry: XlsxZipEntryCompressedSource, pushOutput: (chunk: Uint8Array) => void): void {
   if (entry.dataEnd - entry.dataStart !== entry.compressedSize) {
     throw new Error('Invalid XLSX source ZIP compressed data length')
   }
@@ -170,7 +182,7 @@ function copyCompressedSourceEntryToZipOutput(entry: XlsxZipEntryCompressedSourc
   }
 }
 
-function localFileHeader(record: SourcePreservingZipEntryRecord, time: number, date: number): Uint8Array {
+export function localFileHeader(record: SourcePreservingZipEntryRecord, time: number, date: number): Uint8Array {
   const output = new Uint8Array(30 + record.pathBytes.byteLength)
   writeUint32(output, 0, zipLocalFileHeaderSignature)
   writeUint16(output, 4, zipVersionNeeded)
@@ -187,7 +199,7 @@ function localFileHeader(record: SourcePreservingZipEntryRecord, time: number, d
   return output
 }
 
-function centralDirectoryHeader(record: SourcePreservingZipEntryRecord, time: number, date: number): Uint8Array {
+export function centralDirectoryHeader(record: SourcePreservingZipEntryRecord, time: number, date: number): Uint8Array {
   const output = new Uint8Array(46 + record.pathBytes.byteLength)
   writeUint32(output, 0, zipCentralDirectoryFileHeaderSignature)
   writeUint16(output, 4, zipVersionNeeded)
@@ -210,7 +222,7 @@ function centralDirectoryHeader(record: SourcePreservingZipEntryRecord, time: nu
   return output
 }
 
-function endOfCentralDirectory(recordCount: number, centralDirectorySize: number, centralDirectoryOffset: number): Uint8Array {
+export function endOfCentralDirectory(recordCount: number, centralDirectorySize: number, centralDirectoryOffset: number): Uint8Array {
   if (recordCount > 0xffff) {
     throw new Error('XLSX ZIP has too many entries for source-preserving export')
   }
@@ -290,121 +302,4 @@ export function zipSourcePreservingEntries(
     offset += chunk.byteLength
   }
   return output
-}
-
-export function writeAllSync(fd: number, chunk: Uint8Array): void {
-  let offset = 0
-  while (offset < chunk.byteLength) {
-    offset += writeSync(fd, chunk, offset, chunk.byteLength - offset)
-  }
-}
-
-export function zipSourcePreservingEntriesToFile(
-  zip: SourcePreservingZip,
-  preparedEntries: ReadonlyMap<string, FilePreparedZipEntry>,
-  outputPath: string,
-  options: SourcePreservingZipOptions = {},
-): number {
-  let outputByteLength = 0
-  const records: SourcePreservingZipEntryRecord[] = []
-  const { time, date } = options.dosTime ?? currentZipDosTimeParts()
-  const paths = [...new Set([...Object.keys(zip), ...preparedEntries.keys()])]
-  const fd = openSync(outputPath, 'w')
-  const pushOutput = (chunk: Uint8Array): void => {
-    writeAllSync(fd, chunk)
-    outputByteLength += chunk.byteLength
-  }
-  try {
-    for (const path of paths) {
-      const preparedEntry = preparedEntries.get(path)
-      const sourceEntry = preparedEntry ? null : readUnmaterializedSourceEntry(zip, path)
-      const bytes = preparedEntry || sourceEntry ? undefined : zip[path]
-      if (!preparedEntry && !sourceEntry && !bytes) {
-        continue
-      }
-      assertZip32Size(outputByteLength)
-      const { bytes: pathBytes, utf8 } = encodeZipPath(path)
-      const localHeaderOffset = outputByteLength
-      if (preparedEntry) {
-        assertZip32Size(preparedEntry.uncompressedSize)
-        assertZip32Size(preparedEntry.compressedSize)
-        const record: SourcePreservingZipEntryRecord = {
-          pathBytes,
-          utf8,
-          flags: 0,
-          compressionMethod: zipDeflateCompressionMethod,
-          crc: preparedEntry.crc,
-          compressedSize: preparedEntry.compressedSize,
-          uncompressedSize: preparedEntry.uncompressedSize,
-          localHeaderOffset,
-        }
-        pushOutput(localFileHeader(record, time, date))
-        copyFileToZipOutput(preparedEntry.compressedPath, pushOutput)
-        records.push(record)
-      } else if (sourceEntry) {
-        assertZip32Size(sourceEntry.uncompressedSize)
-        assertZip32Size(sourceEntry.compressedSize)
-        const record: SourcePreservingZipEntryRecord = {
-          pathBytes,
-          utf8,
-          flags: 0,
-          compressionMethod: sourceEntry.compressionMethod,
-          crc: sourceEntry.crc,
-          compressedSize: sourceEntry.compressedSize,
-          uncompressedSize: sourceEntry.uncompressedSize,
-          localHeaderOffset,
-        }
-        pushOutput(localFileHeader(record, time, date))
-        copyCompressedSourceEntryToZipOutput(sourceEntry, pushOutput)
-        records.push(record)
-      } else {
-        const uncompressedSize = bytes!.byteLength
-        const compressed = deflateZipEntry(bytes!)
-        const compressedSize = compressed.byteLength
-        const crc = crc32(bytes!)
-        assertZip32Size(uncompressedSize)
-        assertZip32Size(compressedSize)
-        const record: SourcePreservingZipEntryRecord = {
-          pathBytes,
-          utf8,
-          flags: 0,
-          compressionMethod: zipDeflateCompressionMethod,
-          crc,
-          compressedSize,
-          uncompressedSize,
-          localHeaderOffset,
-        }
-        pushOutput(localFileHeader(record, time, date))
-        pushOutput(compressed)
-        records.push(record)
-      }
-      delete zip[path]
-    }
-
-    const centralDirectoryOffset = outputByteLength
-    for (const record of records) {
-      pushOutput(centralDirectoryHeader(record, time, date))
-    }
-    const centralDirectorySize = outputByteLength - centralDirectoryOffset
-    pushOutput(endOfCentralDirectory(records.length, centralDirectorySize, centralDirectoryOffset))
-  } finally {
-    closeSync(fd)
-  }
-  return outputByteLength
-}
-
-function copyFileToZipOutput(path: string, pushOutput: (chunk: Uint8Array) => void): void {
-  const fd = openSync(path, 'r')
-  const scratch = new Uint8Array(64 * 1024)
-  try {
-    let bytesRead = 0
-    do {
-      bytesRead = readSync(fd, scratch, 0, scratch.byteLength, null)
-      if (bytesRead > 0) {
-        pushOutput(scratch.subarray(0, bytesRead))
-      }
-    } while (bytesRead > 0)
-  } finally {
-    closeSync(fd)
-  }
 }

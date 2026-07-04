@@ -1,66 +1,64 @@
-import { Effect } from 'effect'
 import type { LiteralInput } from '@bilig/protocol'
+import { Effect } from 'effect'
 import type { EngineExistingNumericCellMutationResult } from '../../cell-mutations-at.js'
 import type { SheetRecord } from '../../workbook-store.js'
-import type { U32 } from '../runtime-state.js'
 import { EngineMutationError } from '../errors.js'
+import type { U32 } from '../runtime-state.js'
+import type { DirectFormulaIndexCollection } from './direct-formula-index-collection.js'
+import { lookupImpactCacheKey } from './direct-formula-recalc-helpers.js'
+import { createOperationBatchApplier } from './operation-batch-applier.js'
 import {
+  collectOperationDynamicFormulaDependents,
   hasOperationCycleMembers,
   markOperationCycleMemberInputsChanged,
   normalizeOperationHistoryDependencyPlaceholder,
-  collectOperationDynamicFormulaDependents,
   pruneOperationCellIfOrphaned,
-  refreshDependentRangesAndRebindOperationFormulaDependents,
   rebindOperationDynamicFormulaDependents,
+  refreshDependentRangesAndRebindOperationFormulaDependents,
 } from './operation-cell-lifecycle-helpers.js'
-import type { DirectFormulaIndexCollection } from './direct-formula-index-collection.js'
-import { lookupImpactCacheKey } from './direct-formula-recalc-helpers.js'
+import { createOperationCellMutationApplier } from './operation-cell-mutation-applier.js'
 import { mutationErrorMessage } from './operation-change-helpers.js'
-import { createOperationReplicaVersionWriter } from './operation-replica-helpers.js'
-import { createOperationDirectFormulaDeltas } from './operation-direct-formula-deltas.js'
-import { createOperationDirectFormulaValues } from './operation-direct-formula-values.js'
-import { createOperationDirectRangeDependentService } from './operation-direct-range-dependents.js'
-import { createOperationDirectLookupCurrentService } from './operation-direct-lookup-current.js'
 import { createOperationColumnDependencyTrackerService } from './operation-column-dependency-tracker.js'
-import { createOperationLookupDirtyMarkerService } from './operation-lookup-dirty-markers.js'
-import { createOperationDirectPostRecalcMarkers } from './operation-direct-post-recalc-markers.js'
 import { createOperationDerivedOpApplier } from './operation-derived-op-helpers.js'
-import { canSkipOperationDirtyTraversalForChangedInputs } from './operation-dirty-traversal-helpers.js'
-import { countOperationPostRecalcDirectFormulaMetric, type DirectFormulaMetricCounts } from './operation-post-recalc-direct-formulas.js'
 import { createOperationDirectAggregateMutationFastPaths } from './operation-direct-aggregate-mutation-fast-paths.js'
+import { createOperationDirectFormulaDeltas } from './operation-direct-formula-deltas.js'
+import { tryApplySingleDirectFormulaLiteralMutationWithoutEvents as tryApplySingleDirectFormulaLiteralMutationWithoutEventsWithArgs } from './operation-direct-formula-literal-fast-path.js'
+import { createOperationDirectFormulaValues } from './operation-direct-formula-values.js'
+import { createOperationDirectLookupCurrentService } from './operation-direct-lookup-current.js'
+import { tryApplySingleDirectLookupOperandMutationFastPath as tryApplySingleDirectLookupOperandMutationFastPathWithArgs } from './operation-direct-lookup-operand-fast-path.js'
+import { createOperationDirectPostRecalcMarkers } from './operation-direct-post-recalc-markers.js'
+import { createOperationDirectRangeDependentService } from './operation-direct-range-dependents.js'
+import { createOperationDirectScalarBatchFastPaths } from './operation-direct-scalar-batch-fast-paths.js'
 import { tryApplyTrustedDirectScalarClosureExistingNumericMutation as tryApplyTrustedDirectScalarClosureExistingNumericMutationWithArgs } from './operation-direct-scalar-closure-fast-path.js'
+import {
+  tryApplySingleDirectScalarLiteralMutationWithoutEventsAndReturnChanged as tryApplySingleDirectScalarLiteralMutationWithoutEventsAndReturnChangedWithArgs,
+  tryApplySingleDirectScalarLiteralMutationWithoutEvents as tryApplySingleDirectScalarLiteralMutationWithoutEventsWithArgs,
+} from './operation-direct-scalar-literal-fast-path.js'
+import { canSkipOperationDirtyTraversalForChangedInputs } from './operation-dirty-traversal-helpers.js'
 import {
   tryApplyFormulaLeafExistingLiteralMutation as tryApplyFormulaLeafExistingLiteralMutationWithArgs,
   tryApplyTrustedFormulaLeafExistingNumericMutation as tryApplyTrustedFormulaLeafExistingNumericMutationWithArgs,
 } from './operation-formula-leaf-existing-numeric-fast-path.js'
-import { createOperationDirectScalarBatchFastPaths } from './operation-direct-scalar-batch-fast-paths.js'
-import {
-  tryApplySingleDirectScalarLiteralMutationWithoutEvents as tryApplySingleDirectScalarLiteralMutationWithoutEventsWithArgs,
-  tryApplySingleDirectScalarLiteralMutationWithoutEventsAndReturnChanged as tryApplySingleDirectScalarLiteralMutationWithoutEventsAndReturnChangedWithArgs,
-} from './operation-direct-scalar-literal-fast-path.js'
-import { tryApplySingleDirectFormulaLiteralMutationWithoutEvents as tryApplySingleDirectFormulaLiteralMutationWithoutEventsWithArgs } from './operation-direct-formula-literal-fast-path.js'
-import { createOperationSingleExistingLiteralFastPath } from './operation-single-existing-literal-fast-path.js'
-import { createOperationLookupAccess } from './operation-lookup-access.js'
-import { createOperationLookupPlanner } from './operation-lookup-planner.js'
-import { tryApplySingleDirectLookupOperandMutationFastPath as tryApplySingleDirectLookupOperandMutationFastPathWithArgs } from './operation-direct-lookup-operand-fast-path.js'
-import { canSkipOperationFormulaColumnVersion } from './operation-literal-write-helpers.js'
-import { createOperationServiceRuntimeHelpers } from './operation-service-runtime-helpers.js'
 import { tryApplyOperationFormulaReplacementAsDirectScalarDeltaRoot } from './operation-formula-replacement-direct-scalar.js'
 import { tryApplySingleKernelSyncOnlyLiteralMutationFastPath as tryApplySingleKernelSyncOnlyLiteralMutationFastPathWithArgs } from './operation-kernel-sync-literal-fast-path.js'
-import { createOperationBatchApplier } from './operation-batch-applier.js'
-import { createOperationCellMutationApplier } from './operation-cell-mutation-applier.js'
+import { canSkipOperationFormulaColumnVersion } from './operation-literal-write-helpers.js'
+import { createOperationLookupAccess } from './operation-lookup-access.js'
+import { createOperationLookupDirtyMarkerService } from './operation-lookup-dirty-markers.js'
+import { createOperationLookupPlanner } from './operation-lookup-planner.js'
+import { countOperationPostRecalcDirectFormulaMetric, type DirectFormulaMetricCounts } from './operation-post-recalc-direct-formulas.js'
+import { createOperationReplicaVersionWriter } from './operation-replica-helpers.js'
+import { DIRECT_RANGE_POST_RECALC_LIMIT, DIRECT_SCALAR_DELTA_CLOSURE_LIMIT } from './operation-service-limits.js'
+import { createOperationServiceRuntimeHelpers } from './operation-service-runtime-helpers.js'
 import {
   ENGINE_OPERATION_TEST_HOOKS_ENABLED,
   type CreateEngineOperationServiceArgs,
   type EngineOperationService,
   type MutationSource,
 } from './operation-service-types.js'
+import { createOperationSingleExistingLiteralFastPath } from './operation-single-existing-literal-fast-path.js'
 
-export type { EngineOperationService } from './operation-service-types.js'
 export { operationServiceTestHooks } from './operation-service-test-hooks.js'
-
-const DIRECT_RANGE_POST_RECALC_LIMIT = 16_384
-const DIRECT_SCALAR_DELTA_CLOSURE_LIMIT = 4_096
+export type { EngineOperationService } from './operation-service-types.js'
 
 export function createEngineOperationService(args: CreateEngineOperationServiceArgs): EngineOperationService {
   const {

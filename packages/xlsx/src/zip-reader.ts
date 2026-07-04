@@ -442,14 +442,37 @@ async function inflateCentralDirectoryEntryChunksAsync(
   ) {
     return
   }
-  if (await inflateCentralDirectoryEntryChunksWithNodeZlibAsync(source, dataStart, dataEnd, onChunk, options.chunkSize)) {
-    return
+  let stopped = false
+  let inflatedChunks: Uint8Array[] = []
+  const inflate = new Inflate((chunk) => {
+    if (!stopped) {
+      inflatedChunks.push(chunk)
+    }
+  })
+  const compressedChunkSize = Math.max(1, Math.trunc(options.chunkSize))
+  const scratch = source.readRangeInto ? new Uint8Array(compressedChunkSize) : undefined
+  for (let offset = dataStart; offset < dataEnd; offset += compressedChunkSize) {
+    const end = Math.min(dataEnd, offset + compressedChunkSize)
+    inflatedChunks = []
+    inflate.push(readSourceRange(source, offset, end, scratch), end === dataEnd)
+    for (const chunk of inflatedChunks) {
+      // oxlint-disable-next-line eslint(no-await-in-loop) -- ZIP stream chunks must preserve order and backpressure.
+      if (!(await emitInflatedChunksAsync(chunk, options.chunkSize, onChunk))) {
+        stopped = true
+        return
+      }
+    }
   }
-  await emitInflatedChunksAsync(
-    source.inflateRawRange ? source.inflateRawRange(dataStart, dataEnd) : inflateSync(source.readRange(dataStart, dataEnd)),
-    options.chunkSize,
-    onChunk,
-  )
+  if (compressedSize === 0) {
+    inflatedChunks = []
+    inflate.push(source.readRange(dataStart, dataEnd), true)
+    for (const chunk of inflatedChunks) {
+      // oxlint-disable-next-line eslint(no-await-in-loop) -- ZIP stream chunks must preserve order and backpressure.
+      if (!(await emitInflatedChunksAsync(chunk, options.chunkSize, onChunk))) {
+        return
+      }
+    }
+  }
 }
 
 function readEntryDataRange(
@@ -474,48 +497,6 @@ function readEntryDataRange(
     throw new Error('Invalid XLSX compressed data range')
   }
   return { dataStart, dataEnd }
-}
-
-async function inflateCentralDirectoryEntryChunksWithNodeZlibAsync(
-  source: XlsxZipByteSource,
-  dataStart: number,
-  dataEnd: number,
-  onChunk: XlsxZipAsyncChunkConsumer,
-  chunkSize: number,
-): Promise<boolean> {
-  try {
-    const [{ createInflateRaw }, { Readable }] = await Promise.all([import('node:zlib'), import('node:stream')])
-    let offset = dataStart
-    const compressedChunkSize = Math.max(1, Math.trunc(chunkSize))
-    const compressedStream = new Readable({
-      read() {
-        if (offset >= dataEnd) {
-          this.push(null)
-          return
-        }
-        const end = Math.min(dataEnd, offset + compressedChunkSize)
-        this.push(source.readRange(offset, end))
-        offset = end
-      },
-    })
-    const inflate = createInflateRaw()
-    try {
-      for await (const chunk of compressedStream.pipe(inflate)) {
-        const bytes = chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk)
-        if (!(await emitInflatedChunksAsync(bytes, chunkSize, onChunk))) {
-          compressedStream.destroy()
-          inflate.destroy()
-          return true
-        }
-      }
-    } finally {
-      compressedStream.destroy()
-      inflate.destroy()
-    }
-    return true
-  } catch {
-    return false
-  }
 }
 
 function emitInflatedChunks(chunk: Uint8Array, chunkSize: number, onChunk: XlsxZipChunkConsumer): boolean {

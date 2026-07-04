@@ -117,7 +117,7 @@ before depending on it for production workbook imports.
 
 ## Related
 
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [MCP WorkPaper tool server](mcp-workpaper-tool-server.md)
 - [MCP client setup](mcp-client-setup.md)
 - [Spreadsheet MCP server comparison](spreadsheet-mcp-server-comparison.md)

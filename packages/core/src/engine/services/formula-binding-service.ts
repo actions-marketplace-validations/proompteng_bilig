@@ -1,27 +1,18 @@
 import type { CompiledFormula, StructuralAxisTransform } from '@bilig/formula'
-import { FormulaMode, ErrorCode } from '@bilig/protocol'
+import { ErrorCode, FormulaMode } from '@bilig/protocol'
 import { CellFlags } from '../../cell-store.js'
 import type { EdgeSlice } from '../../edge-arena.js'
-import { entityPayload, isRangeEntity, makeCellEntity } from '../../entity-ids.js'
 import { tableDependencyKey } from '../../engine-metadata-utils.js'
 import { errorValue } from '../../engine-value-utils.js'
+import { entityPayload, isRangeEntity, makeCellEntity } from '../../entity-ids.js'
 import { addEngineCounter } from '../../perf/engine-counters.js'
 import { normalizeDefinedName } from '../../workbook-store.js'
 import type { RuntimeDirectAggregateDescriptor, RuntimeDirectScalarDescriptor, RuntimeFormula } from '../runtime-state.js'
-import {
-  canRewriteCompiledPreservingBindings,
-  canRewriteCompiledPreservingDirectAggregate,
-  canRewriteCompiledPreservingDirectScalar,
-  directScalarDependencyCellsEqual,
-  directAggregateStructureEqual,
-  directCriteriaStructureEqual,
-  directLookupStructureEqual,
-  hasInPlaceDependencyRebindShape,
-  stringArrayEqual,
-  uint32ArrayEqual,
-} from './formula-binding-shape-helpers.js'
-import type { collectDirectApproximateLookupCandidates, collectIndexedExactLookupCandidates } from './formula-binding-lookup-candidates.js'
-import { buildDirectScalarDescriptor } from './formula-binding-direct-scalar.js'
+import { createFormulaBindingBookkeeping } from './formula-binding-bookkeeping.js'
+import { clearFormulaRuntimeFlags } from './formula-binding-cell-flags.js'
+import { clearFormulaBindingNow } from './formula-binding-clear.js'
+import { compileFormulaBindingForCell } from './formula-binding-compile.js'
+import { ensureFormulaBindingDependencyBuildCapacity } from './formula-binding-dependency-build-capacity.js'
 import {
   aggregateColumnDependencyKey,
   appendDirectAggregateColumnReverseEdges,
@@ -33,7 +24,28 @@ import {
   removeDirectAggregateColumnReverseEdges,
   removeDirectCriteriaAggregateColumnReverseEdge,
 } from './formula-binding-dependency-helpers.js'
+import { createFormulaBindingDependencyMaterializer } from './formula-binding-dependency-materializer.js'
+import { directAggregateContainsFormulaOwnerCell } from './formula-binding-direct-aggregate-owner.js'
+import {
+  retargetDirectAggregateFormulaForStructuralTransform,
+  retargetDirectAggregateFormulasForStructuralTransform,
+} from './formula-binding-direct-aggregate-retarget.js'
 import { buildDirectAggregateDescriptor, type ParsedCompiledFormula } from './formula-binding-direct-descriptors.js'
+import { tryRewriteSimpleDirectScalarFormulaSourcePreservingBinding } from './formula-binding-direct-scalar-rewrite.js'
+import { buildDirectScalarDescriptor } from './formula-binding-direct-scalar.js'
+import { formulaBindingEffect } from './formula-binding-effect.js'
+import { bindFreshDirectAggregateFormulaRun } from './formula-binding-fresh-direct-aggregate-run.js'
+import { bindFreshDirectScalarFormulaRun } from './formula-binding-fresh-direct-scalar-run.js'
+import { installFreshFormulaBindingNow } from './formula-binding-install.js'
+import type { collectDirectApproximateLookupCandidates, collectIndexedExactLookupCandidates } from './formula-binding-lookup-candidates.js'
+import { normalizeFormulaBindingLookupCompileMode } from './formula-binding-lookup-mode.js'
+import { primeFormulaBindingLookupCandidates } from './formula-binding-lookup-primer.js'
+import { createPendingInitialFormulaCellTracker } from './formula-binding-pending-formula-cells.js'
+import { canRetainUnmanagedCompiledPlan, makeUnmanagedCompiledPlan } from './formula-binding-plan-helpers.js'
+import { prepareFormulaBindingFromCompiled } from './formula-binding-prepare.js'
+import { createFormulaBindingRangeDependencyUpdater } from './formula-binding-range-dependencies.js'
+import { createFormulaBindingRebinds } from './formula-binding-rebind.js'
+import { rebuildAllFormulaBindingsNow } from './formula-binding-rebuild.js'
 import {
   appendFormulaBindingReverseEdge,
   appendKnownUniqueFormulaBindingReverseEdge,
@@ -41,110 +53,45 @@ import {
   removeFormulaBindingReverseEdge,
   setFormulaBindingReverseEdgeSlice,
 } from './formula-binding-reverse-edges.js'
-import { createFormulaBindingSheetIndex } from './formula-binding-sheet-index.js'
-import { createFormulaBindingMemberCounts } from './formula-binding-member-counts.js'
-import type { FormulaBindingFamilyShapeKeyCache } from './formula-binding-family-shape-key.js'
-import { createFormulaBindingDependencyMaterializer } from './formula-binding-dependency-materializer.js'
-import { createPendingInitialFormulaCellTracker } from './formula-binding-pending-formula-cells.js'
-import { compileFormulaBindingForCell } from './formula-binding-compile.js'
-import { prepareFormulaBindingFromCompiled } from './formula-binding-prepare.js'
-import { createFormulaBindingInstanceTracker } from './formula-binding-instance-tracker.js'
-import { clearFormulaBindingNow } from './formula-binding-clear.js'
-import { installFreshFormulaBindingNow } from './formula-binding-install.js'
-import { createFormulaBindingSheetRenameHandler } from './formula-binding-sheet-rename.js'
-import { createFormulaBindingRebinds } from './formula-binding-rebind.js'
-import { canRetainUnmanagedCompiledPlan, makeUnmanagedCompiledPlan } from './formula-binding-plan-helpers.js'
-import { normalizeFormulaBindingLookupCompileMode } from './formula-binding-lookup-mode.js'
-import { primeFormulaBindingLookupCandidates } from './formula-binding-lookup-primer.js'
-import { directAggregateContainsFormulaOwnerCell } from './formula-binding-direct-aggregate-owner.js'
-import { ensureFormulaBindingDependencyBuildCapacity } from './formula-binding-dependency-build-capacity.js'
-import { createFormulaBindingRangeDependencyUpdater } from './formula-binding-range-dependencies.js'
-import { clearFormulaRuntimeFlags } from './formula-binding-cell-flags.js'
-import { formulaBindingEffect } from './formula-binding-effect.js'
-import { rebuildAllFormulaBindingsNow } from './formula-binding-rebuild.js'
-import { createFormulaBindingFamilyIndexController } from './formula-binding-family-index-controller.js'
 import { applyDirectScalarReplacementRuntimePlanFields, applyFormulaRuntimePlanFields } from './formula-binding-runtime-update.js'
-import { rebuildDeferredFormulaFamilyIndex } from './formula-family-index-rebuild.js'
-import { bindFreshDirectAggregateFormulaRun } from './formula-binding-fresh-direct-aggregate-run.js'
-import { bindFreshDirectScalarFormulaRun } from './formula-binding-fresh-direct-scalar-run.js'
-import { createFormulaBindingInstanceTableRebuildController } from './formula-binding-instance-table-rebuild.js'
-import { tryRewriteSimpleDirectScalarFormulaSourcePreservingBinding } from './formula-binding-direct-scalar-rewrite.js'
-import { updateFormulaBindingVolatileIndex } from './formula-binding-volatile-index.js'
-import { refreshFormulaBindingTrackedMetadata } from './formula-binding-tracked-metadata.js'
-import {
-  retargetDirectAggregateFormulaForStructuralTransform,
-  retargetDirectAggregateFormulasForStructuralTransform,
-} from './formula-binding-direct-aggregate-retarget.js'
 import type {
   BindPreparedFormulaOptions,
   CreateEngineFormulaBindingServiceArgs,
   EngineFormulaBindingService,
   FormulaOwnerPosition,
 } from './formula-binding-service-types.js'
+import {
+  canRewriteCompiledPreservingBindings,
+  canRewriteCompiledPreservingDirectAggregate,
+  canRewriteCompiledPreservingDirectScalar,
+  directAggregateStructureEqual,
+  directCriteriaStructureEqual,
+  directLookupStructureEqual,
+  directScalarDependencyCellsEqual,
+  hasInPlaceDependencyRebindShape,
+  stringArrayEqual,
+  uint32ArrayEqual,
+} from './formula-binding-shape-helpers.js'
+import { createFormulaBindingSheetRenameHandler } from './formula-binding-sheet-rename.js'
+import { refreshFormulaBindingTrackedMetadata } from './formula-binding-tracked-metadata.js'
 export { formulaBindingServiceTestHooks } from './formula-binding-service-test-hooks.js'
 export type * from './formula-binding-service-types.js'
 
 export function createEngineFormulaBindingService(args: CreateEngineFormulaBindingServiceArgs): EngineFormulaBindingService {
-  const resolvedCompiledCache = new Map<string, ParsedCompiledFormula>()
-  const formulaMemberCounts = createFormulaBindingMemberCounts()
-  const formulaSheetIndex = createFormulaBindingSheetIndex()
-  const formulaFamilyShapeKeyCache: FormulaBindingFamilyShapeKeyCache = new Map()
   const {
-    rebuildFormulaInstancesNow,
+    resolvedCompiledCache,
+    formulaMemberCounts,
+    formulaSheetIndex,
+    formulaFamilyIndex,
+    formulaInstanceTableRebuild,
     recordFormulaInstanceNow,
-    registerFormulaFamilyNow: registerFormulaFamilyInStoreNow,
-  } = createFormulaBindingInstanceTracker({
-    serviceArgs: args,
-    formulaFamilyShapeKeyCache,
-  })
-  const formulaInstanceTableRebuild = createFormulaBindingInstanceTableRebuildController({
-    formulaInstances: args.formulaInstances,
-    rebuildFormulaInstancesNow,
-    recordFormulaInstanceNow,
-  })
-  const formulaFamilyIndex = createFormulaBindingFamilyIndexController({
-    formulaFamilies: args.formulaFamilies,
-    formulaFamilyShapeKeyCache,
-    registerFormulaFamilyInStoreNow,
-    countFormulaSheetMembersNow: (sheetId) => formulaMemberCounts.countSheetMembers(sheetId),
-    rebuildFormulaFamilyIndexNow: () =>
-      rebuildDeferredFormulaFamilyIndex({
-        state: args.state,
-        store: args.formulaFamilies,
-        shapeKeyCache: formulaFamilyShapeKeyCache,
-      }),
-  })
-  const { registerFormulaFamilyNow } = formulaFamilyIndex
-
-  const clearFormulaBookkeepingNow = (): void => {
-    resolvedCompiledCache.clear()
-    formulaMemberCounts.clear()
-    formulaSheetIndex.clear()
-    formulaFamilyIndex.clearNow()
-    formulaInstanceTableRebuild.clearRebuildNow()
-  }
-
-  const updateVolatileFormulaIndex = (cellIndex: number, formula: RuntimeFormula | undefined): void =>
-    updateFormulaBindingVolatileIndex(args.volatileFormulaCells, cellIndex, formula)
-
-  const trackFormulaSheetIndexes = (
-    cellIndex: number,
-    ownerSheetName: string,
-    compiled: Pick<CompiledFormula, 'deps' | 'parsedDeps'>,
-  ): void => {
-    formulaSheetIndex.trackFormula(cellIndex, ownerSheetName, compiled)
-  }
-  const trackFormulaSheetOwnerRun = (ownerSheetName: string, cellIndices: readonly number[] | Uint32Array): void => {
-    formulaSheetIndex.trackFormulaOwnerRun(ownerSheetName, cellIndices)
-  }
-
-  const untrackFormulaSheetIndexes = (
-    cellIndex: number,
-    ownerSheetName: string | undefined,
-    compiled: Pick<CompiledFormula, 'deps' | 'parsedDeps'> | undefined,
-  ): void => {
-    formulaSheetIndex.untrackFormula(cellIndex, ownerSheetName, compiled)
-  }
+    registerFormulaFamilyNow,
+    clearFormulaBookkeepingNow,
+    updateVolatileFormulaIndex,
+    trackFormulaSheetIndexes,
+    trackFormulaSheetOwnerRun,
+    untrackFormulaSheetIndexes,
+  } = createFormulaBindingBookkeeping(args)
 
   const ensureDependencyBuildCapacity = (
     cellCapacity: number,

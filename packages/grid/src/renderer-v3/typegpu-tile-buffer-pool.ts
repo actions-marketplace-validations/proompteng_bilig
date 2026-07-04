@@ -57,8 +57,8 @@ const TEXT_INSTANCE_FLOAT_COUNT = 16
 const RECT_INSTANCE_BYTE_COUNT = RECT_INSTANCE_FLOAT_COUNT * Float32Array.BYTES_PER_ELEMENT
 const TEXT_INSTANCE_BYTE_COUNT = TEXT_INSTANCE_FLOAT_COUNT * Float32Array.BYTES_PER_ELEMENT
 const MIN_TILE_TEXT_INSTANCE_COUNT = 32
-const RECT_PARTIAL_WRITE_UNSAFE_DIRTY_MASK_V3 =
-  DirtyMaskV3.Style | DirtyMaskV3.Rect | DirtyMaskV3.Border | DirtyMaskV3.AxisX | DirtyMaskV3.AxisY | DirtyMaskV3.Freeze
+const RECT_PARTIAL_WRITE_ALWAYS_UNSAFE_DIRTY_MASK_V3 = DirtyMaskV3.Style | DirtyMaskV3.Border | DirtyMaskV3.Freeze
+const AXIS_DIRTY_MASK_V3 = DirtyMaskV3.AxisX | DirtyMaskV3.AxisY
 
 export interface TypeGpuTileContentResourceEntryV3 {
   rectBaseCount: number
@@ -714,7 +714,13 @@ export function shouldForceFullRectPayloadWriteForDirtyRevisionV3(input: {
   ) {
     return false
   }
-  return input.dirtyMask !== null && (input.dirtyMask & RECT_PARTIAL_WRITE_UNSAFE_DIRTY_MASK_V3) !== 0
+  if (input.dirtyMask === null) {
+    return false
+  }
+  if ((input.dirtyMask & RECT_PARTIAL_WRITE_ALWAYS_UNSAFE_DIRTY_MASK_V3) !== 0) {
+    return true
+  }
+  return (input.dirtyMask & DirtyMaskV3.Rect) !== 0 && (input.dirtyMask & AXIS_DIRTY_MASK_V3) === 0
 }
 
 function resolveTileDirtyMaskForPartialRectWriteV3(tile: Pick<GridRenderTile, 'dirtyMasks'>): number | null {

@@ -234,7 +234,7 @@ formula-backed runtime boundary, not a finished Excel clone.
 - [Agent tool-calling recipe](agent-workpaper-tool-calling-recipe.md)
 - [MCP spreadsheet tool server](mcp-workpaper-tool-server.md)
 - [Headless spreadsheet engine comparison](headless-spreadsheet-engine-comparison.md)
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)
 - [Spreadsheet MCP server comparison](spreadsheet-mcp-server-comparison.md)
 
 If this solves a workflow you have, the most useful signal is a star on the

@@ -1,10 +1,10 @@
-import { decodeCellAddress, encodeCellAddress } from '@bilig/xlsx'
+import { decodeCellAddress, encodeCellAddress } from '@bilig/xlsx/browser'
 
 import { translateFormulaReferences } from '@bilig/formula'
 import { toLiteralInput } from './workbook-import-helpers.js'
 import { decodeExcelEscapedText } from './xlsx-escaped-text.js'
-import { getZipText, type XlsxZipEntries } from './xlsx-zip.js'
 import { workbookSheetPath } from './xlsx-workbook-sheet-paths.js'
+import { getZipText, type XlsxZipEntries } from './xlsx-zip.js'
 
 interface SharedFormulaBase {
   readonly row: number

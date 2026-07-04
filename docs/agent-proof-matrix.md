@@ -1,5 +1,5 @@
 ---
-title: Agent WorkPaper proof matrix
+title: Agent WorkPaper evaluator matrix
 published: true
 description: Pick the smallest Bilig WorkPaper proof for coding agents, MCP clients, AI SDK tools, OpenAI tool calls, LangGraph, Microsoft Agent Framework, Semantic Kernel, Mastra, and XLSX recalculation.
 tags: agents, mcp, workpaper, spreadsheet automation, proof
@@ -8,7 +8,7 @@ cover_image: https://raw.githubusercontent.com/proompteng/bilig/main/docs/assets
 image: /assets/github-social-preview.png
 ---
 
-# Agent WorkPaper Proof Matrix
+# Agent WorkPaper Evaluator Matrix
 
 Use this page before an agent drives Excel, LibreOffice, Google Sheets, or a
 browser grid. Pick the smallest proof that writes an input, recalculates a
@@ -47,9 +47,9 @@ Expected invariants:
 }
 ```
 
-## Proof Matrix
+## Evaluator Matrix
 
-| Proof | Command or asset | Expected JSON field | What it proves | What it does not prove |
+| Evaluator or contract | Command or asset | Expected JSON field | What it verifies | Explicit limits |
 | --- | --- | --- | --- | --- |
 | WorkPaper service | `npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door workpaper-service --json` | `door: "workpaper-service"`, `verified: true` | Node can edit a WorkPaper input, recalculate a formula, export JSON, restore it, and verify readback. | MCP discovery, private workbook compatibility, macros, pivots, charts, or Excel UI behavior. |
 | Agent MCP evaluator | `npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json` | `door: "agent-mcp"`, `listedResourcesAndPrompts`, `restartReadbackMatchesAfter` | A coding agent or MCP client can discover workbook tools, write a cell, read a formula value, persist state, and restart from disk. | Hosted auth, arbitrary client UX, or full workbook compatibility. |
@@ -77,7 +77,7 @@ and restart state in one command.
 
 Use the Vercel AI SDK, OpenAI, LangGraph, Microsoft Agent Framework, Semantic
 Kernel, or Mastra examples only after the generic evaluator passes. Those
-examples prove host fit, not a stronger workbook runtime.
+examples verify host fit, not a stronger workbook runtime.
 
 Use the XLSX and ExcelJS paths when a saved file or ExcelJS object is already
 the contract. Do not force a WorkPaper model when the job is mostly workbook

@@ -111,4 +111,4 @@ When this page is updated, refresh all four pieces together:
 - [SheetJS formula result not updating in Node.js](sheetjs-formula-result-not-updating-node.md)
 - [ExcelJS formula result not updating after Node edits](exceljs-formula-result-not-updating-after-node-edits.md)
 - [XLSX Cache Doctor GitHub Action](xlsx-cache-doctor-github-action.md)
-- [Agent WorkPaper proof matrix](agent-proof-matrix.md)
+- [Agent WorkPaper evaluator matrix](agent-proof-matrix.md)

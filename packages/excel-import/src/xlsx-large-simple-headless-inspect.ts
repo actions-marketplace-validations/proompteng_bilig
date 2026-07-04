@@ -1,13 +1,18 @@
-import { workbookSheetPathEntriesForSource } from '@bilig/xlsx'
+import { workbookSheetPathEntriesForSource } from '@bilig/xlsx/browser'
 import { normalizeWorkbookName } from './workbook-import-helpers.js'
-import { externalPivotCachesWarning, externalWorkbookReferencesWarning, unsupportedCellStylesWarning } from './xlsx-import-warnings.js'
 import { isDataModelPackagePartPath } from './xlsx-data-model-artifacts.js'
+import { externalPivotCachesWarning, externalWorkbookReferencesWarning, unsupportedCellStylesWarning } from './xlsx-import-warnings.js'
+import {
+  type HeadlessLargeSimpleWorksheetScanOptions,
+  parseHeadlessLargeSimpleWorksheetFromChunks,
+  parseHeadlessLargeSimpleWorksheetFromChunksAsync,
+} from './xlsx-large-simple-headless-worksheet-scanner.js'
+import { LargeSimpleXlsxImportPhaseRecorder } from './xlsx-large-simple-import-telemetry.js'
 import type {
   LargeSimpleXlsxImportStats,
   LargeSimpleXlsxOwnedSourceReleaseEvidence,
   LargeSimpleXlsxSheetDimension,
 } from './xlsx-large-simple-import.js'
-import { LargeSimpleXlsxImportPhaseRecorder } from './xlsx-large-simple-import-telemetry.js'
 import { hasExternalLargeSimplePivotCaches } from './xlsx-large-simple-pivot-warnings.js'
 import {
   hasAnyLargeSimpleRichSharedStringFromChunks,
@@ -17,11 +22,6 @@ import {
   inspectLargeSimpleWorkbookStyleSupportFromChunks,
   inspectLargeSimpleWorkbookStyleSupportFromChunksAsync,
 } from './xlsx-large-simple-styles.js'
-import {
-  type HeadlessLargeSimpleWorksheetScanOptions,
-  parseHeadlessLargeSimpleWorksheetFromChunks,
-  parseHeadlessLargeSimpleWorksheetFromChunksAsync,
-} from './xlsx-large-simple-headless-worksheet-scanner.js'
 import {
   forEachInflatedXlsxZipEntryChunk,
   forEachInflatedXlsxZipEntryChunkAsync,

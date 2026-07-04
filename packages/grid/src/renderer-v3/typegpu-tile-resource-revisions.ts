@@ -283,6 +283,7 @@ export function shouldSyncGridRectTileResourceV3(input: {
   readonly content: {
     readonly decorationCellKeys: ReadonlySet<string> | null
     readonly decorationRects: readonly TextDecorationRect[] | null
+    readonly rectBaseCount: number
     readonly rectCount: number
     readonly rectHandle: GpuBufferHandleV3 | null
     readonly rectRevisionKey: TypeGpuTileRectRevisionKeyV3 | null
@@ -299,7 +300,7 @@ export function shouldSyncGridRectTileResourceV3(input: {
   if (hasGridRectTileResourcePayloadChangedV3(input.content.rectRevisionKey, input.rectRevisionKey)) {
     return true
   }
-  if (input.content.rectCount !== input.tile.rectCount) {
+  if (input.content.rectBaseCount !== input.tile.rectCount) {
     return true
   }
   if (input.tile.rectCount > 0 && !input.content.rectHandle) {
@@ -307,7 +308,7 @@ export function shouldSyncGridRectTileResourceV3(input: {
   }
   const dirtyMask = resolveGridTileDirtyContentMaskV3(input.tile)
   if (dirtyMask === null) {
-    return true
+    return false
   }
   if ((dirtyMask & RECT_DIRTY_MASK_V3) !== 0) {
     return true

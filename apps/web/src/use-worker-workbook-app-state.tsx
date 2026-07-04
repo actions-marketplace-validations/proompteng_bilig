@@ -201,16 +201,30 @@ export function useWorkerWorkbookAppState(input: {
   const clearRuntimeError = useCallback(() => {
     runtimeActorRef.send({ type: 'error.clear' })
   }, [runtimeActorRef])
+  const flushPendingEditCommitRef = useRef<(() => Promise<void>) | null>(null)
+  const isFlushingPendingEditCommitRef = useRef(false)
+  const flushPendingEditCommit = useCallback(async (): Promise<void> => {
+    const flush = flushPendingEditCommitRef.current
+    if (!flush || isFlushingPendingEditCommitRef.current) {
+      return
+    }
+    isFlushingPendingEditCommitRef.current = true
+    try {
+      await flush()
+    } finally {
+      isFlushingPendingEditCommitRef.current = false
+    }
+  }, [])
   const {
     hasLocalMutationInFlight,
     invokeMutation: invokeWorkbookMutation,
-    invokeColumnVisibilityMutation,
-    invokeColumnWidthMutation,
-    invokeRowHeightMutation,
-    invokeRowVisibilityMutation,
-    redoLocalChange,
+    invokeColumnVisibilityMutation: invokeWorkbookColumnVisibilityMutation,
+    invokeColumnWidthMutation: invokeWorkbookColumnWidthMutation,
+    invokeRowHeightMutation: invokeWorkbookRowHeightMutation,
+    invokeRowVisibilityMutation: invokeWorkbookRowVisibilityMutation,
+    redoLocalChange: redoWorkbookLocalChange,
     retryPendingMutation,
-    undoLocalChange,
+    undoLocalChange: undoWorkbookLocalChange,
   } = useWorkbookSync({
     documentId,
     connectionStateName: connectionState.name,
@@ -223,13 +237,48 @@ export function useWorkerWorkbookAppState(input: {
   })
   const [localMutationEpoch, setLocalMutationEpoch] = useState(0)
   const localMutationEpochRef = useRef(0)
-  const invokeMutation: typeof invokeWorkbookMutation = useCallback(
+  const invokeTrackedWorkbookMutation: typeof invokeWorkbookMutation = useCallback(
     async (method, ...args) => {
       localMutationEpochRef.current += 1
       setLocalMutationEpoch((epoch) => epoch + 1)
       await invokeWorkbookMutation(method, ...args)
     },
     [invokeWorkbookMutation],
+  )
+  const invokeMutation: typeof invokeWorkbookMutation = useCallback(
+    async (method, ...args) => {
+      await flushPendingEditCommit()
+      await invokeTrackedWorkbookMutation(method, ...args)
+    },
+    [flushPendingEditCommit, invokeTrackedWorkbookMutation],
+  )
+  const invokeColumnVisibilityMutation: typeof invokeWorkbookColumnVisibilityMutation = useCallback(
+    async (...args) => {
+      await flushPendingEditCommit()
+      await invokeWorkbookColumnVisibilityMutation(...args)
+    },
+    [flushPendingEditCommit, invokeWorkbookColumnVisibilityMutation],
+  )
+  const invokeColumnWidthMutation: typeof invokeWorkbookColumnWidthMutation = useCallback(
+    async (...args) => {
+      await flushPendingEditCommit()
+      await invokeWorkbookColumnWidthMutation(...args)
+    },
+    [flushPendingEditCommit, invokeWorkbookColumnWidthMutation],
+  )
+  const invokeRowHeightMutation: typeof invokeWorkbookRowHeightMutation = useCallback(
+    async (...args) => {
+      await flushPendingEditCommit()
+      await invokeWorkbookRowHeightMutation(...args)
+    },
+    [flushPendingEditCommit, invokeWorkbookRowHeightMutation],
+  )
+  const invokeRowVisibilityMutation: typeof invokeWorkbookRowVisibilityMutation = useCallback(
+    async (...args) => {
+      await flushPendingEditCommit()
+      await invokeWorkbookRowVisibilityMutation(...args)
+    },
+    [flushPendingEditCommit, invokeWorkbookRowVisibilityMutation],
   )
   const {
     columnWidths,
@@ -267,6 +316,7 @@ export function useWorkerWorkbookAppState(input: {
     editorSelectionBehavior,
     editorTargetSelection,
     fillSelectionRange,
+    flushPendingEditCommit: flushInteractionEditCommit,
     getCellEditorSeed,
     acknowledgeExternalSelectionSync,
     handleEditorChange,
@@ -296,10 +346,12 @@ export function useWorkerWorkbookAppState(input: {
     workerHandleRef,
     writesAllowed,
     invokeMutation,
+    invokeEditCommitMutation: invokeTrackedWorkbookMutation,
     perfSession,
     reportRuntimeError,
     sendSelectionChanged,
   })
+  flushPendingEditCommitRef.current = flushInteractionEditCommit
   const invokeSheetStructuralMutation = useCallback(
     (taskFactory: () => Promise<void>, sheetName: string): Promise<void> => {
       const rollbackOptimisticSeeds = supersedeOptimisticCellSeedsForSheet(sheetName)
@@ -347,6 +399,7 @@ export function useWorkerWorkbookAppState(input: {
     })
   const autofitColumn = useCallback(
     async (sheetName: string, columnIndex: number, fallbackWidth: number) => {
+      await flushPendingEditCommit()
       const nextWidth =
         runtimeController && typeof runtimeController.invoke === 'function'
           ? await runtimeController.invoke('autofitColumn', sheetName, columnIndex)
@@ -356,7 +409,7 @@ export function useWorkerWorkbookAppState(input: {
         flush: true,
       })
     },
-    [invokeColumnWidthMutation, runtimeController],
+    [flushPendingEditCommit, invokeColumnWidthMutation, runtimeController],
   )
   const sheetNames = useMemo(
     () => [...(runtimeState?.sheetNames ?? [selection.sheetName])],
@@ -425,25 +478,53 @@ export function useWorkerWorkbookAppState(input: {
   const undoLocalLatestChange = useCallback(() => {
     void (async () => {
       try {
-        await undoLocalChange()
+        await flushPendingEditCommit()
+        await undoWorkbookLocalChange()
       } catch (error) {
         reportRuntimeError(error)
       }
     })()
-  }, [reportRuntimeError, undoLocalChange])
+  }, [flushPendingEditCommit, reportRuntimeError, undoWorkbookLocalChange])
   const redoLocalLatestChange = useCallback(() => {
     void (async () => {
       try {
-        await redoLocalChange()
+        await flushPendingEditCommit()
+        await redoWorkbookLocalChange()
       } catch (error) {
         reportRuntimeError(error)
       }
     })()
-  }, [redoLocalChange, reportRuntimeError])
+  }, [flushPendingEditCommit, redoWorkbookLocalChange, reportRuntimeError])
   const canUndo = zeroConfigured ? remoteCanUndo : !hasLocalMutationInFlight && localHistoryState.canUndo
   const canRedo = zeroConfigured ? remoteCanRedo : !hasLocalMutationInFlight && localHistoryState.canRedo
-  const undoLatestChange = zeroConfigured ? undoRemoteLatestChange : undoLocalLatestChange
-  const redoLatestChange = zeroConfigured ? redoRemoteLatestChange : redoLocalLatestChange
+  const undoLatestChange = useCallback(() => {
+    if (!zeroConfigured) {
+      undoLocalLatestChange()
+      return
+    }
+    void (async () => {
+      try {
+        await flushPendingEditCommit()
+        undoRemoteLatestChange()
+      } catch (error) {
+        reportRuntimeError(error)
+      }
+    })()
+  }, [flushPendingEditCommit, reportRuntimeError, undoLocalLatestChange, undoRemoteLatestChange, zeroConfigured])
+  const redoLatestChange = useCallback(() => {
+    if (!zeroConfigured) {
+      redoLocalLatestChange()
+      return
+    }
+    void (async () => {
+      try {
+        await flushPendingEditCommit()
+        redoRemoteLatestChange()
+      } catch (error) {
+        reportRuntimeError(error)
+      }
+    })()
+  }, [flushPendingEditCommit, redoLocalLatestChange, redoRemoteLatestChange, reportRuntimeError, zeroConfigured])
 
   const previewAgentCommandBundle = useCallback(
     async (bundle: WorkbookAgentCommandBundle) => {

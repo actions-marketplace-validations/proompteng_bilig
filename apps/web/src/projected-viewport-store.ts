@@ -1,8 +1,6 @@
-import type { GridEngineLike, GridRenderRevisionSnapshot } from '@bilig/grid'
 import { formatAddress, parseCellAddress } from '@bilig/formula'
+import type { GridEngineLike, GridRenderRevisionSnapshot } from '@bilig/grid'
 import {
-  MAX_COLS,
-  MAX_ROWS,
   ValueTag,
   type CellRangeRef,
   type CellSnapshot,
@@ -20,23 +18,33 @@ import {
   type WorkbookDeltaBatchV3,
   type WorkerEngineClient,
 } from '@bilig/worker-transport'
+import { resolveProjectedStyleDirtyMask } from './projected-style-dirty-mask.js'
+import type { ProjectedRenderTile, ProjectedTileSceneChange, ProjectedTileSceneStore } from './projected-tile-scene-store.js'
 import { ProjectedViewportAxisStore } from './projected-viewport-axis-store.js'
 import { DEFAULT_MAX_CACHED_CELLS_PER_SHEET, ProjectedViewportCellCache } from './projected-viewport-cell-cache.js'
 import { ProjectedViewportPatchCoordinator, type ProjectedViewportPatchApplied } from './projected-viewport-patch-coordinator.js'
-import type { ProjectedRenderTile, ProjectedTileSceneChange, ProjectedTileSceneStore } from './projected-tile-scene-store.js'
-import { normalizeWorkbookMergeRange } from './worker-runtime-support.js'
-import { ProjectedWorkbookLocalDeltaPublisher } from './projected-workbook-local-delta-publisher.js'
 import { ProjectedViewportPatchRevisionGate } from './projected-viewport-patch-revision-gate.js'
-import { resolveProjectedStyleDirtyMask } from './projected-style-dirty-mask.js'
 import {
   normalizeViewportRange,
   ProjectedViewportRangeOverlayStore,
   viewportRangeCellCount,
   type NormalizedViewportRange,
 } from './projected-viewport-range-overlay.js'
-import { createContentClearedOptimisticSnapshot } from './workbook-optimistic-range.js'
-import { OPTIMISTIC_CELL_SNAPSHOT_FLAG } from './workbook-optimistic-cell-flags.js'
+import {
+  applyProjectedStylePatch,
+  assertValidProjectedAxisMutation,
+  buildAxisEntries,
+  clearProjectedStyleFields,
+  DEFAULT_STYLE_ID,
+  normalizeProjectedCellStyle,
+  projectedCellStyleIdForKey,
+  projectedCellStyleKey,
+} from './projected-viewport-style-helpers.js'
+import { ProjectedWorkbookLocalDeltaPublisher } from './projected-workbook-local-delta-publisher.js'
 import { LOCAL_CELL_VISUAL_DIRTY_MASK } from './projected-workbook-local-delta.js'
+import { OPTIMISTIC_CELL_SNAPSHOT_FLAG } from './workbook-optimistic-cell-flags.js'
+import { createContentClearedOptimisticSnapshot } from './workbook-optimistic-range.js'
+import { normalizeWorkbookMergeRange } from './worker-runtime-support.js'
 
 export interface ProjectedViewportStoreOptions {
   readonly maxCachedCellsPerSheet?: number
@@ -49,10 +57,12 @@ interface ProjectedCellSnapshotWriteOptions {
   readonly localDirtyMask?: number | ((snapshot: CellSnapshot) => number) | undefined
   readonly suppressRangeOverlays?: boolean
 }
+interface ProjectedAxisMutationOptions {
+  readonly emitLocalDelta?: boolean
+}
 type CellItem = readonly [number, number]
 type SheetViewportChannel = 'columnWidths' | 'rowHeights' | 'hiddenColumns' | 'hiddenRows' | 'freeze' | 'merges'
 type SheetIdentity = { readonly sheetId: number; readonly sheetOrdinal: number }
-const DEFAULT_STYLE_ID = 'style-0'
 const MAX_MATERIALIZED_OPTIMISTIC_STYLE_CELLS = 512
 
 export class ProjectedViewportStore implements GridEngineLike {
@@ -192,6 +202,10 @@ export class ProjectedViewportStore implements GridEngineLike {
     return this.rangeOverlayStore.apply(sheetName, address, this.cellCache.getCell(sheetName, address))
   }
 
+  hasCellSnapshot(sheetName: string, address: string): boolean {
+    return this.cellCache.hasCellSnapshot(sheetName, address)
+  }
+
   forEachCellSnapshotInRange(range: CellRangeRef, listener: (snapshot: CellSnapshot) => void): void {
     this.cellCache.forEachCellSnapshotInRange(range, listener)
   }
@@ -317,12 +331,12 @@ export class ProjectedViewportStore implements GridEngineLike {
     return this.rangeOverlayStore.register(range, apply)
   }
 
-  setColumnWidth(sheetName: string, columnIndex: number, width: number): void {
+  setColumnWidth(sheetName: string, columnIndex: number, width: number, options: ProjectedAxisMutationOptions = {}): void {
     assertValidProjectedAxisMutation('column', columnIndex, width)
     const previousWidth = this.axisStore.getColumnWidths(sheetName)[columnIndex]
     this.axisStore.setColumnWidth(sheetName, columnIndex, width)
     this.notifySheetChannels(sheetName, ['columnWidths'])
-    if (this.axisStore.getColumnWidths(sheetName)[columnIndex] !== previousWidth) {
+    if (options.emitLocalDelta !== false && this.axisStore.getColumnWidths(sheetName)[columnIndex] !== previousWidth) {
       this.localDeltaPublisher.emitAxis(sheetName, 'column', columnIndex)
     }
   }
@@ -363,12 +377,12 @@ export class ProjectedViewportStore implements GridEngineLike {
     }
   }
 
-  setRowHeight(sheetName: string, rowIndex: number, height: number): void {
+  setRowHeight(sheetName: string, rowIndex: number, height: number, options: ProjectedAxisMutationOptions = {}): void {
     assertValidProjectedAxisMutation('row', rowIndex, height)
     const previousHeight = this.axisStore.getRowHeights(sheetName)[rowIndex]
     this.axisStore.setRowHeight(sheetName, rowIndex, height)
     this.notifySheetChannels(sheetName, ['rowHeights'])
-    if (this.axisStore.getRowHeights(sheetName)[rowIndex] !== previousHeight) {
+    if (options.emitLocalDelta !== false && this.axisStore.getRowHeights(sheetName)[rowIndex] !== previousHeight) {
       this.localDeltaPublisher.emitAxis(sheetName, 'row', rowIndex)
     }
   }
@@ -715,265 +729,4 @@ function omitSnapshotStyleId(snapshot: CellSnapshot): CellSnapshot {
   const next = { ...snapshot }
   delete next.styleId
   return next
-}
-
-function normalizeProjectedCellStyle(style: Omit<CellStyleRecord, 'id'>): Omit<CellStyleRecord, 'id'> {
-  return {
-    ...(style.fill?.backgroundColor ? { fill: { backgroundColor: style.fill.backgroundColor } } : {}),
-    ...(style.font && Object.keys(style.font).length > 0 ? { font: { ...style.font } } : {}),
-    ...(style.alignment && Object.keys(style.alignment).length > 0 ? { alignment: { ...style.alignment } } : {}),
-    ...(style.borders && Object.keys(style.borders).length > 0
-      ? {
-          borders: {
-            ...(style.borders.top ? { top: { ...style.borders.top } } : {}),
-            ...(style.borders.right ? { right: { ...style.borders.right } } : {}),
-            ...(style.borders.bottom ? { bottom: { ...style.borders.bottom } } : {}),
-            ...(style.borders.left ? { left: { ...style.borders.left } } : {}),
-          },
-        }
-      : {}),
-    ...(style.protection ? { protection: { ...style.protection } } : {}),
-  }
-}
-
-function projectedCellStyleKey(style: Omit<CellStyleRecord, 'id'>): string {
-  return JSON.stringify({
-    alignment: style.alignment ?? null,
-    borders: style.borders ?? null,
-    fill: style.fill?.backgroundColor ?? null,
-    font: style.font ?? null,
-    protection: style.protection ?? null,
-  })
-}
-
-function projectedCellStyleIdForKey(key: string): string {
-  let hash = 2166136261
-  for (let index = 0; index < key.length; index += 1) {
-    hash ^= key.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-  return `style-local-${(hash >>> 0).toString(16)}`
-}
-
-function cloneProjectedStyleWithoutId(style: CellStyleRecord): Omit<CellStyleRecord, 'id'> {
-  return normalizeProjectedCellStyle(style)
-}
-
-function applyProjectedStylePatch(baseStyle: CellStyleRecord, patch: CellStylePatch): Omit<CellStyleRecord, 'id'> {
-  const next = cloneProjectedStyleWithoutId(baseStyle)
-  if (patch.fill === null) {
-    delete next.fill
-  } else if (patch.fill !== undefined) {
-    const backgroundColor = patch.fill.backgroundColor
-    if (backgroundColor === null) {
-      delete next.fill
-    } else if (backgroundColor !== undefined) {
-      next.fill = { backgroundColor }
-    }
-  }
-  if (patch.font === null) {
-    delete next.font
-  } else if (patch.font) {
-    const font = { ...next.font }
-    applyOptionalProjectedField(font, 'family', patch.font.family)
-    applyOptionalProjectedField(font, 'size', patch.font.size)
-    applyOptionalProjectedField(font, 'bold', patch.font.bold)
-    applyOptionalProjectedField(font, 'italic', patch.font.italic)
-    applyOptionalProjectedField(font, 'underline', patch.font.underline)
-    applyOptionalProjectedField(font, 'color', patch.font.color)
-    if (Object.keys(font).length > 0) {
-      next.font = font
-    } else {
-      delete next.font
-    }
-  }
-  if (patch.alignment === null) {
-    delete next.alignment
-  } else if (patch.alignment) {
-    const alignment = { ...next.alignment }
-    applyOptionalProjectedField(alignment, 'horizontal', patch.alignment.horizontal)
-    applyOptionalProjectedField(alignment, 'vertical', patch.alignment.vertical)
-    applyOptionalProjectedField(alignment, 'wrap', patch.alignment.wrap)
-    applyOptionalProjectedField(alignment, 'indent', patch.alignment.indent)
-    applyOptionalProjectedField(alignment, 'shrinkToFit', patch.alignment.shrinkToFit)
-    applyOptionalProjectedField(alignment, 'readingOrder', patch.alignment.readingOrder)
-    applyOptionalProjectedField(alignment, 'textRotation', patch.alignment.textRotation)
-    applyOptionalProjectedField(alignment, 'justifyLastLine', patch.alignment.justifyLastLine)
-    if (Object.keys(alignment).length > 0) {
-      next.alignment = alignment
-    } else {
-      delete next.alignment
-    }
-  }
-  if (patch.borders === null) {
-    delete next.borders
-  } else if (patch.borders) {
-    const borders = { ...next.borders }
-    applyProjectedBorderSidePatch(borders, 'top', patch.borders.top)
-    applyProjectedBorderSidePatch(borders, 'right', patch.borders.right)
-    applyProjectedBorderSidePatch(borders, 'bottom', patch.borders.bottom)
-    applyProjectedBorderSidePatch(borders, 'left', patch.borders.left)
-    if (Object.keys(borders).length > 0) {
-      next.borders = borders
-    } else {
-      delete next.borders
-    }
-  }
-  return normalizeProjectedCellStyle(next)
-}
-
-function applyProjectedBorderSidePatch(
-  borders: NonNullable<CellStyleRecord['borders']>,
-  side: keyof NonNullable<CellStyleRecord['borders']>,
-  patch: NonNullable<CellStylePatch['borders']>['top'] | null | undefined,
-): void {
-  if (patch === undefined) {
-    return
-  }
-  if (patch === null) {
-    delete borders[side]
-    return
-  }
-  const nextSide: Partial<NonNullable<CellStyleRecord['borders']>['top']> = { ...borders[side] }
-  applyOptionalProjectedField(nextSide, 'style', patch.style)
-  applyOptionalProjectedField(nextSide, 'weight', patch.weight)
-  applyOptionalProjectedField(nextSide, 'color', patch.color)
-  if (nextSide.style && nextSide.weight && nextSide.color) {
-    borders[side] = {
-      color: nextSide.color,
-      style: nextSide.style,
-      weight: nextSide.weight,
-    }
-  } else {
-    delete borders[side]
-  }
-}
-
-function clearProjectedStyleFields(baseStyle: CellStyleRecord, fields: readonly CellStyleField[] | undefined): Omit<CellStyleRecord, 'id'> {
-  if (fields === undefined || fields.length === 0) {
-    return {}
-  }
-  const next = cloneProjectedStyleWithoutId(baseStyle)
-  const cleared = new Set(fields)
-  if (cleared.has('backgroundColor')) {
-    delete next.fill
-  }
-  const font = filterProjectedStyleSection(
-    next.font,
-    [
-      ['fontFamily', 'family'],
-      ['fontSize', 'size'],
-      ['fontBold', 'bold'],
-      ['fontItalic', 'italic'],
-      ['fontUnderline', 'underline'],
-      ['fontColor', 'color'],
-    ],
-    cleared,
-  )
-  if (font) {
-    next.font = font
-  } else {
-    delete next.font
-  }
-  const alignment = filterProjectedStyleSection(
-    next.alignment,
-    [
-      ['alignmentHorizontal', 'horizontal'],
-      ['alignmentVertical', 'vertical'],
-      ['alignmentWrap', 'wrap'],
-      ['alignmentIndent', 'indent'],
-      ['alignmentShrinkToFit', 'shrinkToFit'],
-      ['alignmentReadingOrder', 'readingOrder'],
-      ['alignmentTextRotation', 'textRotation'],
-      ['alignmentJustifyLastLine', 'justifyLastLine'],
-    ],
-    cleared,
-  )
-  if (alignment) {
-    next.alignment = alignment
-  } else {
-    delete next.alignment
-  }
-  const borders = filterProjectedStyleSection(
-    next.borders,
-    [
-      ['borderTop', 'top'],
-      ['borderRight', 'right'],
-      ['borderBottom', 'bottom'],
-      ['borderLeft', 'left'],
-    ],
-    cleared,
-  )
-  if (borders) {
-    next.borders = borders
-  } else {
-    delete next.borders
-  }
-  return normalizeProjectedCellStyle(next)
-}
-
-function filterProjectedStyleSection<T extends object>(
-  section: T | undefined,
-  fields: ReadonlyArray<readonly [CellStyleField, keyof T]>,
-  cleared: ReadonlySet<CellStyleField>,
-): T | undefined {
-  if (!section) {
-    return undefined
-  }
-  const nextSection = { ...section }
-  fields.forEach(([field, key]) => {
-    if (cleared.has(field)) {
-      delete nextSection[key]
-    }
-  })
-  return Object.keys(nextSection).length > 0 ? nextSection : undefined
-}
-
-function applyOptionalProjectedField<T extends object, K extends keyof T>(target: T, key: K, value: T[K] | null | undefined): void {
-  if (value === undefined) {
-    return
-  }
-  if (value === null) {
-    delete target[key]
-    return
-  }
-  target[key] = value
-}
-
-function assertValidProjectedAxisMutation(axis: 'column' | 'row', index: number, size: number | undefined): void {
-  const axisLength = axis === 'column' ? MAX_COLS : MAX_ROWS
-  if (!Number.isInteger(index) || index < 0 || index >= axisLength) {
-    throw new Error(`Invalid projected ${axis} index: ${index}`)
-  }
-  if (size !== undefined && (!Number.isFinite(size) || size < 0)) {
-    throw new Error(`Invalid projected ${axis} size: ${size}`)
-  }
-}
-
-function buildAxisEntries(
-  sizes: Readonly<Record<number, number>>,
-  hiddenAxes: Readonly<Record<number, true>>,
-  idPrefix: 'col' | 'row',
-): WorkbookAxisEntrySnapshot[] {
-  const indexes = new Set<number>()
-  for (const key of Object.keys(sizes)) {
-    const index = Number(key)
-    if (Number.isInteger(index) && index >= 0) {
-      indexes.add(index)
-    }
-  }
-  for (const key of Object.keys(hiddenAxes)) {
-    const index = Number(key)
-    if (Number.isInteger(index) && index >= 0) {
-      indexes.add(index)
-    }
-  }
-  return [...indexes]
-    .toSorted((left, right) => left - right)
-    .map((index) => ({
-      id: `${idPrefix}-${index}`,
-      index,
-      size: sizes[index] ?? null,
-      hidden: hiddenAxes[index] === true ? true : null,
-    }))
 }

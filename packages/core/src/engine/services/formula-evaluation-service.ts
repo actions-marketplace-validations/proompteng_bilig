@@ -1,43 +1,47 @@
-import { Effect } from 'effect'
-import { ErrorCode, MAX_COLS, MAX_ROWS, ValueTag, type CellValue } from '@bilig/protocol'
 import {
   createLookupBuiltinResolver,
   evaluatePlanResult,
   evaluatePlanScalarResult,
   formatAddress,
-  lowerToPlan,
   isArrayValue,
+  lowerToPlan,
+  parseCellAddress,
   parseFormula,
+  parseRangeAddress,
   scalarFromEvaluationResult,
   type EvaluationContext,
   type EvaluationResult,
   type FormulaNode,
   type RangeBuiltinArgument,
-  parseCellAddress,
-  parseRangeAddress,
 } from '@bilig/formula'
+import { ErrorCode, MAX_COLS, MAX_ROWS, ValueTag, type CellValue } from '@bilig/protocol'
+import { Effect } from 'effect'
 import { CellFlags } from '../../cell-store.js'
 import { definedNameValueToCellValue, definedNameValueToReferenceOperand } from '../../engine-metadata-utils.js'
 import { emptyValue, errorValue } from '../../engine-value-utils.js'
 import { addEngineCounter } from '../../perf/engine-counters.js'
-import type { EngineRuntimeState, RuntimeFormula, SpillMaterialization } from '../runtime-state.js'
 import { EngineFormulaEvaluationError } from '../errors.js'
+import { getRuntimeFormulaStructuralCompiled } from '../runtime-formula-source.js'
+import type { EngineRuntimeState, RuntimeFormula, SpillMaterialization } from '../runtime-state.js'
 import type { CriterionRangeCacheService, CriterionRangeMatch } from './criterion-range-cache-service.js'
 import type { ExactColumnIndexService } from './exact-column-index-service.js'
-import type { EngineRuntimeColumnStoreService } from './runtime-column-store-service.js'
-import type { RangeAggregateCacheService } from './range-aggregate-cache-service.js'
-import type { SortedColumnSearchService } from './sorted-column-search-service.js'
+import { tryEvaluateDirectAggregate } from './formula-evaluation-direct-aggregate.js'
 import { directCriteriaRangeVersionKey, rememberDirectCriteriaResult } from './formula-evaluation-direct-criteria-cache.js'
+import {
+  tryEvaluateNativeDirectCriteriaMatchedAggregate,
+  tryEvaluateNativeDirectCriteriaPredicateAggregate,
+  type NativeDirectCriteriaPredicateLayoutCache,
+} from './formula-evaluation-direct-criteria-native.js'
+import { createDirectCriteriaSharingContext } from './formula-evaluation-direct-criteria-sharing.js'
 import {
   applyDirectCriteriaResultTransforms,
   numericLikeValueInView,
   strictNumericAggregateCandidateInView,
   tryEvaluateDirectCriteriaTransformShortCircuit,
 } from './formula-evaluation-direct-criteria-transforms.js'
-import { tryEvaluateDirectVectorLookup } from './formula-evaluation-direct-lookup.js'
 import { tryEvaluateDirectIndexExactMatch, tryEvaluateDirectIndexOffset } from './formula-evaluation-direct-index.js'
+import { tryEvaluateDirectVectorLookup } from './formula-evaluation-direct-lookup.js'
 import { tryEvaluateDirectScalar } from './formula-evaluation-direct-scalar.js'
-import { getRuntimeFormulaStructuralCompiled } from '../runtime-formula-source.js'
 import {
   cellValuesEqual,
   directErrorResult,
@@ -45,18 +49,14 @@ import {
   evaluationErrorMessage,
   referenceReplacementKey,
 } from './formula-evaluation-helpers.js'
-import { tryEvaluateDirectAggregate } from './formula-evaluation-direct-aggregate.js'
-import {
-  tryEvaluateNativeDirectCriteriaMatchedAggregate,
-  tryEvaluateNativeDirectCriteriaPredicateAggregate,
-  type NativeDirectCriteriaPredicateLayoutCache,
-} from './formula-evaluation-direct-criteria-native.js'
-import { createDirectCriteriaSharingContext } from './formula-evaluation-direct-criteria-sharing.js'
 import { createRowVisibilityResolvers } from './formula-evaluation-row-hidden.js'
-import { readPrecisionAsDisplayedCellValue, roundFormulaResultForPrecisionAsDisplayed } from './precision-as-displayed.js'
-import { resolveStructuredReferenceNow } from './formula-evaluation-structured-reference.js'
 import type { EngineFormulaEvaluationService } from './formula-evaluation-service-types.js'
+import { resolveStructuredReferenceNow } from './formula-evaluation-structured-reference.js'
 import { tryEvaluateFormulaLeafInlineScalar } from './formula-leaf-inline-scalar-evaluator.js'
+import { readPrecisionAsDisplayedCellValue, roundFormulaResultForPrecisionAsDisplayed } from './precision-as-displayed.js'
+import type { RangeAggregateCacheService } from './range-aggregate-cache-service.js'
+import type { EngineRuntimeColumnStoreService } from './runtime-column-store-service.js'
+import type { SortedColumnSearchService } from './sorted-column-search-service.js'
 export type { EngineFormulaEvaluationService } from './formula-evaluation-service-types.js'
 
 const DIRECT_CRITERIA_MATCH_CACHE_LIMIT = 16_384
@@ -799,23 +799,25 @@ export function createEngineFormulaEvaluationService(args: {
     return emptyChangedCellIndices
   }
 
+  const tryEvaluateDirectFormulaFastPath = (cellIndex: number, formula: RuntimeFormula): CellValue | undefined =>
+    tryEvaluateDirectVectorLookup(directVectorLookupContext, formula) ??
+    tryEvaluateDirectScalar(formula, readCellValueByIndex, workbookDateSystem()) ??
+    tryEvaluateDirectAggregate({
+      formula,
+      workbook: args.state.workbook,
+      counters: args.state.counters,
+      aggregateCache: args.aggregateCache,
+      readCellValueByIndex,
+    }) ??
+    tryEvaluateDirectCriteriaAggregate(formula, cellIndex) ??
+    (formula.inlineScalarFastPlanKind !== undefined ? tryEvaluateFormulaLeafInlineScalar({ state: args.state, formula }) : undefined)
+
   const evaluateDirectLookupFormulaNow = (cellIndex: number): number[] | undefined => {
     const formula = args.state.formulas.get(cellIndex)
     if (!formula) {
       return undefined
     }
-    const directResult =
-      tryEvaluateDirectVectorLookup(directVectorLookupContext, formula) ??
-      tryEvaluateDirectScalar(formula, readCellValueByIndex, workbookDateSystem()) ??
-      tryEvaluateDirectAggregate({
-        formula,
-        workbook: args.state.workbook,
-        counters: args.state.counters,
-        aggregateCache: args.aggregateCache,
-        readCellValueByIndex,
-      }) ??
-      tryEvaluateDirectCriteriaAggregate(formula, cellIndex) ??
-      (formula.inlineScalarFastPlanKind !== undefined ? tryEvaluateFormulaLeafInlineScalar({ state: args.state, formula }) : undefined)
+    const directResult = tryEvaluateDirectFormulaFastPath(cellIndex, formula)
     return directResult === undefined
       ? undefined
       : formula.compiled.producesSpill
@@ -830,18 +832,7 @@ export function createEngineFormulaEvaluationService(args: {
       return []
     }
 
-    const directResult =
-      tryEvaluateDirectVectorLookup(directVectorLookupContext, formula) ??
-      tryEvaluateDirectScalar(formula, readCellValueByIndex, workbookDateSystem()) ??
-      tryEvaluateDirectAggregate({
-        formula,
-        workbook: args.state.workbook,
-        counters: args.state.counters,
-        aggregateCache: args.aggregateCache,
-        readCellValueByIndex,
-      }) ??
-      tryEvaluateDirectCriteriaAggregate(formula, cellIndex) ??
-      (formula.inlineScalarFastPlanKind !== undefined ? tryEvaluateFormulaLeafInlineScalar({ state: args.state, formula }) : undefined)
+    const directResult = tryEvaluateDirectFormulaFastPath(cellIndex, formula)
     if (directResult !== undefined) {
       return storeFormulaResult(cellIndex, formula, directResult)
     }

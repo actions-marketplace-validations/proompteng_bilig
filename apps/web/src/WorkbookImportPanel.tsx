@@ -1,5 +1,3 @@
-import { useId } from 'react'
-import { Upload } from 'lucide-react'
 import {
   CSV_CONTENT_TYPE,
   LEGACY_XLS_CONTENT_TYPE,
@@ -7,7 +5,9 @@ import {
   XLSM_CONTENT_TYPE,
   type WorkbookImportContentType,
 } from '@bilig/agent-api'
-import type { ImportedWorkbookPreview } from '@bilig/excel-import'
+import type { ImportedWorkbookPreview } from '@bilig/excel-import/browser'
+import { Upload } from 'lucide-react'
+import { useId } from 'react'
 import { cn } from './cn.js'
 import { workbookAlertClass, workbookButtonClass, workbookPillClass, workbookSurfaceClass } from './workbook-shell-chrome.js'
 

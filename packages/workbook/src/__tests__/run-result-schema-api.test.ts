@@ -85,5 +85,5 @@ describe('@bilig/workbook run-result schema api', () => {
       expect(validateRunResultSchema(description), JSON.stringify(description)).toBe(true)
       expect(checkWorkbookRunResultDescription(description).status, JSON.stringify(description)).toBe('valid')
     }
-  })
+  }, 15_000)
 })

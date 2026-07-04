@@ -7,7 +7,8 @@
       "@bilig/core": ["../core/src/index.ts"],
       "@bilig/protocol": ["../protocol/src/index.ts"],
       "@bilig/wasm-kernel": ["../wasm-kernel/src/index.ts"],
-      "@bilig/xlsx": ["../xlsx/src/index.ts"]
+      "@bilig/xlsx": ["../xlsx/src/index.ts"],
+      "@bilig/xlsx/browser": ["../xlsx/src/browser.ts"]
     }
   },
   "references": [

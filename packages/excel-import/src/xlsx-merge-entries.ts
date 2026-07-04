@@ -1,4 +1,4 @@
-import { encodeCellAddress } from '@bilig/xlsx'
+import { encodeCellAddress } from '@bilig/xlsx/browser'
 import type { SheetJsRange } from './xlsx-sheetjs-types.js'
 
 import type { WorkbookMergeRangeSnapshot } from '@bilig/protocol'

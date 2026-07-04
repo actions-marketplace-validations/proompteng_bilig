@@ -1,9 +1,7 @@
-import { Effect } from 'effect'
 import { parseCellAddress } from '@bilig/formula'
-import type { EngineOp, EngineOpBatch } from '@bilig/workbook'
-import { ValueTag, type CellRangeRef, type CellSnapshot } from '@bilig/protocol'
-import { createBatch } from '../../replica-state.js'
-import type { WorkbookStore } from '../../workbook-store.js'
+import { ValueTag } from '@bilig/protocol'
+import type { EngineOp } from '@bilig/workbook'
+import { Effect } from 'effect'
 import {
   cellMutationRefToEngineOp,
   cloneCellMutationRef,
@@ -11,105 +9,40 @@ import {
   type EngineCellMutationRef,
   type EngineExistingLiteralCellMutationRef,
   type EngineExistingNumericCellMutationRef,
-  type EngineExistingNumericCellMutationsRef,
   type EngineExistingNumericCellMutationResult,
+  type EngineExistingNumericCellMutationsRef,
 } from '../../cell-mutations-at.js'
-import type {
-  EngineRuntimeState,
-  PreparedCellAddress,
-  RuntimeStructuralFormulaSourceTransform,
-  TransactionRecord,
-} from '../runtime-state.js'
+import { createBatch } from '../../replica-state.js'
 import { EngineMutationError } from '../errors.js'
+import type { PreparedCellAddress, TransactionRecord } from '../runtime-state.js'
+import { inverseMutationStructuralInsertOp, isMutationStructuralInsertOp } from './mutation-cell-content-helpers.js'
+import { createMutationCellRestoreHistoryHelpers, tryMutationCellRefsFromOps } from './mutation-cell-restore-history.js'
+import { createMutationCoreInverseOps } from './mutation-core-inverse-ops.js'
 import { tryBuildFastMutationHistory, type FastMutationHistoryResult } from './mutation-history-fast-path.js'
+import { createMutationRangeOperations } from './mutation-range-operations.js'
+import { tryExecuteMutationRenderCommitFastPath } from './mutation-render-commit-fast-path.js'
+import { normalizeRenderCommitOps } from './mutation-render-commit-normalizer.js'
+import type { CreateEngineMutationServiceArgs, EngineMutationService } from './mutation-service-types.js'
+import { createMutationStructuralDeleteInverseHelpers } from './mutation-structural-delete-inverse.js'
 import {
   cloneTransactionRecordOps,
   createExistingNumericCellMutationsTransactionRecord,
-  createLazyReversedExistingNumericCellMutationsTransactionRecord,
   createLazyCellMutationTransactionRecord,
+  createLazyReversedExistingNumericCellMutationsTransactionRecord,
   createLazySingleOpTransactionRecord,
   createOpsTransactionRecord,
-  existingNumericCellMutationsRecordToRefs,
   createSingleExistingLiteralCellMutationTransactionRecord,
   createSingleExistingNumericCellMutationTransactionRecord,
+  existingNumericCellMutationsRecordToRefs,
   singleExistingLiteralCellMutationRecordToRef,
   singleExistingNumericCellMutationRecordToRef,
   transactionRecordOps,
 } from './mutation-transaction-records.js'
-import { normalizeRenderCommitOps } from './mutation-render-commit-normalizer.js'
-import { inverseMutationStructuralInsertOp, isMutationStructuralInsertOp } from './mutation-cell-content-helpers.js'
-import { createMutationCellRestoreHistoryHelpers, tryMutationCellRefsFromOps } from './mutation-cell-restore-history.js'
-import { createMutationStructuralDeleteInverseHelpers } from './mutation-structural-delete-inverse.js'
-import type { EngineMutationService } from './mutation-service-types.js'
-import { tryExecuteMutationRenderCommitFastPath } from './mutation-render-commit-fast-path.js'
-import { createMutationRangeOperations } from './mutation-range-operations.js'
-import { createMutationCoreInverseOps } from './mutation-core-inverse-ops.js'
 import { isWorkbookTableHeaderCell } from './operation-table-header-rename.js'
 
 export type { EngineMutationService } from './mutation-service-types.js'
 
-export function createEngineMutationService(args: {
-  readonly state: Pick<
-    EngineRuntimeState,
-    | 'replicaState'
-    | 'batchListeners'
-    | 'formulas'
-    | 'undoStack'
-    | 'redoStack'
-    | 'counters'
-    | 'trackReplicaVersions'
-    | 'getSyncClientConnection'
-    | 'getTransactionReplayDepth'
-    | 'setTransactionReplayDepth'
-  > & {
-    readonly workbook: WorkbookStore
-  }
-  readonly captureSheetCellState: (sheetName: string) => EngineOp[]
-  readonly captureRowRangeCellState: (sheetName: string, start: number, count: number) => EngineOp[]
-  readonly captureColumnRangeCellState: (sheetName: string, start: number, count: number) => EngineOp[]
-  readonly captureStoredCellOps: (cellIndex: number, sheetName: string, address: string) => EngineOp[]
-  readonly restoreCellOps: (sheetName: string, address: string) => EngineOp[]
-  readonly getCellByIndex: (cellIndex: number) => CellSnapshot
-  readonly getFormulaFamilyStructuralSourceTransform?: (cellIndex: number) => RuntimeStructuralFormulaSourceTransform | undefined
-  readonly hasFormulaFamilyStructuralSourceTransforms?: () => boolean
-  readonly readRangeCells: (range: CellRangeRef) => CellSnapshot[][]
-  readonly toCellStateOps: (
-    sheetName: string,
-    address: string,
-    snapshot: CellSnapshot,
-    sourceSheetName?: string,
-    sourceAddress?: string,
-  ) => EngineOp[]
-  readonly applyBatchNow: (
-    batch: EngineOpBatch,
-    source: 'local' | 'restore' | 'undo' | 'redo',
-    potentialNewCells?: number,
-    preparedCellAddressesByOpIndex?: readonly (PreparedCellAddress | null)[],
-    options?: { readonly emitTracked?: boolean },
-  ) => void
-  readonly applyLocalSingleStructuralAxisOpWithoutBatchNow?: (
-    op: Extract<EngineOp, { kind: 'insertRows' | 'insertColumns' }>,
-    options?: { readonly emitTracked?: boolean; readonly recordHistory?: boolean },
-  ) => boolean
-  readonly applyCellMutationsAtBatchNow: (
-    refs: readonly EngineCellMutationRef[],
-    batch: EngineOpBatch | null,
-    source: 'local' | 'restore' | 'undo' | 'redo',
-    potentialNewCells?: number,
-  ) => void
-  readonly applyExistingNumericCellMutationsAtBatchNow?: (
-    record: Extract<TransactionRecord, { kind: 'existing-numeric-cell-mutations' }>,
-    batch: EngineOpBatch | null,
-    source: 'local' | 'restore' | 'undo' | 'redo',
-  ) => boolean
-  readonly applyExistingNumericCellMutationAtNow?: (
-    request: EngineExistingNumericCellMutationRef,
-  ) => EngineExistingNumericCellMutationResult | null
-  readonly applyExistingLiteralCellMutationAtNow?: (
-    request: EngineExistingLiteralCellMutationRef,
-  ) => EngineExistingNumericCellMutationResult | null
-  readonly hasExternallyVisibleLocalMutationObservers?: () => boolean
-}): EngineMutationService {
+export function createEngineMutationService(args: CreateEngineMutationServiceArgs): EngineMutationService {
   const emptyBatchOps: EngineOp[] = []
   const shouldCreateLocalBatch = (): boolean =>
     args.state.trackReplicaVersions ||

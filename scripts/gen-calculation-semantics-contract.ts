@@ -7,10 +7,11 @@ import { pathToFileURL } from 'node:url'
 import {
   canonicalFormulaFixtures,
   canonicalWorkbookSemanticsFixtures,
-  type ExcelFixtureCase,
   excelDateTimeFixtureSuite,
+  type ExcelFixtureCase,
 } from '../packages/excel-fixtures/src/index.ts'
 import { formulaCompatibilityRegistry, getCompatibilityEntry } from '../packages/formula/src/compatibility.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 import {
   arrayField,
   asObject,
@@ -21,7 +22,6 @@ import {
   stringArrayField,
   stringField,
 } from './json-contract-helpers.ts'
-import { formatJsonForRepo } from './generated-json-format.ts'
 
 export interface WorkbookSemanticsCategoryCoverage {
   readonly category: string
@@ -101,21 +101,21 @@ const workbookSemanticsCategorySpecs = [
 
 function main(): void {
   const isCheckMode = process.argv.includes('--check')
-  const scorecard = buildCalculationSemanticsContract()
-  const serializedScorecard = formatJsonForRepo(`${JSON.stringify(scorecard, null, 2)}\n`)
+  const contract = buildCalculationSemanticsContract()
+  const serializedContract = formatJsonForRepo(`${JSON.stringify(contract, null, 2)}\n`)
 
   if (isCheckMode) {
     if (!existsSync(outputPath)) {
       throw new Error(`Calculation semantics contract is missing. Run: bun scripts/gen-calculation-semantics-contract.ts`)
     }
-    const currentScorecard = readFileSync(outputPath, 'utf8')
-    if (currentScorecard !== serializedScorecard) {
+    const currentContract = readFileSync(outputPath, 'utf8')
+    if (currentContract !== serializedContract) {
       throw new Error('Generated calculation semantics contract is out of date. Run: bun scripts/gen-calculation-semantics-contract.ts')
     }
     validateCalculationSemanticsContract(parseCalculationSemanticsContract(readJsonObject(outputPath)))
   } else {
     mkdirSync(dirname(outputPath), { recursive: true })
-    writeFileSync(outputPath, serializedScorecard)
+    writeFileSync(outputPath, serializedContract)
   }
 
   console.log(
@@ -123,11 +123,11 @@ function main(): void {
       {
         mode: isCheckMode ? 'check' : 'write',
         outputPath,
-        allCommittedFormulaSemanticsCovered: scorecard.summary.allCommittedFormulaSemanticsCovered,
-        coveredCanonicalFixtureCount: scorecard.summary.coveredCanonicalFixtureCount,
-        canonicalFormulaFixtureCount: scorecard.summary.canonicalFormulaFixtureCount,
-        coveredWorkbookSemanticsFixtureCount: scorecard.summary.coveredWorkbookSemanticsFixtureCount,
-        workbookSemanticsFixtureCount: scorecard.summary.workbookSemanticsFixtureCount,
+        allCommittedFormulaSemanticsCovered: contract.summary.allCommittedFormulaSemanticsCovered,
+        coveredCanonicalFixtureCount: contract.summary.coveredCanonicalFixtureCount,
+        canonicalFormulaFixtureCount: contract.summary.canonicalFormulaFixtureCount,
+        coveredWorkbookSemanticsFixtureCount: contract.summary.coveredWorkbookSemanticsFixtureCount,
+        workbookSemanticsFixtureCount: contract.summary.workbookSemanticsFixtureCount,
       },
       null,
       2,
@@ -260,25 +260,25 @@ export function parseCalculationSemanticsContract(value: Record<string, unknown>
   }
 }
 
-export function validateCalculationSemanticsContract(scorecard: CalculationSemanticsContract): void {
-  const current = buildCalculationSemanticsContract(scorecard.generatedAt)
+export function validateCalculationSemanticsContract(contract: CalculationSemanticsContract): void {
+  const current = buildCalculationSemanticsContract(contract.generatedAt)
   if (
-    JSON.stringify(scorecard.summary) !== JSON.stringify(current.summary) ||
-    JSON.stringify(scorecard.coverage) !== JSON.stringify(current.coverage)
+    JSON.stringify(contract.summary) !== JSON.stringify(current.summary) ||
+    JSON.stringify(contract.coverage) !== JSON.stringify(current.coverage)
   ) {
     throw new Error('Calculation semantics contract is stale against the current fixture corpus')
   }
-  if (!scorecard.summary.allCommittedFormulaSemanticsCovered) {
+  if (!contract.summary.allCommittedFormulaSemanticsCovered) {
     throw new Error(
-      `Calculation semantics coverage is incomplete: missing canonical=${scorecard.summary.missingCanonicalFixtureIds.join(
+      `Calculation semantics coverage is incomplete: missing canonical=${contract.summary.missingCanonicalFixtureIds.join(
         ',',
-      )}; missing workbook=${scorecard.summary.missingWorkbookSemanticsFixtureIds.join(',')}`,
+      )}; missing workbook=${contract.summary.missingWorkbookSemanticsFixtureIds.join(',')}`,
     )
   }
-  if (!scorecard.coverage.stableFormulaFixtureIds.includes('lookup-reference:offset-basic')) {
+  if (!contract.coverage.stableFormulaFixtureIds.includes('lookup-reference:offset-basic')) {
     throw new Error('Calculation semantics contract must cover the canonical OFFSET fixture')
   }
-  if (!scorecard.summary.coveredWorkbookSemanticsCategories.includes('structured-references')) {
+  if (!contract.summary.coveredWorkbookSemanticsCategories.includes('structured-references')) {
     throw new Error('Calculation semantics contract must cover structured-reference workbook semantics')
   }
 }

@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -513,7 +513,7 @@ describe('repository dependency policy', () => {
   it('keeps excel-import source-preserving output as a shim over @bilig/xlsx', () => {
     const sourcePreservingExport = readFileSync(join(repoRoot, 'packages/excel-import/src/xlsx-source-preserving-export.ts'), 'utf8')
 
-    expect(sourcePreservingExport).toContain("from '@bilig/xlsx'")
+    expect(sourcePreservingExport).toContain("from '@bilig/xlsx/source-preserving-literal-patches'")
     expect(sourcePreservingExport).toContain('exportBiligXlsxSourceLiteralPatches')
     expect(sourcePreservingExport).toContain('forceWorkbookRecalculation: calculationTextPatches.length === 0')
     expect(sourcePreservingExport).not.toContain('tryWriteStreamingPatchedWorksheetEntry')
@@ -531,15 +531,15 @@ describe('repository dependency policy', () => {
     )
     const workbookSheetPaths = readFileSync(join(repoRoot, 'packages/excel-import/src/xlsx-workbook-sheet-paths.ts'), 'utf8')
 
-    expect(largeSimpleImport).toContain("from '@bilig/xlsx'")
+    expect(largeSimpleImport).toContain("from '@bilig/xlsx/browser'")
     expect(largeSimpleImport).toContain('workbookSheetPathEntriesForSource(zip)')
     expect(largeSimpleImport).not.toContain('readWorksheetPathsByRelationshipId')
-    expect(largeSimpleInspect).toContain("from '@bilig/xlsx'")
+    expect(largeSimpleInspect).toContain("from '@bilig/xlsx/browser'")
     expect(largeSimpleInspect).toContain('workbookSheetPathEntriesForSource(zip)')
     expect(largeSimpleInspect).not.toContain('readWorksheetPathsByRelationshipId')
     expect(largeSimpleWorkbookMetadata).not.toContain('readWorksheetPathsByRelationshipId')
     expect(largeSimpleWorkbookMetadata).not.toContain('worksheetRelationshipType')
-    expect(workbookSheetPaths).toContain("from '@bilig/xlsx'")
+    expect(workbookSheetPaths).toContain("from '@bilig/xlsx/browser'")
     expect(workbookSheetPaths).toContain('coreWorkbookSheetPathEntriesForSource(source)')
     expect(workbookSheetPaths).toContain('return coreWorkbookSheetPathEntriesFromSource(source, sheetNames)')
   })

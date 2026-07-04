@@ -1,4 +1,3 @@
-import { unzipSync, zipSync } from 'fflate'
 import {
   decodeCellAddress,
   decodeCellRange,
@@ -6,9 +5,11 @@ import {
   encodeCellRange,
   encodeColumnAddress,
   type XlsxCellRange,
-} from '@bilig/xlsx'
+} from '@bilig/xlsx/browser'
+import { unzipSync, zipSync } from 'fflate'
 
 import type { CellRangeRef, LiteralInput, WorkbookPivotSnapshot, WorkbookPivotValueSnapshot, WorkbookSnapshot } from '@bilig/protocol'
+import { defaultDataFieldVerb, subtotalValue } from './xlsx-pivot-aggregate-xml.js'
 import {
   addContentTypeOverride,
   addExportPreservedPivotArtifactsToXlsxBytes,
@@ -26,7 +27,6 @@ import {
   setZipText,
   spreadsheetNamespace,
 } from './xlsx-pivot-artifacts.js'
-import { defaultDataFieldVerb, subtotalValue } from './xlsx-pivot-aggregate-xml.js'
 import { getZipText, type XlsxZipEntries } from './xlsx-zip.js'
 
 type ZipEntries = XlsxZipEntries

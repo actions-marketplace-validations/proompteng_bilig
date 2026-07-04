@@ -4,9 +4,9 @@ import { buildImportExportFidelityContract, validateImportExportFidelityContract
 
 describe('import/export fidelity contract', () => {
   it('generates a checked artifact from real CSV and XLSX import/export round trips', async () => {
-    const scorecard = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
+    const contract = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
 
-    expect(scorecard).toMatchObject({
+    expect(contract).toMatchObject({
       schemaVersion: 1,
       suite: 'import-export-fidelity',
       generatedAt: '2026-05-06T08:00:00.000Z',
@@ -17,7 +17,7 @@ describe('import/export fidelity contract', () => {
         xlsxSnapshotRoundTripPassed: true,
       },
     })
-    expect(scorecard.cases.map((entry) => entry.id)).toEqual([
+    expect(contract.cases.map((entry) => entry.id)).toEqual([
       'csv-import-preview',
       'csv-engine-roundtrip',
       'xlsx-import-preview',
@@ -38,8 +38,8 @@ describe('import/export fidelity contract', () => {
       'xlsx-macro-payload-preserved-without-execution',
       'xlsx-runtime-feature-policy-warning',
     ])
-    expect(scorecard.cases.every((entry) => entry.required && entry.passed)).toBe(true)
-    expect(scorecard.cases.find((entry) => entry.id === 'xlsx-macro-payload-preserved-without-execution')).toMatchObject({
+    expect(contract.cases.every((entry) => entry.required && entry.passed)).toBe(true)
+    expect(contract.cases.find((entry) => entry.id === 'xlsx-macro-payload-preserved-without-execution')).toMatchObject({
       format: 'xlsx',
       direction: 'import-export-import',
       coveredFeatures: [
@@ -50,7 +50,7 @@ describe('import/export fidelity contract', () => {
       ],
       missingFeatures: [],
     })
-    expect(scorecard.summary.coveredFeatures).toEqual([
+    expect(contract.summary.coveredFeatures).toEqual([
       'csv.import',
       'csv.preview',
       'csv.export',
@@ -91,14 +91,14 @@ describe('import/export fidelity contract', () => {
       'xlsx.externalData.provenance',
       'xlsx.runtimeFeaturePolicyWarnings',
     ])
-    expect(scorecard.summary.unsupportedFeatures).toEqual([])
-    expect(scorecard.summary.declinedRuntimeFeatures).toEqual(['xlsx.macros.execution'])
-    expect(scorecard.semanticLedger).toContainEqual({
+    expect(contract.summary.unsupportedFeatures).toEqual([])
+    expect(contract.summary.declinedRuntimeFeatures).toEqual(['xlsx.macros.execution'])
+    expect(contract.semanticLedger).toContainEqual({
       feature: 'xlsx.macros.execution',
       disposition: 'declined-runtime',
       reason: 'Bilig preserves macro payload metadata but intentionally never executes workbook macros.',
     })
-    expect(scorecard.semanticLedger).toContainEqual({
+    expect(contract.semanticLedger).toContainEqual({
       feature: 'xlsx.values',
       disposition: 'preserved',
       reason: 'Preserved by required import/export fidelity case evidence.',
@@ -106,46 +106,46 @@ describe('import/export fidelity contract', () => {
   })
 
   it('keeps unsupported and declined import/export semantics explicit', async () => {
-    const scorecard = await buildImportExportFidelityContract('test-generated')
+    const contract = await buildImportExportFidelityContract('test-generated')
 
-    expect(scorecard.summary.unsupportedFeatures).toEqual([])
-    expect(scorecard.summary.declinedRuntimeFeatures).toEqual(['xlsx.macros.execution'])
-    expect(new Set(scorecard.semanticLedger.map((entry) => entry.disposition))).toEqual(new Set(['preserved', 'declined-runtime']))
+    expect(contract.summary.unsupportedFeatures).toEqual([])
+    expect(contract.summary.declinedRuntimeFeatures).toEqual(['xlsx.macros.execution'])
+    expect(new Set(contract.semanticLedger.map((entry) => entry.disposition))).toEqual(new Set(['preserved', 'declined-runtime']))
   })
 
   it('rejects stale artifacts missing required fidelity cases', async () => {
-    const scorecard = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
-    const staleScorecard = {
-      ...scorecard,
-      cases: scorecard.cases.filter((entry) => entry.id !== 'xlsx-snapshot-roundtrip-dimensions-merges'),
+    const contract = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
+    const staleContract = {
+      ...contract,
+      cases: contract.cases.filter((entry) => entry.id !== 'xlsx-snapshot-roundtrip-dimensions-merges'),
     }
 
-    expect(() => validateImportExportFidelityContract(staleScorecard)).toThrow(
+    expect(() => validateImportExportFidelityContract(staleContract)).toThrow(
       'Import/export fidelity contract is missing required case: xlsx-snapshot-roundtrip-dimensions-merges',
     )
   })
 
   it('rejects artifacts whose summary feature coverage drifts from case evidence', async () => {
-    const scorecard = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
-    const missingFeatureScorecard = {
-      ...scorecard,
+    const contract = await buildImportExportFidelityContract('2026-05-06T08:00:00.000Z')
+    const missingFeatureContract = {
+      ...contract,
       summary: {
-        ...scorecard.summary,
-        coveredFeatures: scorecard.summary.coveredFeatures.filter((feature) => feature !== 'xlsx.styles'),
+        ...contract.summary,
+        coveredFeatures: contract.summary.coveredFeatures.filter((feature) => feature !== 'xlsx.styles'),
       },
     }
-    const extraFeatureScorecard = {
-      ...scorecard,
+    const extraFeatureContract = {
+      ...contract,
       summary: {
-        ...scorecard.summary,
-        coveredFeatures: [...scorecard.summary.coveredFeatures, 'xlsx.unbackedClaim'],
+        ...contract.summary,
+        coveredFeatures: [...contract.summary.coveredFeatures, 'xlsx.unbackedClaim'],
       },
     }
 
-    expect(() => validateImportExportFidelityContract(missingFeatureScorecard)).toThrow(
+    expect(() => validateImportExportFidelityContract(missingFeatureContract)).toThrow(
       'Import/export fidelity contract summary is missing covered feature: xlsx.styles',
     )
-    expect(() => validateImportExportFidelityContract(extraFeatureScorecard)).toThrow(
+    expect(() => validateImportExportFidelityContract(extraFeatureContract)).toThrow(
       'Import/export fidelity contract summary reports uncovered feature: xlsx.unbackedClaim',
     )
   })

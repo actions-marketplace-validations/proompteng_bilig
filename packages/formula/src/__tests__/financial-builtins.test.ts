@@ -1,137 +1,883 @@
-import { describe, expect, it } from 'vitest'
-import { ErrorCode, ValueTag, type CellValue } from '@bilig/protocol'
-import {
-  cumulativePeriodicPayment,
-  dbDepreciation,
-  ddbDepreciation,
-  futureValue,
-  interestPayment,
-  periodicPayment,
-  presentValue,
-  principalPayment,
-  solveRate,
-  totalPeriods,
-  vdbDepreciation,
-} from '../builtins/financial.js'
+import { ErrorCode, ValueTag } from '@bilig/protocol'
+import { afterEach, describe, expect, it } from 'vitest'
 import { getBuiltin } from '../builtins.js'
+import { clearExternalFunctionAdapters } from '../external-function-adapter.js'
 
-const num = (value: number): CellValue => ({ tag: ValueTag.Number, value })
-const str = (value: string, stringId = 1): CellValue => ({ tag: ValueTag.String, value, stringId })
-const valueError = { tag: ValueTag.Error, code: ErrorCode.Value } as const
-const div0Error = { tag: ValueTag.Error, code: ErrorCode.Div0 } as const
-
-describe('financial helpers', () => {
-  it('computes time-value-of-money helpers', () => {
-    expect(futureValue(0.1, 2, -100, -1000, 0)).toBeCloseTo(1420, 12)
-    expect(presentValue(0.1, 2, -100, 1420, 0)).toBeCloseTo(-1000, 12)
-    expect(periodicPayment(0.1, 2, 1000, 0, 0)).toBeCloseTo(-576.1904761904761, 12)
-    expect(totalPeriods(0.1, -576.1904761904761, 1000, 0, 0)).toBeCloseTo(2, 12)
-    expect(solveRate(48, -200, 8000, 0, 0, 0.1)).toBeCloseTo(0.007701472488246008, 12)
-  })
-
-  it('covers time-value validation and zero-rate branches', () => {
-    expect(futureValue(0, 3, -10, -100, 0)).toBe(130)
-    expect(presentValue(0, 3, -10, 130, 0)).toBe(-100)
-    expect(periodicPayment(0, 4, 100, 20, 0)).toBe(-30)
-    expect(periodicPayment(0.1, 0, 100, 20, 0)).toBeUndefined()
-    expect(periodicPayment(-1, 2, 100, 20, 1)).toBeUndefined()
-    expect(totalPeriods(0, -20, 100, 0, 0)).toBe(5)
-    expect(totalPeriods(0, 0, 100, 0, 0)).toBeUndefined()
-    expect(totalPeriods(0.1, 0, 100, 0, 0)).toBeUndefined()
-    expect(solveRate(0, -200, 8000, 0, 0, 0.1)).toBeUndefined()
-    expect(solveRate(2, -50, 100, 0, 0, 0)).toBe(0)
-    expect(solveRate(48, -200, 8000, 0, 0, Number.NaN)).toBeCloseTo(0.007701472488246008, 12)
-    expect(solveRate(48, -200, 8000, 0, 0, -5)).toBeUndefined()
-  })
-
-  it('computes depreciation helpers', () => {
-    expect(dbDepreciation(10000, 1000, 5, 1, 12)).toBeCloseTo(3690, 12)
-    expect(ddbDepreciation(2400, 300, 10, 2, 2)).toBeCloseTo(384, 12)
-    expect(vdbDepreciation(2400, 300, 10, 1, 3, 2, false)).toBeCloseTo(691.2, 12)
-  })
-
-  it('covers depreciation validation and partial-period branches', () => {
-    expect(dbDepreciation(10000, 1000, 5, 1, 6)).toBeCloseTo(1845, 12)
-    expect(dbDepreciation(10000, 1000, 5, 6, 6)).toBeCloseTo(238.5271245878818, 12)
-    expect(dbDepreciation(0, 1000, 5, 1, 12)).toBeUndefined()
-    expect(dbDepreciation(10000, 1000, 5, 1, 13)).toBeUndefined()
-    expect(ddbDepreciation(2400, 300, 10, 1.5, 2)).toBeCloseTo(192, 12)
-    expect(ddbDepreciation(2400, 300, 10, 2, 0)).toBeUndefined()
-    expect(vdbDepreciation(2400, 300, 10, 0, 1, 2, true)).toBeCloseTo(480, 12)
-    expect(vdbDepreciation(2400, 300, 10, 2, 2, 2, false)).toBe(0)
-    expect(vdbDepreciation(2400, 300, 10, 3, 2, 2, false)).toBeUndefined()
-  })
-
-  it('computes interest and principal helpers', () => {
-    expect(interestPayment(0.1, 1, 2, 1000, 0, 0)).toBeCloseTo(-100, 12)
-    expect(principalPayment(0.1, 1, 2, 1000, 0, 0)).toBeCloseTo(-476.19047619047615, 12)
-    expect(cumulativePeriodicPayment(0.09 / 12, 30 * 12, 125000, 13, 24, 0, false)).toBeCloseTo(-11135.232130750845, 12)
-    expect(cumulativePeriodicPayment(0.09 / 12, 30 * 12, 125000, 13, 24, 0, true)).toBeCloseTo(-934.1071234208765, 12)
-    expect(interestPayment(0.08 / 12, 2, 10, 10000, 0, 1)).toBeCloseTo(-59.79890448548015, 12)
-    expect(principalPayment(0.08 / 12, 2, 10, 10000, 0, 1)).toBeCloseTo(-970.365422692497, 12)
-    expect(cumulativePeriodicPayment(0.08 / 12, 10, 10000, 1, 10, 1, false)).toBeCloseTo(-301.64327177965646, 12)
-    expect(cumulativePeriodicPayment(0.08 / 12, 10, 10000, 1, 10, 1, true)).toBeCloseTo(-10000, 9)
-  })
-
-  it('covers interest, principal, and cumulative validation branches', () => {
-    expect(interestPayment(0.1, 1, 2, 1000, 0, 1)).toBe(0)
-    expect(interestPayment(0.1, 0, 2, 1000, 0, 0)).toBeUndefined()
-    expect(interestPayment(-1, 1, 2, 1000, 0, 1)).toBeUndefined()
-    expect(principalPayment(0.1, 0, 2, 1000, 0, 0)).toBeUndefined()
-    expect(cumulativePeriodicPayment(0, 30 * 12, 125000, 13, 24, 0, false)).toBeUndefined()
-    expect(cumulativePeriodicPayment(0.09 / 12, 30 * 12, 125000, 24, 13, 0, false)).toBeUndefined()
-    expect(cumulativePeriodicPayment(0.09 / 12, 30 * 12, 125000, 13, 400, 0, false)).toBeUndefined()
-    expect(cumulativePeriodicPayment(0.1, 2, 100, 1, 1, -10, false)).toBeUndefined()
-  })
+afterEach(() => {
+  clearExternalFunctionAdapters()
 })
 
-describe('financial builtins', () => {
-  it('coerces direct numeric text for annuity functions', () => {
-    expect(getBuiltin('FV')?.(str('0.1'), str('2'), str('-100'), str('-1000'))).toEqual({
-      tag: ValueTag.Number,
-      value: expect.closeTo(1420, 10),
-    })
-    expect(getBuiltin('PV')?.(str('0.1'), str('2'), str('-576.1904761904761'))).toEqual({
-      tag: ValueTag.Number,
-      value: expect.closeTo(1000, 10),
-    })
-    expect(getBuiltin('PMT')?.(str('0.1'), str('2'), str('1000'))).toEqual({
-      tag: ValueTag.Number,
-      value: expect.closeTo(-576.1904761904758, 10),
-    })
-    expect(getBuiltin('PMT')?.(str('0.1'), str('2'), str('1000'), str('0'), str('1'))).toEqual({
-      tag: ValueTag.Number,
-      value: expect.closeTo(-523.8095238095234, 10),
-    })
-    expect(getBuiltin('NPER')?.(str('0.1'), str('-576.1904761904761'), str('1000'))).toEqual({
-      tag: ValueTag.Number,
-      value: expect.closeTo(2, 10),
-    })
-    expect(getBuiltin('ISPMT')?.(str('0.1'), str('0'), str('3'), str('8000'))).toEqual(num(-800))
-    expect(getBuiltin('IPMT')?.(str('0.1'), str('1'), str('2'), str('1000'))).toEqual(num(-100))
-    expect(getBuiltin('PPMT')?.(str('0.1'), str('1'), str('2'), str('1000'))).toEqual({
-      tag: ValueTag.Number,
-      value: expect.closeTo(-476.1904761904758, 10),
+describe('formula builtins: legacy financial and validation builtins', () => {
+  it('supports ACCRINT, ACCRINTM, AMORDEGRC, and AMORLINC', () => {
+    const issue = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2020 },
+      { tag: ValueTag.Number, value: 2 },
+      { tag: ValueTag.Number, value: 1 },
+    )
+    const firstInterest = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2020 },
+      { tag: ValueTag.Number, value: 11 },
+      { tag: ValueTag.Number, value: 30 },
+    )
+    const settlement = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2020 },
+      { tag: ValueTag.Number, value: 12 },
+      { tag: ValueTag.Number, value: 31 },
+    )
+    const cost = { tag: ValueTag.Number, value: 2000 }
+    const salvage = { tag: ValueTag.Number, value: 10 }
+    const period = { tag: ValueTag.Number, value: 4 }
+    const rate = { tag: ValueTag.Number, value: 0.1 }
+    const basis = { tag: ValueTag.Number, value: 0 }
+
+    expect(issue?.tag).toBe(ValueTag.Number)
+    expect(firstInterest?.tag).toBe(ValueTag.Number)
+    expect(settlement?.tag).toBe(ValueTag.Number)
+
+    const firstAccrual = getBuiltin('ACCRINT')?.(
+      issue,
+      firstInterest,
+      settlement,
+      rate,
+      { tag: ValueTag.Number, value: 1000 },
+      { tag: ValueTag.Number, value: 2 },
+      basis,
+    )
+    expect(firstAccrual).toMatchObject({ tag: ValueTag.Number })
+    expect(firstAccrual?.tag === ValueTag.Number ? firstAccrual.value : Number.NaN).toBeCloseTo(91.66666666666667, 12)
+
+    const omittedBasisAccrual = getBuiltin('ACCRINT')?.(
+      issue,
+      firstInterest,
+      settlement,
+      rate,
+      { tag: ValueTag.Number, value: 1000 },
+      { tag: ValueTag.Number, value: 2 },
+    )
+    expect(omittedBasisAccrual).toMatchObject({ tag: ValueTag.Number })
+    expect(omittedBasisAccrual?.tag === ValueTag.Number ? omittedBasisAccrual.value : Number.NaN).toBeCloseTo(91.66666666666667, 12)
+
+    const fullAccrual = getBuiltin('ACCRINT')?.(
+      issue,
+      firstInterest,
+      settlement,
+      rate,
+      { tag: ValueTag.Number, value: 1000 },
+      { tag: ValueTag.Number, value: 2 },
+      basis,
+    )
+    const shortAccrual = getBuiltin('ACCRINT')?.(
+      issue,
+      firstInterest,
+      settlement,
+      rate,
+      { tag: ValueTag.Number, value: 1000 },
+      { tag: ValueTag.Number, value: 2 },
+      basis,
+      { tag: ValueTag.Boolean, value: false },
+    )
+    expect(fullAccrual).toMatchObject({ tag: ValueTag.Number })
+    expect(shortAccrual).toMatchObject({ tag: ValueTag.Number })
+    const shortAccrualValue = shortAccrual?.tag === ValueTag.Number ? shortAccrual.value : Number.NaN
+    const fullAccrualValue = fullAccrual?.tag === ValueTag.Number ? fullAccrual.value : Number.NaN
+    expect(shortAccrualValue).toBeLessThan(fullAccrualValue)
+
+    const maturityAccrual = getBuiltin('ACCRINTM')?.(issue, settlement, rate, undefined, basis)
+    expect(maturityAccrual).toMatchObject({ tag: ValueTag.Number })
+    expect(maturityAccrual?.tag === ValueTag.Number ? maturityAccrual.value : Number.NaN).toBeCloseTo(91.66666666666667, 12)
+
+    expect(getBuiltin('AMORLINC')?.(cost, issue, settlement, salvage, period, rate, basis)).toEqual({ tag: ValueTag.Number, value: 200 })
+
+    expect(getBuiltin('AMORDEGRC')?.(cost, issue, settlement, salvage, period, rate, basis)).toEqual({ tag: ValueTag.Number, value: 163 })
+
+    expect(
+      getBuiltin('ACCRINT')?.(issue, settlement, issue, rate, { tag: ValueTag.Number, value: 1000 }, { tag: ValueTag.Number, value: 2 }),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+
+    expect(
+      getBuiltin('ACCRINT')?.(
+        issue,
+        settlement,
+        settlement,
+        rate,
+        { tag: ValueTag.Number, value: 1000 },
+        { tag: ValueTag.Number, value: 3 },
+      ),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+  })
+
+  it('covers ACCRINT and ACCRINTM basis variants and invalid argument branches', () => {
+    const issue = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2020 },
+      { tag: ValueTag.Number, value: 1 },
+      { tag: ValueTag.Number, value: 1 },
+    )
+    const firstInterest = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2020 },
+      { tag: ValueTag.Number, value: 2 },
+      { tag: ValueTag.Number, value: 1 },
+    )
+    const settlement = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2021 },
+      { tag: ValueTag.Number, value: 1 },
+      { tag: ValueTag.Number, value: 1 },
+    )
+    const rate = { tag: ValueTag.Number, value: 0.08 }
+    const par = { tag: ValueTag.Number, value: 1000 }
+    const frequency = { tag: ValueTag.Number, value: 2 }
+
+    expect(issue?.tag).toBe(ValueTag.Number)
+    expect(firstInterest?.tag).toBe(ValueTag.Number)
+    expect(settlement?.tag).toBe(ValueTag.Number)
+
+    for (const basis of [0, 1, 2, 3, 4]) {
+      expect(
+        getBuiltin('ACCRINT')?.(issue, firstInterest, settlement, rate, par, frequency, {
+          tag: ValueTag.Number,
+          value: basis,
+        }),
+      ).toMatchObject({ tag: ValueTag.Number })
+      expect(
+        getBuiltin('ACCRINTM')?.(issue, settlement, rate, par, {
+          tag: ValueTag.Number,
+          value: basis,
+        }),
+      ).toMatchObject({ tag: ValueTag.Number })
+    }
+
+    expect(
+      getBuiltin('ACCRINT')?.(issue, firstInterest, settlement, rate, par, frequency, {
+        tag: ValueTag.Number,
+        value: 5,
+      }),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+
+    expect(getBuiltin('ACCRINTM')?.(issue, settlement, rate, par, { tag: ValueTag.Number, value: 5 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
     })
   })
 
-  it('coerces direct numeric text for cumulative payment period arguments', () => {
-    expect(getBuiltin('CUMIPMT')?.(str('0.0075'), str('360'), str('125000'), str('13'), str('24'), str('0'))).toEqual({
+  it('covers AMORLINC and AMORDEGRC branch-heavy scenarios', () => {
+    const cost = { tag: ValueTag.Number, value: 1000 }
+    const datePurchased = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2020 },
+      { tag: ValueTag.Number, value: 1 },
+      { tag: ValueTag.Number, value: 1 },
+    )
+    const firstPeriod = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2021 },
+      { tag: ValueTag.Number, value: 1 },
+      { tag: ValueTag.Number, value: 1 },
+    )
+    const basis = { tag: ValueTag.Number, value: 0 }
+
+    expect(datePurchased?.tag).toBe(ValueTag.Number)
+    expect(firstPeriod?.tag).toBe(ValueTag.Number)
+
+    expect(
+      getBuiltin('AMORLINC')?.(
+        cost,
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 25 },
+        { tag: ValueTag.Number, value: 0 },
+        { tag: ValueTag.Number, value: 0.15 },
+        basis,
+      ),
+    ).toMatchObject({ tag: ValueTag.Number, value: 150 })
+
+    expect(
+      getBuiltin('AMORLINC')?.(
+        cost,
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 25 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 0.15 },
+        basis,
+      ),
+    ).toMatchObject({ tag: ValueTag.Number, value: 150 })
+
+    expect(
+      getBuiltin('AMORLINC')?.(
+        cost,
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 25 },
+        { tag: ValueTag.Number, value: 6 },
+        { tag: ValueTag.Number, value: 0.15 },
+        basis,
+      ),
+    ).toMatchObject({ tag: ValueTag.Number, value: 75 })
+
+    expect(
+      getBuiltin('AMORLINC')?.(
+        cost,
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 25 },
+        { tag: ValueTag.Number, value: 7 },
+        { tag: ValueTag.Number, value: 0.15 },
+        basis,
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: 0 })
+
+    expect(
+      getBuiltin('AMORDEGRC')?.(
+        { tag: ValueTag.Number, value: 1000 },
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 10 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 0.2 },
+        basis,
+      ),
+    ).toMatchObject({ tag: ValueTag.Number, value: 240 })
+
+    expect(
+      getBuiltin('AMORDEGRC')?.(
+        { tag: ValueTag.Number, value: 1000 },
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 10 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 0.3 },
+        basis,
+      ),
+    ).toMatchObject({ tag: ValueTag.Number, value: 247 })
+
+    expect(
+      getBuiltin('AMORDEGRC')?.(
+        { tag: ValueTag.Number, value: 1000 },
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 10 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 0.5 },
+        basis,
+      ),
+    ).toMatchObject({ tag: ValueTag.Number, value: 250 })
+
+    expect(
+      getBuiltin('AMORDEGRC')?.(
+        { tag: ValueTag.Number, value: 1000 },
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 0 },
+        { tag: ValueTag.Number, value: 3 },
+        { tag: ValueTag.Number, value: 1.2 },
+        basis,
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: 0 })
+
+    expect(
+      getBuiltin('AMORDEGRC')?.(
+        { tag: ValueTag.Number, value: 100 },
+        datePurchased,
+        firstPeriod,
+        { tag: ValueTag.Number, value: 200 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 0.1 },
+        basis,
+      ),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+  })
+
+  it('covers combinatorics, product, quotient, and financial validation edge branches', () => {
+    expect(getBuiltin('COMBINA')?.({ tag: ValueTag.Number, value: 4 }, { tag: ValueTag.Number, value: 0 })).toEqual({
       tag: ValueTag.Number,
-      value: expect.closeTo(-11135.232130750845, 8),
+      value: 1,
     })
-    expect(getBuiltin('CUMPRINC')?.(str('0.0075'), str('360'), str('125000'), str('13'), str('24'), str('0'))).toEqual({
+    expect(getBuiltin('COMBINA')?.({ tag: ValueTag.Number, value: 0 }, { tag: ValueTag.Number, value: 3 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('COMBINA')?.({ tag: ValueTag.String, value: 'bad', stringId: 1 }, { tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+
+    expect(
+      getBuiltin('GCD')?.({ tag: ValueTag.Number, value: 54 }, { tag: ValueTag.Number, value: 24.9 }, { tag: ValueTag.Number, value: 6 }),
+    ).toEqual({ tag: ValueTag.Number, value: 6 })
+    expect(
+      getBuiltin('LCM')?.({ tag: ValueTag.Number, value: 4 }, { tag: ValueTag.Number, value: 6 }, { tag: ValueTag.Number, value: 3.8 }),
+    ).toEqual({ tag: ValueTag.Number, value: 12 })
+    expect(getBuiltin('MROUND')?.({ tag: ValueTag.Number, value: 10 }, { tag: ValueTag.Number, value: 0 })).toEqual({
       tag: ValueTag.Number,
-      value: expect.closeTo(-934.1071234208765, 8),
+      value: 0,
+    })
+    expect(getBuiltin('MROUND')?.({ tag: ValueTag.Number, value: 10 }, { tag: ValueTag.Number, value: 4 })).toEqual({
+      tag: ValueTag.Number,
+      value: 12,
+    })
+    expect(
+      getBuiltin('MULTINOMIAL')?.(
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.Number, value: 3 },
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: 60 })
+    expect(getBuiltin('PRODUCT')?.()).toEqual({ tag: ValueTag.Number, value: 0 })
+    expect(getBuiltin('PRODUCT')?.({ tag: ValueTag.Error, code: ErrorCode.Ref }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Ref,
+    })
+    expect(getBuiltin('QUOTIENT')?.({ tag: ValueTag.Number, value: 7 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: 3,
+    })
+
+    const issue = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2020 },
+      { tag: ValueTag.Number, value: 1 },
+      { tag: ValueTag.Number, value: 1 },
+    )
+    const settlement = getBuiltin('DATE')?.(
+      { tag: ValueTag.Number, value: 2020 },
+      { tag: ValueTag.Number, value: 12 },
+      { tag: ValueTag.Number, value: 31 },
+    )
+    expect(issue?.tag).toBe(ValueTag.Number)
+    expect(settlement?.tag).toBe(ValueTag.Number)
+    expect(
+      getBuiltin('AMORDEGRC')?.(
+        { tag: ValueTag.String, value: 'bad', stringId: 2 },
+        issue,
+        settlement,
+        { tag: ValueTag.Number, value: 0 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 0.1 },
+        { tag: ValueTag.Number, value: 0 },
+      ),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+    expect(
+      getBuiltin('AMORLINC')?.(
+        { tag: ValueTag.Number, value: 1000 },
+        issue,
+        settlement,
+        { tag: ValueTag.String, value: 'bad', stringId: 3 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 0.1 },
+        { tag: ValueTag.Number, value: 0 },
+      ),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+  })
+
+  it('covers bitwise, integer, and rounding validation branches', () => {
+    expect(getBuiltin('BITXOR')?.({ tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('BITXOR')?.({ tag: ValueTag.String, value: 'bad', stringId: 1 }, { tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('BITXOR')?.({ tag: ValueTag.Number, value: 3 }, { tag: ValueTag.String, value: 'bad', stringId: 2 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('BITLSHIFT')?.({ tag: ValueTag.Number, value: 1 }, { tag: ValueTag.String, value: 'bad', stringId: 3 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('BITLSHIFT')?.({ tag: ValueTag.Number, value: 1 }, { tag: ValueTag.Number, value: 33 })).toEqual({
+      tag: ValueTag.Number,
+      value: 2 ** 33,
+    })
+    expect(getBuiltin('BITRSHIFT')?.({ tag: ValueTag.String, value: 'bad', stringId: 4 }, { tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('INT')?.({ tag: ValueTag.String, value: 'bad', stringId: 5 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('ROUNDUP')?.({ tag: ValueTag.Number, value: 12.34 }, { tag: ValueTag.String, value: 'bad', stringId: 6 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('ROUNDDOWN')?.({ tag: ValueTag.Number, value: 12.34 }, { tag: ValueTag.String, value: 'bad', stringId: 7 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('TRUNC')?.({ tag: ValueTag.Number, value: 12.34 }, { tag: ValueTag.String, value: 'bad', stringId: 8 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('TRUNC')?.({ tag: ValueTag.Number, value: -12.34 })).toEqual({
+      tag: ValueTag.Number,
+      value: -12,
     })
   })
 
-  it('rejects invalid direct financial text instead of defaulting to zero', () => {
-    expect(getBuiltin('PMT')?.(str('bad'), str('2'), str('1000'))).toEqual(valueError)
-    expect(getBuiltin('CUMIPMT')?.(str('0.0075'), str('bad'), str('125000'), str('13'), str('24'), str('0'))).toEqual(valueError)
+  it('covers ceiling, floor, parity, factorial, and combinatoric branches', () => {
+    expect(
+      getBuiltin('FLOOR.MATH')?.(
+        { tag: ValueTag.Number, value: -5.5 },
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.Number, value: 0 },
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: -6 })
+    expect(
+      getBuiltin('FLOOR.MATH')?.(
+        { tag: ValueTag.Number, value: -5.5 },
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.Number, value: 1 },
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: -4 })
+    expect(getBuiltin('FLOOR.PRECISE')?.({ tag: ValueTag.Number, value: -5.5 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: -6,
+    })
+    expect(
+      getBuiltin('CEILING.MATH')?.(
+        { tag: ValueTag.Number, value: -5.5 },
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.Number, value: 0 },
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: -4 })
+    expect(
+      getBuiltin('CEILING.MATH')?.(
+        { tag: ValueTag.Number, value: -5.5 },
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.Number, value: 1 },
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: -6 })
+    expect(getBuiltin('CEILING.PRECISE')?.({ tag: ValueTag.Number, value: -5.5 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: -4,
+    })
+    expect(getBuiltin('ISO.CEILING')?.({ tag: ValueTag.Number, value: -5.5 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: -4,
+    })
+    expect(
+      getBuiltin('CEILING.PRECISE')?.({ tag: ValueTag.String, value: 'bad', stringId: 9 }, { tag: ValueTag.Number, value: 2 }),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+    expect(getBuiltin('ISO.CEILING')?.({ tag: ValueTag.Number, value: 4 }, { tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+
+    expect(getBuiltin('BITAND')?.({ tag: ValueTag.Number, value: 3 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('BITAND')?.({ tag: ValueTag.Number, value: 3 }, { tag: ValueTag.String, value: 'bad', stringId: 10 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('BITOR')?.({ tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('BITOR')?.({ tag: ValueTag.Number, value: 1 }, { tag: ValueTag.String, value: 'bad', stringId: 11 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+
+    expect(getBuiltin('EVEN')?.({ tag: ValueTag.Number, value: -3 })).toEqual({
+      tag: ValueTag.Number,
+      value: -4,
+    })
+    expect(getBuiltin('ODD')?.({ tag: ValueTag.Number, value: -2 })).toEqual({
+      tag: ValueTag.Number,
+      value: -3,
+    })
+    expect(getBuiltin('FACT')?.({ tag: ValueTag.Number, value: -1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('FACTDOUBLE')?.({ tag: ValueTag.Number, value: -3 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('COMBIN')?.({ tag: ValueTag.Number, value: 3 }, { tag: ValueTag.Number, value: 4 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('COMBINA')?.({ tag: ValueTag.Number, value: 3 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: 6,
+    })
+    expect(getBuiltin('GCD')?.()).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+    expect(getBuiltin('LCM')?.()).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
   })
 
-  it('rejects zero NPV discount bases instead of returning Infinity', () => {
-    expect(getBuiltin('NPV')?.(num(-1), num(100), num(200))).toEqual(div0Error)
+  it('covers logarithmic, hyperbolic, and sign-related math edge branches', () => {
+    expect(getBuiltin('HARMEAN')?.()).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+    expect(getBuiltin('HARMEAN')?.({ tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: -1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+
+    expect(getBuiltin('LOG10')?.({ tag: ValueTag.Number, value: 1000 })).toEqual({
+      tag: ValueTag.Number,
+      value: 3,
+    })
+    expect(getBuiltin('LOG10')?.({ tag: ValueTag.Number, value: -1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('LOG')?.({ tag: ValueTag.Number, value: 8 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: 3,
+    })
+    expect(getBuiltin('LOG')?.({ tag: ValueTag.Number, value: 100 })).toEqual({
+      tag: ValueTag.Number,
+      value: 2,
+    })
+    expect(
+      getBuiltin('ACOT')?.({
+        tag: ValueTag.Number,
+        value: 0,
+      }),
+    ).toEqual({ tag: ValueTag.Number, value: Math.PI / 2 })
+    expect(getBuiltin('ACOTH')?.({ tag: ValueTag.Number, value: 0.5 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('COT')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Div0,
+    })
+    expect(getBuiltin('COTH')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Div0,
+    })
+    expect(getBuiltin('CSC')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Div0,
+    })
+    expect(getBuiltin('CSCH')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Div0,
+    })
+    expect(getBuiltin('SECH')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 1,
+    })
+    expect(getBuiltin('SIGN')?.({ tag: ValueTag.Number, value: -42 })).toEqual({
+      tag: ValueTag.Number,
+      value: -1,
+    })
+    expect(getBuiltin('SIGN')?.({ tag: ValueTag.String, value: 'bad', stringId: 12 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+  })
+
+  it('covers direct trig, exponential, and positive rounding builtin paths', () => {
+    expect(getBuiltin('SIN')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('COS')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 1,
+    })
+    expect(getBuiltin('TAN')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('ASIN')?.({ tag: ValueTag.Number, value: 1 })).toMatchObject({
+      tag: ValueTag.Number,
+      value: expect.closeTo(Math.PI / 2, 12),
+    })
+    expect(getBuiltin('ACOS')?.({ tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('ASIN')?.({ tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('ACOS')?.({ tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('ATAN')?.({ tag: ValueTag.Number, value: 1 })).toMatchObject({
+      tag: ValueTag.Number,
+      value: expect.closeTo(Math.PI / 4, 12),
+    })
+    expect(getBuiltin('ATAN2')?.({ tag: ValueTag.Number, value: 1 }, { tag: ValueTag.Number, value: 1 })).toMatchObject({
+      tag: ValueTag.Number,
+      value: expect.closeTo(Math.PI / 4, 12),
+    })
+    expect(getBuiltin('DEGREES')?.({ tag: ValueTag.Number, value: Math.PI })).toMatchObject({
+      tag: ValueTag.Number,
+      value: expect.closeTo(180, 12),
+    })
+    expect(getBuiltin('RADIANS')?.({ tag: ValueTag.Number, value: 180 })).toMatchObject({
+      tag: ValueTag.Number,
+      value: expect.closeTo(Math.PI, 12),
+    })
+    expect(getBuiltin('EXP')?.({ tag: ValueTag.Number, value: 1 })).toMatchObject({
+      tag: ValueTag.Number,
+      value: expect.closeTo(Math.E, 12),
+    })
+    expect(getBuiltin('LN')?.({ tag: ValueTag.Number, value: Math.E })).toMatchObject({
+      tag: ValueTag.Number,
+      value: expect.closeTo(1, 12),
+    })
+    expect(getBuiltin('POWER')?.({ tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 3 })).toEqual({
+      tag: ValueTag.Number,
+      value: 8,
+    })
+    expect(getBuiltin('POWER')?.({ tag: ValueTag.Number, value: -32 }, { tag: ValueTag.Number, value: 1 / 5 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('SQRT')?.({ tag: ValueTag.Number, value: 9 })).toEqual({
+      tag: ValueTag.Number,
+      value: 3,
+    })
+    expect(getBuiltin('PI')?.()).toMatchObject({
+      tag: ValueTag.Number,
+      value: expect.closeTo(Math.PI, 12),
+    })
+    expect(getBuiltin('SINH')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('COSH')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 1,
+    })
+    expect(getBuiltin('TANH')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('ASINH')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('ACOSH')?.({ tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('ATANH')?.({ tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('ACOSH')?.({ tag: ValueTag.Number, value: 0.5 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+    expect(getBuiltin('ATANH')?.({ tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Num,
+    })
+
+    expect(getBuiltin('FLOOR.MATH')?.({ tag: ValueTag.Number, value: 5.5 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: 4,
+    })
+    expect(getBuiltin('CEILING.MATH')?.({ tag: ValueTag.Number, value: 5.5 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: 6,
+    })
+    expect(getBuiltin('FLOOR.PRECISE')?.({ tag: ValueTag.Number, value: 4 }, { tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('CEILING.PRECISE')?.({ tag: ValueTag.Number, value: 4 }, { tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Number,
+      value: 0,
+    })
+    expect(getBuiltin('BITAND')?.({ tag: ValueTag.String, value: 'bad', stringId: 13 }, { tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('BITOR')?.({ tag: ValueTag.String, value: 'bad', stringId: 14 }, { tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+  })
+
+  it('covers AVERAGEA and SUBTOTAL aggregate dispatch branches', () => {
+    expect(
+      getBuiltin('AVERAGEA')?.(
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.String, value: 'skip', stringId: 15 },
+        { tag: ValueTag.Boolean, value: true },
+        { tag: ValueTag.Empty },
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: 0.75 })
+
+    expect(
+      getBuiltin('SUBTOTAL')?.({ tag: ValueTag.Number, value: 1 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 4 }),
+    ).toEqual({ tag: ValueTag.Number, value: 3 })
+    expect(
+      getBuiltin('SUBTOTAL')?.(
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.Boolean, value: true },
+        { tag: ValueTag.String, value: 'skip', stringId: 16 },
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: 2 })
+    expect(
+      getBuiltin('SUBTOTAL')?.(
+        { tag: ValueTag.Number, value: 3 },
+        { tag: ValueTag.Number, value: 2 },
+        { tag: ValueTag.Empty },
+        { tag: ValueTag.String, value: 'skip', stringId: 17 },
+      ),
+    ).toEqual({ tag: ValueTag.Number, value: 2 })
+    expect(
+      getBuiltin('SUBTOTAL')?.({ tag: ValueTag.Number, value: 4 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 4 }),
+    ).toEqual({ tag: ValueTag.Number, value: 4 })
+    expect(
+      getBuiltin('SUBTOTAL')?.({ tag: ValueTag.Number, value: 5 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 4 }),
+    ).toEqual({ tag: ValueTag.Number, value: 2 })
+    expect(
+      getBuiltin('SUBTOTAL')?.({ tag: ValueTag.Number, value: 6 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 4 }),
+    ).toEqual({ tag: ValueTag.Number, value: 8 })
+    expect(
+      getBuiltin('SUBTOTAL')?.({ tag: ValueTag.Number, value: 7 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 4 }),
+    ).toMatchObject({ tag: ValueTag.Number, value: expect.closeTo(Math.sqrt(2), 12) })
+    expect(
+      getBuiltin('SUBTOTAL')?.({ tag: ValueTag.Number, value: 8 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 4 }),
+    ).toEqual({ tag: ValueTag.Number, value: 1 })
+    expect(
+      getBuiltin('SUBTOTAL')?.({ tag: ValueTag.Number, value: 10 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 4 }),
+    ).toEqual({ tag: ValueTag.Number, value: 2 })
+    expect(
+      getBuiltin('SUBTOTAL')?.({ tag: ValueTag.Number, value: 11 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 4 }),
+    ).toEqual({ tag: ValueTag.Number, value: 1 })
+  })
+
+  it('covers aggregate aliases and formatting validation branches', () => {
+    expect(getBuiltin('AVERAGEA')?.({ tag: ValueTag.Error, code: ErrorCode.Div0 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Div0,
+    })
+    expect(getBuiltin('AVERAGE')?.()).toEqual({ tag: ValueTag.Error, code: ErrorCode.Div0 })
+    expect(getBuiltin('AVG')?.()).toEqual({ tag: ValueTag.Error, code: ErrorCode.Div0 })
+    expect(getBuiltin('AVERAGEA')?.()).toEqual({ tag: ValueTag.Error, code: ErrorCode.Div0 })
+    expect(
+      getBuiltin('AGGREGATE')?.(
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 6 },
+        { tag: ValueTag.Error, code: ErrorCode.NA },
+        { tag: ValueTag.String, value: 'skip', stringId: 17 },
+      ),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Div0 })
+    expect(getBuiltin('AVERAGE')?.({ tag: ValueTag.Error, code: ErrorCode.Value })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('AVG')?.({ tag: ValueTag.Error, code: ErrorCode.Name })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Name,
+    })
+    expect(getBuiltin('MAXA')?.({ tag: ValueTag.Error, code: ErrorCode.Ref })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Ref,
+    })
+    expect(getBuiltin('MINA')?.({ tag: ValueTag.Error, code: ErrorCode.NA })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.NA,
+    })
+
+    expect(
+      getBuiltin('ADDRESS')?.({ tag: ValueTag.Number, value: 1 }, { tag: ValueTag.Number, value: 1 }, { tag: ValueTag.Number, value: 5 }),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+    expect(getBuiltin('ADDRESS')?.({ tag: ValueTag.Error, code: ErrorCode.NA }, { tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.NA,
+    })
+    expect(
+      getBuiltin('ADDRESS')?.(
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Boolean, value: true },
+      ),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+    expect(
+      getBuiltin('ADDRESS')?.(
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Empty },
+      ),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
+    expect(getBuiltin('DOLLAR')?.({ tag: ValueTag.Number, value: Number.POSITIVE_INFINITY }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Value,
+    })
+    expect(getBuiltin('DOLLAR')?.({ tag: ValueTag.Error, code: ErrorCode.NA }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.NA,
+    })
+    expect(getBuiltin('FIXED')?.({ tag: ValueTag.Number, value: 1 }, { tag: ValueTag.Error, code: ErrorCode.NA })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.NA,
+    })
+    expect(getBuiltin('DOLLAR')?.({ tag: ValueTag.Number, value: 10 }, { tag: ValueTag.Number, value: 1.5 })).toEqual({
+      tag: ValueTag.String,
+      value: '$10.0',
+      stringId: 0,
+    })
+    expect(getBuiltin('DOLLARDE')?.({ tag: ValueTag.Number, value: 1.5 }, { tag: ValueTag.Number, value: 0 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.Div0,
+    })
+    expect(getBuiltin('DOLLARDE')?.({ tag: ValueTag.Error, code: ErrorCode.NA }, { tag: ValueTag.Number, value: 16 })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.NA,
+    })
+    expect(getBuiltin('DOLLARFR')?.({ tag: ValueTag.Number, value: 1.5 }, { tag: ValueTag.Error, code: ErrorCode.NA })).toEqual({
+      tag: ValueTag.Error,
+      code: ErrorCode.NA,
+    })
+    expect(getBuiltin('DOLLARDE')?.({ tag: ValueTag.Number, value: 1.6 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.Number,
+      value: 4,
+    })
+  })
+
+  it('supports ADDRESS and DOLLAR formatting edge cases', () => {
+    const ADDRESS = getBuiltin('ADDRESS')!
+    expect(ADDRESS({ tag: ValueTag.Number, value: 12 }, { tag: ValueTag.Number, value: 3 })).toEqual({
+      tag: ValueTag.String,
+      value: '$C$12',
+      stringId: 0,
+    })
+    expect(ADDRESS({ tag: ValueTag.Number, value: 7 }, { tag: ValueTag.Number, value: 2 }, { tag: ValueTag.Number, value: 2 })).toEqual({
+      tag: ValueTag.String,
+      value: 'B$7',
+      stringId: 0,
+    })
+    expect(
+      ADDRESS(
+        { tag: ValueTag.Number, value: 4 },
+        { tag: ValueTag.Number, value: 5 },
+        { tag: ValueTag.Number, value: 1 },
+        { tag: ValueTag.Boolean, value: false },
+      ),
+    ).toEqual({
+      tag: ValueTag.String,
+      value: 'R4C5',
+      stringId: 0,
+    })
+
+    expect(getBuiltin('DOLLAR')?.({ tag: ValueTag.Number, value: -1234.5 }, { tag: ValueTag.Number, value: 1 })).toEqual({
+      tag: ValueTag.String,
+      value: '-$1,234.5',
+      stringId: 0,
+    })
+    expect(
+      getBuiltin('DOLLAR')?.(
+        { tag: ValueTag.Number, value: 1234.56 },
+        { tag: ValueTag.Number, value: 0 },
+        { tag: ValueTag.Number, value: 1 },
+      ),
+    ).toEqual({ tag: ValueTag.Error, code: ErrorCode.Value })
   })
 })

@@ -1,5 +1,11 @@
 import type { EngineCellMutationRef, SheetRecord, SpreadsheetEngine } from '@bilig/core/headless-runtime'
 import { MAX_COLS, MAX_ROWS, type CellSnapshot, type CellValue, type WorkbookSnapshot } from '@bilig/protocol'
+import type { WorkPaperAxisIntervalEditMode, WorkPaperAxisKind } from './work-paper-axis-helpers.js'
+import type { WorkPaperClipboardPayload } from './work-paper-clipboard.js'
+import { DEFAULT_CONFIG, WORKPAPER_PUBLIC_ERROR_NAMES, resolveConfiguredWorkPaperConfig } from './work-paper-config.js'
+import { WorkPaperEmitter } from './work-paper-emitter.js'
+import { WorkPaperEngineEventTracker } from './work-paper-engine-event-tracker.js'
+import type { MetadataRenameEngine, WorkPaperStructuralInsertEngine } from './work-paper-engine-types.js'
 import {
   WorkPaperInvalidArgumentsError,
   WorkPaperNamedExpressionDoesNotExistError,
@@ -7,11 +13,19 @@ import {
   WorkPaperOperationError,
   WorkPaperSheetError,
 } from './work-paper-errors.js'
-import { cloneConfig, DEFAULT_CONFIG, validateWorkPaperConfig, WORKPAPER_PUBLIC_ERROR_NAMES } from './work-paper-config.js'
-import { assertRowAndColumn, makeNamedExpressionKey } from './work-paper-runtime-helpers.js'
-import { inspectSheetDimensionsWithinLimits, workPaperSheetHasDynamicSpillFormula } from './work-paper-sheet-inspection.js'
-import { WorkPaperSheetDimensionCache } from './work-paper-sheet-dimension-cache.js'
-import type { WorkPaperAxisIntervalEditMode, WorkPaperAxisKind } from './work-paper-axis-helpers.js'
+import { tryApplyExistingNumericCellMutationsAtWithOptions } from './work-paper-existing-numeric-mutation-fast-path.js'
+import { restorePublicWorkPaperFormula, rewriteWorkPaperFormulaForStorage } from './work-paper-formula-rewrite.js'
+import {
+  captureWorkPaperFunctionRegistry,
+  clearWorkPaperFunctionBindings,
+  type InternalFunctionBinding,
+} from './work-paper-function-registry.js'
+import { WorkPaperImportedXlsxState } from './work-paper-imported-xlsx-state.js'
+import { createWorkPaperInternals } from './work-paper-internals.js'
+import { buildWorkPaperRawCellMutation } from './work-paper-literal-mutation-queue.js'
+import { applyWorkPaperMatrixContents, applyWorkPaperSerializedMatrix } from './work-paper-matrix-application.js'
+import { WorkPaperMutationQueues } from './work-paper-mutation-queues.js'
+import { tryChangeSimpleNumericNamedExpressionFastPath } from './work-paper-named-expression-fast-path-runtime.js'
 import {
   createInternalNamedExpressionRecord,
   evaluateWorkPaperNamedExpression,
@@ -22,67 +36,45 @@ import {
   type InternalNamedExpression,
   type WorkPaperNamedExpressionValueSnapshot,
 } from './work-paper-named-expression-helpers.js'
-import type {
-  WorkPaperAxisInterval,
-  WorkPaperCellAddress,
-  WorkPaperCellRange,
-  WorkPaperChange,
-  WorkPaperConfig,
-  WorkPaperSheet,
-  WorkPaperSheets,
-  WorkPaperInternals,
-  RawCellContent,
-  SerializedWorkPaperNamedExpression,
-} from './work-paper-types.js'
-import { WorkPaperEmitter } from './work-paper-emitter.js'
-import { replaceWorkPaperSheetContent } from './work-paper-sheet-replacement.js'
-import { restorePublicWorkPaperFormula, rewriteWorkPaperFormulaForStorage } from './work-paper-formula-rewrite.js'
-import { applyWorkPaperMatrixContents, applyWorkPaperSerializedMatrix } from './work-paper-matrix-application.js'
-import type { WorkPaperClipboardPayload } from './work-paper-clipboard.js'
-import type { QueuedEvent } from './work-paper-tracked-event-helpers.js'
-import type { VisibilitySnapshot } from './work-paper-visibility-snapshot.js'
+import { createWorkPaperEngine, releaseWorkPaperEngine, workPaperEvaluationTimeoutErrorFrom } from './work-paper-runtime-construction.js'
+import { assertRowAndColumn, makeNamedExpressionKey } from './work-paper-runtime-helpers.js'
+import { WorkPaperRuntimeLifecycleBase } from './work-paper-runtime-lifecycle-base.js'
+import { WorkPaperSheetDimensionCache } from './work-paper-sheet-dimension-cache.js'
 import {
-  captureWorkPaperFunctionRegistry,
-  clearWorkPaperFunctionBindings,
-  type InternalFunctionBinding,
-} from './work-paper-function-registry.js'
-import { createWorkPaperInternals } from './work-paper-internals.js'
+  initializeWorkPaperFromSheetEntries,
+  initializeWorkPaperFromSheets,
+  initializeWorkPaperFromSnapshot,
+} from './work-paper-sheet-initialization.js'
+import { inspectSheetDimensionsWithinLimits, workPaperSheetHasDynamicSpillFormula } from './work-paper-sheet-inspection.js'
+import { tryRenameSheetMetadataOnlyPrevalidated } from './work-paper-sheet-rename-metadata-fast-path.js'
+import { replaceWorkPaperSheetContent } from './work-paper-sheet-replacement.js'
+import { cloneWorkPaperSnapshotWithRuntimeImage } from './work-paper-snapshot-clone.js'
 import {
   ensureWorkPaperCustomAdapterInstalled,
   getAllRegisteredWorkPaperFunctionPlugins,
   hasRegisteredWorkPaperFunctionPlugins,
   workPaperGlobalCustomFunctions,
 } from './work-paper-static-registry.js'
-import {
-  initializeWorkPaperFromSheetEntries,
-  initializeWorkPaperFromSheets,
-  initializeWorkPaperFromSnapshot,
-} from './work-paper-sheet-initialization.js'
-import { cloneWorkPaperSnapshotWithRuntimeImage } from './work-paper-snapshot-clone.js'
-import { buildWorkPaperRawCellMutation } from './work-paper-literal-mutation-queue.js'
-import { WorkPaperMutationQueues } from './work-paper-mutation-queues.js'
-import { tryApplyExistingNumericCellMutationsAtWithOptions } from './work-paper-existing-numeric-mutation-fast-path.js'
-import { WorkPaperEngineEventTracker } from './work-paper-engine-event-tracker.js'
-import { WorkPaperRuntimeLifecycleBase } from './work-paper-runtime-lifecycle-base.js'
-import { tryChangeSimpleNumericNamedExpressionFastPath } from './work-paper-named-expression-fast-path-runtime.js'
-import { tryRenameSheetMetadataOnlyPrevalidated } from './work-paper-sheet-rename-metadata-fast-path.js'
-import { createWorkPaperEngine, releaseWorkPaperEngine, workPaperEvaluationTimeoutErrorFrom } from './work-paper-runtime-construction.js'
-import type { MetadataRenameEngine, WorkPaperStructuralInsertEngine } from './work-paper-engine-types.js'
-import { WorkPaperImportedXlsxState } from './work-paper-imported-xlsx-state.js'
+import type { QueuedEvent } from './work-paper-tracked-event-helpers.js'
+import type {
+  RawCellContent,
+  SerializedWorkPaperNamedExpression,
+  WorkPaperAxisInterval,
+  WorkPaperCellAddress,
+  WorkPaperCellRange,
+  WorkPaperChange,
+  WorkPaperConfig,
+  WorkPaperInternals,
+  WorkPaperSheet,
+  WorkPaperSheets,
+} from './work-paper-types.js'
+import type { VisibilitySnapshot } from './work-paper-visibility-snapshot.js'
 
 const EMPTY_WORKPAPER_CHANGES: WorkPaperChange[] = []
 
 type NamedExpressionValueSnapshot = WorkPaperNamedExpressionValueSnapshot
 
 let nextWorkbookId = 1
-
-function resolveConfiguredWorkPaperConfig(configInput: WorkPaperConfig): WorkPaperConfig {
-  validateWorkPaperConfig(configInput)
-  return {
-    ...cloneConfig(DEFAULT_CONFIG),
-    ...cloneConfig(configInput),
-  }
-}
 
 export class WorkPaper extends WorkPaperRuntimeLifecycleBase {
   readonly workbookId = nextWorkbookId++

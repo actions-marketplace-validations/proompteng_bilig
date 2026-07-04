@@ -4,19 +4,19 @@ import { buildLargeWorkbookSloBudget } from '../gen-large-workbook-slo-budget.ts
 
 describe('large workbook SLO budget', () => {
   it('maps benchmark-contract output into checked large-workbook and worker-runtime SLOs', () => {
-    const scorecard = buildLargeWorkbookSloBudget(buildReportFixture())
+    const budget = buildLargeWorkbookSloBudget(buildReportFixture())
 
-    expect(scorecard.summary.coveredLargeWorkbookRows).toEqual([100_000, 250_000])
-    expect(scorecard.summary.allSloBudgetsPassed).toBe(true)
-    expect(scorecard.summary.headedBrowserFrameP95Evidence).toBe('playwright-contracts')
-    expect(scorecard.summary.headedBrowserFrameP95ContractsPassed).toBe(true)
-    expect(scorecard.summary).not.toHaveProperty('externalGoogleSheetsEvidence')
-    expect(scorecard.summary).not.toHaveProperty('externalMicrosoftExcelEvidence')
-    expect(scorecard.summary).not.toHaveProperty('externalUiResponsivenessGoogleSheetsEvidence')
-    expect(scorecard.summary).not.toHaveProperty('externalUiResponsivenessMicrosoftExcelEvidence')
-    expect(scorecard.source).not.toHaveProperty('externalLargeWorkbookComparisonArtifact')
-    expect(scorecard.source).not.toHaveProperty('externalUiResponsivenessComparisonArtifact')
-    expect(scorecard.measurements.map((measurement) => measurement.id)).toEqual([
+    expect(budget.summary.coveredLargeWorkbookRows).toEqual([100_000, 250_000])
+    expect(budget.summary.allSloBudgetsPassed).toBe(true)
+    expect(budget.summary.headedBrowserFrameP95Evidence).toBe('playwright-contracts')
+    expect(budget.summary.headedBrowserFrameP95ContractsPassed).toBe(true)
+    expect(budget.summary).not.toHaveProperty('externalGoogleSheetsEvidence')
+    expect(budget.summary).not.toHaveProperty('externalMicrosoftExcelEvidence')
+    expect(budget.summary).not.toHaveProperty('externalUiResponsivenessGoogleSheetsEvidence')
+    expect(budget.summary).not.toHaveProperty('externalUiResponsivenessMicrosoftExcelEvidence')
+    expect(budget.source).not.toHaveProperty('externalLargeWorkbookComparisonArtifact')
+    expect(budget.source).not.toHaveProperty('externalUiResponsivenessComparisonArtifact')
+    expect(budget.measurements.map((measurement) => measurement.id)).toEqual([
       'load100k',
       'load250k',
       'workerWarmStart100k',
@@ -24,27 +24,27 @@ describe('large workbook SLO budget', () => {
       'workerVisibleEdit10k',
       'workerReconnectCatchUp100Pending',
     ])
-    expect(scorecard.measurements.find((measurement) => measurement.id === 'workerVisibleEdit10k')).toMatchObject({
+    expect(budget.measurements.find((measurement) => measurement.id === 'workerVisibleEdit10k')).toMatchObject({
       category: 'ui-responsiveness',
       actualP95: 4,
       budgetP95: 16,
       passed: true,
     })
-    expect(scorecard.headedBrowserFrameP95Contracts.map((contract) => contract.id)).toEqual([
+    expect(budget.headedBrowserFrameP95Contracts.map((contract) => contract.id)).toEqual([
       'headedDense100kDiagonalBrowse',
       'headedWide250kMainBodyBrowse',
       'headedWide250kVisibleEditCommit',
     ])
-    expect(scorecard.headedBrowserFrameP95Contracts.every((contract) => contract.passed)).toBe(true)
-    expect(scorecard.headedBrowserFrameP95Contracts[0]).toMatchObject({
+    expect(budget.headedBrowserFrameP95Contracts.every((contract) => contract.passed)).toBe(true)
+    expect(budget.headedBrowserFrameP95Contracts[0]).toMatchObject({
       category: 'large-workbook-scale',
       corpusCaseId: 'dense-mixed-100k',
       materializedCells: 100_000,
       metric: 'frameMs.p95',
       budgetP95: 20,
     })
-    expect(scorecard).not.toHaveProperty(['external', 'Sheets', 'Excel', 'Comparison'].join(''))
-    expect(scorecard).not.toHaveProperty(['ui', 'Responsiveness', 'External', 'Sheets', 'Excel', 'Comparison'].join(''))
+    expect(budget).not.toHaveProperty(['external', 'Sheets', 'Excel', 'Comparison'].join(''))
+    expect(budget).not.toHaveProperty(['ui', 'Responsiveness', 'External', 'Sheets', 'Excel', 'Comparison'].join(''))
   })
 
   it('rejects reports that do not cover both 100k and 250k workbook sessions', () => {

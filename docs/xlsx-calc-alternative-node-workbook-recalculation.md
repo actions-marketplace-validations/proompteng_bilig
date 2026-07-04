@@ -100,7 +100,7 @@ It should end with checks like these:
 
 Historical `xlsx-calc` timing comparisons are intentionally excluded from the
 default quality story. The product gate here is deterministic workbook
-recalculation behavior, not a checked-in competitor scorecard or `.cache`
+recalculation behavior, not a checked-in competitor contract report or `.cache`
 research artifact.
 
 ## What I Would Test

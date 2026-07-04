@@ -45,6 +45,7 @@ import {
   applyOptimisticFillRange,
   applyOptimisticMoveRange,
 } from './use-workbook-selection-actions.js'
+import { deferInteractionPersistence, deferNextInteractionFrame } from './interaction-idle-scheduler.js'
 
 interface ZeroMutationSource {
   mutate(mutation: unknown): unknown
@@ -59,16 +60,6 @@ type ViewportAxisSizeMutationOptions = {
   deferLocalApplication?: boolean
   flush?: boolean
   deferPersistence?: boolean
-}
-
-function deferViewportAxisSizeFrame(): Promise<void> {
-  return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-      window.requestAnimationFrame(() => resolve())
-      return
-    }
-    setTimeout(resolve, 0)
-  })
 }
 
 function parsedCellInputForMutation(
@@ -634,12 +625,12 @@ export function useWorkbookSync(input: {
       const initialViewportStore = workerHandleRef.current?.viewportStore
       const previousWidth = initialViewportStore?.getColumnWidths(sheetName)[columnIndex]
       if (options?.deferLocalApplication) {
-        await deferViewportAxisSizeFrame()
+        await deferNextInteractionFrame()
       }
       const viewportStore = workerHandleRef.current?.viewportStore === initialViewportStore ? initialViewportStore : undefined
       if (viewportStore) {
         const applyOptimisticWidth = () => {
-          viewportStore.setColumnWidth(sheetName, columnIndex, width)
+          viewportStore.setColumnWidth(sheetName, columnIndex, width, { emitLocalDelta: false })
         }
         if (options?.flush) {
           flushSync(applyOptimisticWidth)
@@ -648,7 +639,7 @@ export function useWorkbookSync(input: {
         }
       }
       if (options?.deferPersistence) {
-        await deferViewportAxisSizeFrame()
+        await deferInteractionPersistence()
       }
       try {
         await invokeMutation('updateColumnMetadata', sheetName, columnIndex, 1, width, null)
@@ -667,12 +658,12 @@ export function useWorkbookSync(input: {
       const initialViewportStore = workerHandleRef.current?.viewportStore
       const previousHeight = initialViewportStore?.getRowHeights(sheetName)[rowIndex]
       if (options?.deferLocalApplication) {
-        await deferViewportAxisSizeFrame()
+        await deferNextInteractionFrame()
       }
       const viewportStore = workerHandleRef.current?.viewportStore === initialViewportStore ? initialViewportStore : undefined
       if (viewportStore) {
         const applyOptimisticHeight = () => {
-          viewportStore.setRowHeight(sheetName, rowIndex, height)
+          viewportStore.setRowHeight(sheetName, rowIndex, height, { emitLocalDelta: false })
         }
         if (options?.flush) {
           flushSync(applyOptimisticHeight)
@@ -681,7 +672,7 @@ export function useWorkbookSync(input: {
         }
       }
       if (options?.deferPersistence) {
-        await deferViewportAxisSizeFrame()
+        await deferInteractionPersistence()
       }
       try {
         await invokeMutation('updateRowMetadata', sheetName, rowIndex, 1, height, null)

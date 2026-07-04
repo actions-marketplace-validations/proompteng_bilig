@@ -2,14 +2,14 @@ import type { WorkbookAgentAppliedBy } from '@bilig/agent-api'
 import type { WorkbookAgentStreamEvent, WorkbookAgentThreadSnapshot, WorkbookAgentThreadSummary } from '@bilig/contracts'
 import type { SessionIdentity } from '../http/session.js'
 import type { ZeroSyncService } from '../zero/service.js'
+import type { CodexAppServerClientOptions, CodexAppServerTransport } from './codex-app-server-client.js'
 import {
   DEFAULT_MAX_CODEX_CLIENTS,
   DEFAULT_MAX_CODEX_CONCURRENT_TURNS_PER_CLIENT,
   DEFAULT_MAX_CODEX_QUEUED_TURNS_PER_CLIENT,
 } from './workbook-agent-codex-runtime.js'
-import type { CodexAppServerClientOptions, CodexAppServerTransport } from './codex-app-server-client.js'
-import type { WorkbookAgentFeatureFlags } from './workbook-agent-feature-flags.js'
 import { parsePositiveIntegerEnv } from './workbook-agent-env.js'
+import type { WorkbookAgentFeatureFlags } from './workbook-agent-feature-flags.js'
 import type { WorkbookAgentObservabilitySnapshot } from './workbook-agent-session-registry.js'
 
 const DEFAULT_MAX_ACTIVE_TURNS_PER_USER = parsePositiveIntegerEnv(
@@ -95,14 +95,16 @@ export interface EnabledWorkbookAgentServiceOptions {
   featureFlags?: Partial<WorkbookAgentFeatureFlags>
 }
 
-export function resolveWorkbookAgentServiceLimits(options: EnabledWorkbookAgentServiceOptions): {
+export interface WorkbookAgentServiceLimits {
   readonly maxSessions: number
   readonly maxCodexClients: number
   readonly maxConcurrentTurnsPerCodexClient: number
   readonly maxQueuedTurnsPerCodexClient: number
   readonly maxActiveTurnsPerUser: number
   readonly maxActiveTurnsPerDocument: number
-} {
+}
+
+export function resolveWorkbookAgentServiceLimits(options: EnabledWorkbookAgentServiceOptions): WorkbookAgentServiceLimits {
   return {
     maxSessions: options.maxSessions ?? 64,
     maxCodexClients: options.maxCodexClients ?? DEFAULT_MAX_CODEX_CLIENTS,

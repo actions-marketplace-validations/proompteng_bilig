@@ -1,9 +1,6 @@
-import { encodeCellAddress } from '@bilig/xlsx'
 import { parseCsv, parseCsvCellInput, resolveCsvParseOptions, type CsvParseOptions } from '@bilig/core'
 import type { WorkbookSnapshot } from '@bilig/protocol'
-import { CSV_CONTENT_TYPE } from './workbook-import-content-types.js'
-import { createSheetPreview, normalizeCsvSheetName, normalizeWorkbookName } from './workbook-import-helpers.js'
-import { createWorkbookPreview } from './workbook-import-preview.js'
+import { encodeCellAddress } from '@bilig/xlsx/browser'
 import {
   attachImportedRuntimeCoordinates,
   createImportedRuntimeSheetCells,
@@ -11,6 +8,9 @@ import {
   type ImportedRuntimeCellCoordinate,
 } from './imported-runtime-coordinates.js'
 import type { ImportedWorkbook } from './index.js'
+import { CSV_CONTENT_TYPE } from './workbook-import-content-types.js'
+import { createSheetPreview, normalizeCsvSheetName, normalizeWorkbookName } from './workbook-import-helpers.js'
+import { createWorkbookPreview } from './workbook-import-preview.js'
 
 export type CsvImportOptions = CsvParseOptions
 

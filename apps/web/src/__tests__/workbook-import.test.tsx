@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
-import { act } from 'react'
-import { createRoot } from 'react-dom/client'
-import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { WorkbookLoadedResponse } from '@bilig/agent-api'
 import { CSV_CONTENT_TYPE, LEGACY_XLS_CONTENT_TYPE, XLSB_CONTENT_TYPE, XLSM_CONTENT_TYPE, XLSX_CONTENT_TYPE } from '@bilig/agent-api'
-import type { ImportedWorkbookPreview } from '@bilig/excel-import'
+import type { ImportedWorkbookPreview } from '@bilig/excel-import/browser'
+import { act } from 'react'
+import { createRoot } from 'react-dom/client'
 import type { ToastT, ToastToDismiss } from 'sonner'
 import { toast } from 'sonner'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { WorkbookToastRegion } from '../WorkbookToastRegion.js'
-import { finalizeWorkbookImport, resolveWorkbookImportContentType } from '../workbook-import-client.js'
 import { useWorkbookImportPane } from '../use-workbook-import-pane.js'
+import { finalizeWorkbookImport, resolveWorkbookImportContentType } from '../workbook-import-client.js'
 
 async function flushToasts(): Promise<void> {
   await act(async () => {

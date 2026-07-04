@@ -1,6 +1,6 @@
-import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
+import { decodeCellRange, encodeCellAddress, encodeCellRange } from '@bilig/xlsx/browser'
 import { XMLParser } from 'fast-xml-parser'
-import { decodeCellRange, encodeCellAddress, encodeCellRange } from '@bilig/xlsx'
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 
 import type { CellRangeRef, WorkbookRangeProtectionSnapshot, WorkbookSnapshot } from '@bilig/protocol'
 import { escapeXmlAttribute } from './xlsx-export-xml.js'

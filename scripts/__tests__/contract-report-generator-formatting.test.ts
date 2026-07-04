@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const scriptsDir = new URL('..', import.meta.url).pathname
 
-describe('scorecard generator formatting', () => {
+describe('contract report generator formatting', () => {
   it('uses the shared deterministic JSON formatter instead of generator-local oxfmt shells', () => {
     const generatorFiles = readdirSync(scriptsDir)
       .filter((fileName) => fileName.startsWith('gen-') && fileName.endsWith('.ts'))

@@ -1,9 +1,17 @@
 #!/usr/bin/env bun
 import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
 
 const defaultCoveragePath = fileURLToPath(new URL('../coverage/coverage-final.json', import.meta.url))
+
+type IstanbulFileCoverage = {
+  s?: Record<string, number>
+  statementMap?: Record<string, { start: { line: number }; end: { line: number } }>
+}
+
+type IstanbulCoverageMap = Record<string, IstanbulFileCoverage>
 
 const thresholds = [
   { label: 'packages/core/src', prefix: '/packages/core/src/', lines: 91 },
@@ -13,10 +21,53 @@ const thresholds = [
 
 const ignoredSuffixes = ['/index.ts', '/snapshot.ts', '/ast.ts']
 
-function lineStatsForFile(fileCoverage: {
-  s?: Record<string, number>
-  statementMap?: Record<string, { start: { line: number }; end: { line: number } }>
-}) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function isNumberRecord(value: unknown): value is Record<string, number> {
+  return isRecord(value) && Object.values(value).every((entry) => typeof entry === 'number')
+}
+
+function isStatementLocation(value: unknown): value is { start: { line: number }; end: { line: number } } {
+  if (!isRecord(value) || !isRecord(value.start) || !isRecord(value.end)) {
+    return false
+  }
+
+  return typeof value.start.line === 'number' && typeof value.end.line === 'number'
+}
+
+function isStatementMap(value: unknown): value is IstanbulFileCoverage['statementMap'] {
+  return isRecord(value) && Object.values(value).every(isStatementLocation)
+}
+
+function isIstanbulFileCoverage(value: unknown): value is IstanbulFileCoverage {
+  if (!isRecord(value)) {
+    return false
+  }
+
+  const hitCounts = value['s']
+  const statementMap = value['statementMap']
+  return (hitCounts === undefined || isNumberRecord(hitCounts)) && (statementMap === undefined || isStatementMap(statementMap))
+}
+
+function parseCoverageMap(json: string): IstanbulCoverageMap {
+  const parsed: unknown = JSON.parse(json)
+  if (!isRecord(parsed)) {
+    throw new Error('Coverage file must contain an Istanbul coverage map object')
+  }
+
+  const coverage: IstanbulCoverageMap = {}
+  for (const [filePath, fileCoverage] of Object.entries(parsed)) {
+    if (!isIstanbulFileCoverage(fileCoverage)) {
+      throw new Error(`Coverage entry is not an Istanbul file coverage object: ${filePath}`)
+    }
+    coverage[filePath] = fileCoverage
+  }
+  return coverage
+}
+
+function lineStatsForFile(fileCoverage: IstanbulFileCoverage) {
   const totalLines = new Set<number>()
   const coveredLines = new Set<number>()
 
@@ -40,13 +91,7 @@ function lineStatsForFile(fileCoverage: {
   }
 }
 
-function aggregatePrefix(
-  prefix: string,
-  coverageData: Record<
-    string,
-    { s?: Record<string, number>; statementMap?: Record<string, { start: { line: number }; end: { line: number } }> }
-  >,
-) {
+function aggregatePrefix(prefix: string, coverageData: IstanbulCoverageMap) {
   let total = 0
   let covered = 0
 
@@ -101,7 +146,7 @@ export async function runCoverageContracts(path = resolveCoverageFilePath()): Pr
     throw new Error(`Coverage file not found at ${resolvedPath}`)
   }
 
-  const coverage = await Bun.file(resolvedPath).json()
+  const coverage = parseCoverageMap(await readFile(resolvedPath, 'utf8'))
 
   const results = thresholds.map((threshold) => ({
     label: threshold.label,

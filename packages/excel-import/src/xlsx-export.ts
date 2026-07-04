@@ -1,6 +1,6 @@
-import { writeFileSync } from 'node:fs'
+import { decodeCellAddress, decodeCellRange, encodeCellAddress, encodeCellRange } from '@bilig/xlsx/browser'
 import { unzipSync, zipSync } from 'fflate'
-import { decodeCellAddress, decodeCellRange, encodeCellAddress, encodeCellRange } from '@bilig/xlsx'
+import { writeFileSync } from 'node:fs'
 import type {
   SheetJsCellObject,
   SheetJsColInfo,
@@ -20,9 +20,10 @@ import type {
   WorkbookSnapshot,
 } from '@bilig/protocol'
 import { addExportArrayFormulasToXlsxBytes, addExportNativeSpillsToXlsxBytes } from './xlsx-array-formulas.js'
-import { addExportCellMetadataToXlsxBytes } from './xlsx-cell-metadata.js'
-import { addMissingBlankCells, addMissingFormattedCells } from './xlsx-cell-insertion.js'
+import { tryExportBiligSimpleXlsx } from './xlsx-bilig-simple-export.js'
 import { addExportCalculationSettingsToXlsxBytes } from './xlsx-calculation-settings.js'
+import { addMissingBlankCells, addMissingFormattedCells } from './xlsx-cell-insertion.js'
+import { addExportCellMetadataToXlsxBytes } from './xlsx-cell-metadata.js'
 import { addExportChartArtifactsToXlsxBytes } from './xlsx-chart-artifacts.js'
 import { addExportChartsToXlsxBytes } from './xlsx-charts.js'
 import { addExportLegacyCommentVmlToXlsxBytes } from './xlsx-comment-vml.js'
@@ -32,45 +33,28 @@ import { addExportControlArtifactsToXlsxBytes } from './xlsx-control-artifacts.j
 import { addExportDataModelArtifactsToXlsxBytes } from './xlsx-data-model-artifacts.js'
 import { addExportDataTableFormulasToXlsxBytes } from './xlsx-data-table-formulas.js'
 import { buildExportDefinedNames } from './xlsx-defined-names.js'
-import { addExportDrawingArtifactsToXlsxBytes } from './xlsx-drawing-artifacts.js'
-import { addExportExternalLinkArtifactsToXlsxBytes } from './xlsx-external-link-artifacts.js'
 import { addExportWorksheetDimensionsToXlsxBytes, applyExportWorksheetDimensionsToWorksheetXml } from './xlsx-dimensions.js'
-import { addExportFiltersToXlsxBytes } from './xlsx-filters.js'
-import { addExportFreezePanesToXlsxBytes } from './xlsx-freeze-panes.js'
-import { encodeFormulaForXlsx } from './xlsx-formula-translation.js'
-import { addExportPivotsToXlsxBytes } from './xlsx-pivot-export.js'
-import { addExportPrintPageSetupToXlsxBytes } from './xlsx-print-page-setup.js'
-import { addExportProtectedRangesToXlsxBytes } from './xlsx-protected-ranges.js'
-import { addExportRichTextArtifactsToXlsxBytes } from './xlsx-rich-text-artifacts.js'
-import { addExportSheetProtectionsToXlsxBytes } from './xlsx-sheet-protection.js'
-import { addExportSortsToXlsxBytes } from './xlsx-sorts.js'
-import { addExportSheetTabColorsToXlsxBytes } from './xlsx-tab-colors.js'
-import { addExportTablesToXlsxBytes } from './xlsx-tables.js'
-import { addExportThreadedCommentArtifactsToXlsxBytes } from './xlsx-threaded-comment-artifacts.js'
-import { addExportThemeArtifactToXlsxBytes } from './xlsx-theme-artifacts.js'
-import { addExportDataValidationsToXlsxBytes } from './xlsx-validations.js'
-import { addExportViewStateToXlsxBytes } from './xlsx-view-state.js'
-import { addExportWorkbookProtectionToXlsxBytes } from './xlsx-workbook-protection.js'
-import { addExportWorkbookPropertiesToXlsxBytes } from './xlsx-workbook-properties.js'
-import { addExportIgnoredErrorsToXlsxBytes } from './xlsx-ignored-errors.js'
-import { decodePreservedVbaProjectPayload } from './xlsx-macros.js'
-import { addExportPrinterSettingsToXlsxBytes } from './xlsx-printer-settings.js'
-import { addExportWorksheetPropertiesToXlsxBytes } from './xlsx-sheet-properties.js'
-import { applyExportSheetVisibilitiesToWorkbook } from './xlsx-sheet-visibility.js'
-import { addExportSlicerConnectionArtifactsToXlsxBytes } from './xlsx-slicer-connection-artifacts.js'
-import { addExportSparklinesToXlsxBytes } from './xlsx-sparklines.js'
-import { tryExportBiligSimpleXlsx } from './xlsx-bilig-simple-export.js'
-import { addExportHyperlinkDisplaysToXlsxBytes, addExportHyperlinksToWorksheet, hasExportHyperlinks } from './xlsx-hyperlinks.js'
-import { loadOptionalSheetJs } from './xlsx-optional-sheetjs.js'
+import { addExportDrawingArtifactsToXlsxBytes } from './xlsx-drawing-artifacts.js'
 import { preserveSnapshotNumberFormats } from './xlsx-export-number-formats.js'
 import { escapeXmlAttribute, getZipText, setXmlAttribute, setZipText } from './xlsx-export-xml.js'
-import {
-  appendCustomCellXfsToStylesXml,
-  readCellXfs,
-  updateXmlElementCount,
-  worksheetCellElementPattern,
-  worksheetCellOpeningTagPattern,
-} from './xlsx-style-xml.js'
+import { addExportExternalLinkArtifactsToXlsxBytes } from './xlsx-external-link-artifacts.js'
+import { addExportFiltersToXlsxBytes } from './xlsx-filters.js'
+import { encodeFormulaForXlsx } from './xlsx-formula-translation.js'
+import { addExportFreezePanesToXlsxBytes } from './xlsx-freeze-panes.js'
+import { addExportHyperlinkDisplaysToXlsxBytes, addExportHyperlinksToWorksheet, hasExportHyperlinks } from './xlsx-hyperlinks.js'
+import { addExportIgnoredErrorsToXlsxBytes } from './xlsx-ignored-errors.js'
+import { decodePreservedVbaProjectPayload } from './xlsx-macros.js'
+import { loadOptionalSheetJs } from './xlsx-optional-sheetjs.js'
+import { addExportPivotsToXlsxBytes } from './xlsx-pivot-export.js'
+import { addExportPrintPageSetupToXlsxBytes } from './xlsx-print-page-setup.js'
+import { addExportPrinterSettingsToXlsxBytes } from './xlsx-printer-settings.js'
+import { addExportProtectedRangesToXlsxBytes } from './xlsx-protected-ranges.js'
+import { addExportRichTextArtifactsToXlsxBytes } from './xlsx-rich-text-artifacts.js'
+import { addExportWorksheetPropertiesToXlsxBytes } from './xlsx-sheet-properties.js'
+import { addExportSheetProtectionsToXlsxBytes } from './xlsx-sheet-protection.js'
+import { applyExportSheetVisibilitiesToWorkbook } from './xlsx-sheet-visibility.js'
+import { addExportSlicerConnectionArtifactsToXlsxBytes } from './xlsx-slicer-connection-artifacts.js'
+import { addExportSortsToXlsxBytes } from './xlsx-sorts.js'
 import {
   readImportedXlsxSourceBytes,
   readImportedXlsxSourceCellPatches,
@@ -80,20 +64,36 @@ import {
 import { tryCopyImportedXlsxSourceToFile } from './xlsx-source-copy.js'
 import {
   exportXlsxSourceLiteralPatches,
-  exportXlsxSourceLiteralPatchesToFileAsync,
   exportXlsxSourceLiteralPatchesToFile,
-  tryExportSourcePreservingXlsxToFile,
+  exportXlsxSourceLiteralPatchesToFileAsync,
   tryExportSourcePreservingXlsx,
+  tryExportSourcePreservingXlsxToFile,
   type XlsxSourceLiteralPatch,
   type XlsxSourceLiteralPatchExportInput,
   type XlsxSourceLiteralPatchFileExportInput,
   type XlsxSourceLiteralPatchFileExportResult,
 } from './xlsx-source-preserving-export.js'
+import { addExportSparklinesToXlsxBytes } from './xlsx-sparklines.js'
+import {
+  appendCustomCellXfsToStylesXml,
+  readCellXfs,
+  updateXmlElementCount,
+  worksheetCellElementPattern,
+  worksheetCellOpeningTagPattern,
+} from './xlsx-style-xml.js'
+import { addExportSheetTabColorsToXlsxBytes } from './xlsx-tab-colors.js'
+import { addExportTablesToXlsxBytes } from './xlsx-tables.js'
+import { addExportThemeArtifactToXlsxBytes } from './xlsx-theme-artifacts.js'
+import { addExportThreadedCommentArtifactsToXlsxBytes } from './xlsx-threaded-comment-artifacts.js'
+import { addExportDataValidationsToXlsxBytes } from './xlsx-validations.js'
+import { addExportViewStateToXlsxBytes } from './xlsx-view-state.js'
+import { addExportWorkbookPropertiesToXlsxBytes } from './xlsx-workbook-properties.js'
+import { addExportWorkbookProtectionToXlsxBytes } from './xlsx-workbook-protection.js'
 
 export {
   exportXlsxSourceLiteralPatches,
-  exportXlsxSourceLiteralPatchesToFileAsync,
   exportXlsxSourceLiteralPatchesToFile,
+  exportXlsxSourceLiteralPatchesToFileAsync,
   type XlsxSourceLiteralPatch,
   type XlsxSourceLiteralPatchExportInput,
   type XlsxSourceLiteralPatchFileExportInput,

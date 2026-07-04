@@ -2,9 +2,9 @@ import type {
   XlsxFixtureArtifact,
   XlsxFixtureCaseStatus,
   XlsxFixtureCorpusCase,
-  XlsxFixtureCorpusScorecard,
-  XlsxFixtureFeatureCounts,
+  XlsxFixtureCorpusContractReport,
   XlsxFixtureExternalReferenceSummary,
+  XlsxFixtureFeatureCounts,
   XlsxFixtureLicenseEvidence,
   XlsxFixtureManifest,
   XlsxFixtureSource,
@@ -121,10 +121,10 @@ export function parseXlsxFixtureManifestJson(value: unknown): XlsxFixtureManifes
   return manifest
 }
 
-export function parseXlsxFixtureCorpusScorecardJson(value: unknown): XlsxFixtureCorpusScorecard {
+export function parseXlsxFixtureCorpusContractReportJson(value: unknown): XlsxFixtureCorpusContractReport {
   const record = asRecord(value)
   const summary = asRecord(record['summary'])
-  const scorecard: XlsxFixtureCorpusScorecard = {
+  const contractReport: XlsxFixtureCorpusContractReport = {
     schemaVersion: readExpectedNumber(record, 'schemaVersion', 1),
     suite: readExpectedString(record, 'suite', 'xlsx-fixture-corpus'),
     generatedAt: readRequiredString(record, 'generatedAt'),
@@ -145,8 +145,8 @@ export function parseXlsxFixtureCorpusScorecardJson(value: unknown): XlsxFixture
     },
     cases: readRequiredArray(record, 'cases').map(parseXlsxFixtureCorpusCase),
   }
-  validateXlsxFixtureCorpusScorecard(scorecard)
-  return scorecard
+  validateXlsxFixtureCorpusContractReport(contractReport)
+  return contractReport
 }
 
 export function parseXlsxFixtureCorpusCase(value: unknown): XlsxFixtureCorpusCase {
@@ -232,49 +232,52 @@ export function readArray(value: Record<string, unknown>, key: string): unknown[
   return Array.isArray(fieldValue) ? fieldValue : []
 }
 
-function validateXlsxFixtureCorpusScorecard(scorecard: XlsxFixtureCorpusScorecard): void {
-  if (scorecard.schemaVersion !== 1 || scorecard.suite !== 'xlsx-fixture-corpus') {
-    throw new Error('Unexpected XLSX fixture corpus scorecard header')
+function validateXlsxFixtureCorpusContractReport(contractReport: XlsxFixtureCorpusContractReport): void {
+  if (contractReport.schemaVersion !== 1 || contractReport.suite !== 'xlsx-fixture-corpus') {
+    throw new Error('Unexpected XLSX fixture corpus contract report header')
   }
-  validateTargetWorkbookCount(scorecard.summary.targetWorkbookCount)
-  if (scorecard.cases.length !== scorecard.summary.cachedWorkbookCount) {
-    throw new Error('XLSX fixture corpus scorecard case count does not match cached workbook count')
+  validateTargetWorkbookCount(contractReport.summary.targetWorkbookCount)
+  if (contractReport.cases.length !== contractReport.summary.cachedWorkbookCount) {
+    throw new Error('XLSX fixture corpus contract report case count does not match cached workbook count')
   }
-  if (scorecard.summary.remainingToTarget !== Math.max(0, scorecard.summary.targetWorkbookCount - scorecard.summary.cachedWorkbookCount)) {
-    throw new Error('XLSX fixture corpus scorecard remaining target count is stale')
+  if (
+    contractReport.summary.remainingToTarget !==
+    Math.max(0, contractReport.summary.targetWorkbookCount - contractReport.summary.cachedWorkbookCount)
+  ) {
+    throw new Error('XLSX fixture corpus contract report remaining target count is stale')
   }
-  const passedWorkbookCount = scorecard.cases.filter((entry) => entry.status === 'passed').length
-  const failedWorkbookCount = scorecard.cases.filter((entry) => entry.status === 'failed').length
-  const errorWorkbookCount = scorecard.cases.filter((entry) => entry.status === 'error').length
-  const unsupportedWorkbookCount = scorecard.cases.filter((entry) => entry.status === 'unsupported').length
-  if (scorecard.summary.passedWorkbookCount !== passedWorkbookCount) {
-    throw new Error('XLSX fixture corpus scorecard passed workbook count is stale')
+  const passedWorkbookCount = contractReport.cases.filter((entry) => entry.status === 'passed').length
+  const failedWorkbookCount = contractReport.cases.filter((entry) => entry.status === 'failed').length
+  const errorWorkbookCount = contractReport.cases.filter((entry) => entry.status === 'error').length
+  const unsupportedWorkbookCount = contractReport.cases.filter((entry) => entry.status === 'unsupported').length
+  if (contractReport.summary.passedWorkbookCount !== passedWorkbookCount) {
+    throw new Error('XLSX fixture corpus contract report passed workbook count is stale')
   }
-  if (scorecard.summary.failedWorkbookCount !== failedWorkbookCount) {
-    throw new Error('XLSX fixture corpus scorecard failed workbook count is stale')
+  if (contractReport.summary.failedWorkbookCount !== failedWorkbookCount) {
+    throw new Error('XLSX fixture corpus contract report failed workbook count is stale')
   }
-  if (scorecard.summary.errorWorkbookCount !== errorWorkbookCount) {
-    throw new Error('XLSX fixture corpus scorecard error workbook count is stale')
+  if (contractReport.summary.errorWorkbookCount !== errorWorkbookCount) {
+    throw new Error('XLSX fixture corpus contract report error workbook count is stale')
   }
-  if (scorecard.summary.unsupportedWorkbookCount !== unsupportedWorkbookCount) {
-    throw new Error('XLSX fixture corpus scorecard unsupported workbook count is stale')
+  if (contractReport.summary.unsupportedWorkbookCount !== unsupportedWorkbookCount) {
+    throw new Error('XLSX fixture corpus contract report unsupported workbook count is stale')
   }
-  const importedWorkbookCount = scorecard.cases.filter((entry) => entry.validation.importPassed).length
-  if (scorecard.summary.importedWorkbookCount !== importedWorkbookCount) {
-    throw new Error('XLSX fixture corpus scorecard imported workbook count is stale')
+  const importedWorkbookCount = contractReport.cases.filter((entry) => entry.validation.importPassed).length
+  if (contractReport.summary.importedWorkbookCount !== importedWorkbookCount) {
+    throw new Error('XLSX fixture corpus contract report imported workbook count is stale')
   }
-  const formulaOracleComparisonCount = scorecard.cases.reduce((sum, entry) => sum + entry.validation.formulaOracleComparisons, 0)
-  if (scorecard.summary.formulaOracleComparisonCount !== formulaOracleComparisonCount) {
-    throw new Error('XLSX fixture corpus scorecard formula oracle comparison count is stale')
+  const formulaOracleComparisonCount = contractReport.cases.reduce((sum, entry) => sum + entry.validation.formulaOracleComparisons, 0)
+  if (contractReport.summary.formulaOracleComparisonCount !== formulaOracleComparisonCount) {
+    throw new Error('XLSX fixture corpus contract report formula oracle comparison count is stale')
   }
-  if (scorecard.summary.formulaOracleMatchCount !== countFormulaOracleMatches(scorecard.cases)) {
-    throw new Error('XLSX fixture corpus scorecard formula oracle match count is stale')
+  if (contractReport.summary.formulaOracleMatchCount !== countFormulaOracleMatches(contractReport.cases)) {
+    throw new Error('XLSX fixture corpus contract report formula oracle match count is stale')
   }
-  if (scorecard.summary.allCachedWorkbooksPassed !== scorecard.cases.every((entry) => entry.passed)) {
-    throw new Error('XLSX fixture corpus scorecard pass summary is stale')
+  if (contractReport.summary.allCachedWorkbooksPassed !== contractReport.cases.every((entry) => entry.passed)) {
+    throw new Error('XLSX fixture corpus contract report pass summary is stale')
   }
-  if (!scorecard.summary.allCachedWorkbooksPassed) {
-    throw new Error('XLSX fixture corpus scorecard has cached workbooks that did not pass')
+  if (!contractReport.summary.allCachedWorkbooksPassed) {
+    throw new Error('XLSX fixture corpus contract report has cached workbooks that did not pass')
   }
 }
 

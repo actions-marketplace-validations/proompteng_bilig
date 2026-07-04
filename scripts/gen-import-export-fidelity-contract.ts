@@ -10,15 +10,15 @@ import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 import { SpreadsheetEngine } from '../packages/core/src/engine.js'
 import { exportXlsx, importCsv, importXlsx, manualCalculationModeWarning } from '../packages/excel-import/src/index.js'
 import type { WorkbookSnapshot } from '../packages/protocol/src/types.js'
-import { projectSupportedSnapshotSemantics } from './import-export-fidelity-projection.ts'
+import { formatJsonForRepo } from './generated-json-format.ts'
 import { parseImportExportFidelityContract, validateImportExportFidelityContract } from './import-export-fidelity-contract-validation.ts'
+import { projectSupportedSnapshotSemantics } from './import-export-fidelity-projection.ts'
 import {
   buildImportExportSemanticLedger,
   importExportDeclinedRuntimeFeatures,
   importExportUnsupportedFeatures,
   type ImportExportSemanticLedgerEntry,
 } from './import-export-semantic-loss-ledger.ts'
-import { formatJsonForRepo } from './generated-json-format.ts'
 
 export { parseImportExportFidelityContract, validateImportExportFidelityContract }
 
@@ -107,16 +107,16 @@ async function main(): Promise<void> {
     if (!existsSync(outputPath)) {
       throw new Error(`Import/export fidelity contract is missing. Run: bun scripts/gen-import-export-fidelity-contract.ts`)
     }
-    const scorecard = parseImportExportFidelityContract(JSON.parse(readFileSync(outputPath, 'utf8')) as unknown)
-    validateImportExportFidelityContract(scorecard)
-    logResult('check', scorecard)
+    const contract = parseImportExportFidelityContract(JSON.parse(readFileSync(outputPath, 'utf8')) as unknown)
+    validateImportExportFidelityContract(contract)
+    logResult('check', contract)
     return
   }
 
-  const scorecard = await buildImportExportFidelityContract()
+  const contract = await buildImportExportFidelityContract()
   mkdirSync(dirname(outputPath), { recursive: true })
-  writeFileSync(outputPath, formatJsonForRepo(`${JSON.stringify(scorecard, null, 2)}\n`))
-  logResult('write', scorecard)
+  writeFileSync(outputPath, formatJsonForRepo(`${JSON.stringify(contract, null, 2)}\n`))
+  logResult('write', contract)
 }
 
 export async function buildImportExportFidelityContract(generatedAt = new Date().toISOString()): Promise<ImportExportFidelityContract> {
@@ -156,20 +156,20 @@ export async function buildImportExportFidelityContract(generatedAt = new Date()
     },
     summary: {
       allRequiredCasesPassed: cases.filter((entry) => entry.required).every((entry) => entry.passed),
-      csvRoundTripPassed: scorecardCase(cases, 'csv-engine-roundtrip').passed,
-      xlsxImportPassed: scorecardCase(cases, 'xlsx-import-preview').passed,
+      csvRoundTripPassed: contractCase(cases, 'csv-engine-roundtrip').passed,
+      xlsxImportPassed: contractCase(cases, 'xlsx-import-preview').passed,
       xlsxSnapshotRoundTripPassed:
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-values-formulas-formats').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-dimensions-merges').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-freeze-panes').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-filters').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-sorts').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-sheet-protection').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-protected-ranges').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-data-validations').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-tables').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-charts').passed &&
-        scorecardCase(cases, 'xlsx-snapshot-roundtrip-pivots').passed,
+        contractCase(cases, 'xlsx-snapshot-roundtrip-values-formulas-formats').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-dimensions-merges').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-freeze-panes').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-filters').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-sorts').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-sheet-protection').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-protected-ranges').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-data-validations').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-tables').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-charts').passed &&
+        contractCase(cases, 'xlsx-snapshot-roundtrip-pivots').passed,
       coveredFeatures,
       unsupportedFeatures: [...importExportUnsupportedFeatures(semanticLedger)],
       declinedRuntimeFeatures: [...importExportDeclinedRuntimeFeatures(semanticLedger)],
@@ -657,7 +657,7 @@ function runXlsxRuntimeFeaturePolicyWarningCase(): ImportExportFidelityCase {
       unsupportedFeatureDisclosures.length === 0,
     coveredFeatures: ['xlsx.runtimeFeaturePolicyWarnings'],
     evidence:
-      'Scorecard separates import/export compatibility from unsafe runtime execution surfaces: preserved manual calculation metadata emits the expected stale-cache warning, while native macro execution is disclosed as a declined runtime feature.',
+      'Contract report separates import/export compatibility from unsafe runtime execution surfaces: preserved manual calculation metadata emits the expected stale-cache warning, while native macro execution is disclosed as a declined runtime feature.',
   })
 }
 
@@ -890,7 +890,7 @@ function createFidelitySnapshot(): WorkbookSnapshot {
   }
 }
 
-function scorecardCase(cases: readonly ImportExportFidelityCase[], id: string): ImportExportFidelityCase {
+function contractCase(cases: readonly ImportExportFidelityCase[], id: string): ImportExportFidelityCase {
   const entry = cases.find((candidate) => candidate.id === id)
   if (!entry) {
     throw new Error(`Import/export fidelity contract is missing required case: ${id}`)
@@ -898,16 +898,16 @@ function scorecardCase(cases: readonly ImportExportFidelityCase[], id: string): 
   return entry
 }
 
-function logResult(mode: 'check' | 'write', scorecard: ImportExportFidelityContract): void {
+function logResult(mode: 'check' | 'write', contract: ImportExportFidelityContract): void {
   console.log(
     JSON.stringify(
       {
         mode,
         outputPath,
-        allRequiredCasesPassed: scorecard.summary.allRequiredCasesPassed,
-        coveredFeatures: scorecard.summary.coveredFeatures.length,
-        unsupportedFeatures: scorecard.summary.unsupportedFeatures.length,
-        declinedRuntimeFeatures: scorecard.summary.declinedRuntimeFeatures.length,
+        allRequiredCasesPassed: contract.summary.allRequiredCasesPassed,
+        coveredFeatures: contract.summary.coveredFeatures.length,
+        unsupportedFeatures: contract.summary.unsupportedFeatures.length,
+        declinedRuntimeFeatures: contract.summary.declinedRuntimeFeatures.length,
       },
       null,
       2,

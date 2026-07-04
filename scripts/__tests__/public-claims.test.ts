@@ -44,7 +44,7 @@ describe('public claim check', () => {
     })
   })
 
-  it('blocks broad claims without trusting caller-provided scorecard state', () => {
+  it('blocks broad claims without trusting caller-provided contract state', () => {
     const repoRoot = makeTempRepo({
       'README.md': 'Bilig is 10x faster than Google Sheets.',
     })

@@ -206,16 +206,16 @@ function main(): void {
     if (!existsSync(outputPath)) {
       throw new Error(`Large workbook SLO budget is missing. Run: bun scripts/gen-large-workbook-slo-budget.ts`)
     }
-    const scorecard = parseLargeWorkbookSloBudget(JSON.parse(readFileSync(outputPath, 'utf8')) as unknown)
-    validateLargeWorkbookSloBudget(scorecard)
-    logResult('check', scorecard)
+    const budget = parseLargeWorkbookSloBudget(JSON.parse(readFileSync(outputPath, 'utf8')) as unknown)
+    validateLargeWorkbookSloBudget(budget)
+    logResult('check', budget)
     return
   }
 
-  const scorecard = buildLargeWorkbookSloBudget(runBenchContractsReport())
+  const budget = buildLargeWorkbookSloBudget(runBenchContractsReport())
   mkdirSync(dirname(outputPath), { recursive: true })
-  writeFileSync(outputPath, formatJsonForRepo(`${JSON.stringify(scorecard, null, 2)}\n`))
-  logResult('write', scorecard)
+  writeFileSync(outputPath, formatJsonForRepo(`${JSON.stringify(budget, null, 2)}\n`))
+  logResult('write', budget)
 }
 
 export function buildLargeWorkbookSloBudget(reportInput: unknown, generatedAt = new Date().toISOString()): LargeWorkbookSloBudget {
@@ -450,44 +450,44 @@ export function parseLargeWorkbookSloBudget(value: unknown): LargeWorkbookSloBud
   }
 }
 
-function validateLargeWorkbookSloBudget(scorecard: LargeWorkbookSloBudget): void {
-  const actualIds = scorecard.measurements.map((measurement) => measurement.id)
+function validateLargeWorkbookSloBudget(budget: LargeWorkbookSloBudget): void {
+  const actualIds = budget.measurements.map((measurement) => measurement.id)
   const expectedIds = measurementSpecs.map((spec) => spec.id)
   if (JSON.stringify(actualIds) !== JSON.stringify(expectedIds)) {
     throw new Error(
       `Large workbook SLO budget measurement coverage is stale. Expected ${expectedIds.join(', ')}, got ${actualIds.join(', ')}`,
     )
   }
-  if (JSON.stringify(scorecard.summary.coveredLargeWorkbookRows) !== JSON.stringify([100_000, 250_000])) {
+  if (JSON.stringify(budget.summary.coveredLargeWorkbookRows) !== JSON.stringify([100_000, 250_000])) {
     throw new Error('Large workbook SLO budget must cover 100k and 250k materialized-cell sessions')
   }
-  const actualHeadedBrowserIds = scorecard.headedBrowserFrameP95Contracts.map((contract) => contract.id)
+  const actualHeadedBrowserIds = budget.headedBrowserFrameP95Contracts.map((contract) => contract.id)
   const expectedHeadedBrowserIds = headedBrowserFrameP95ContractSpecs.map((spec) => spec.id)
   if (JSON.stringify(actualHeadedBrowserIds) !== JSON.stringify(expectedHeadedBrowserIds)) {
     throw new Error(
       `Large workbook SLO budget headed browser coverage is stale. Expected ${expectedHeadedBrowserIds.join(', ')}, got ${actualHeadedBrowserIds.join(', ')}`,
     )
   }
-  const failed = scorecard.measurements.find((measurement) => !measurement.passed || !measurement.gatePassed)
+  const failed = budget.measurements.find((measurement) => !measurement.passed || !measurement.gatePassed)
   if (failed) {
     throw new Error(`Large workbook SLO budget contains a failed measurement: ${failed.id}`)
   }
-  const failedContract = scorecard.headedBrowserFrameP95Contracts.find((contract) => !contract.passed)
+  const failedContract = budget.headedBrowserFrameP95Contracts.find((contract) => !contract.passed)
   if (failedContract) {
     throw new Error(`Large workbook SLO budget contains a failed headed browser contract: ${failedContract.id}`)
   }
 }
 
-function logResult(mode: 'check' | 'write', scorecard: LargeWorkbookSloBudget): void {
+function logResult(mode: 'check' | 'write', budget: LargeWorkbookSloBudget): void {
   console.log(
     JSON.stringify(
       {
         mode,
         outputPath,
-        coveredLargeWorkbookRows: scorecard.summary.coveredLargeWorkbookRows,
-        allSloBudgetsPassed: scorecard.summary.allSloBudgetsPassed,
-        allGateBudgetsPassed: scorecard.summary.allGateBudgetsPassed,
-        headedBrowserFrameP95ContractsPassed: scorecard.summary.headedBrowserFrameP95ContractsPassed,
+        coveredLargeWorkbookRows: budget.summary.coveredLargeWorkbookRows,
+        allSloBudgetsPassed: budget.summary.allSloBudgetsPassed,
+        allGateBudgetsPassed: budget.summary.allGateBudgetsPassed,
+        headedBrowserFrameP95ContractsPassed: budget.summary.headedBrowserFrameP95ContractsPassed,
       },
       null,
       2,

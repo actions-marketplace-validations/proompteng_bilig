@@ -17,6 +17,7 @@ import {
 import { OPTIMISTIC_CELL_SNAPSHOT_FLAG } from './workbook-optimistic-cell-flags.js'
 import { LOCAL_CELL_CONTENT_DIRTY_MASK } from './projected-workbook-local-delta.js'
 import type { WorkbookMutationMethod } from './workbook-sync.js'
+import { deferInteractionPersistence } from './interaction-idle-scheduler.js'
 import {
   clampSelectionMovement,
   emptyCellSnapshot,
@@ -35,6 +36,11 @@ import {
 export interface EditTargetSelection {
   readonly sheetName: string
   readonly address: string
+}
+
+interface DeferredEditCommitTask {
+  ready: boolean
+  runNow(): Promise<void>
 }
 
 function selectionSnapshotToRangeRef(selection: GridSelectionSnapshot): CellRangeRef {
@@ -71,30 +77,6 @@ function readMountedCellEditorValue(): string | null {
   }
   const editor = document.querySelector<HTMLTextAreaElement>('[data-testid="cell-editor-input"]')
   return editor?.value ?? null
-}
-
-function scheduleCellEditorCommitPersistence(task: () => Promise<void>, deferUntilPaint: boolean): Promise<void> {
-  if (!deferUntilPaint || typeof window === 'undefined') {
-    return task()
-  }
-  return new Promise((resolve, reject) => {
-    const run = async () => {
-      try {
-        await task()
-        resolve()
-      } catch (error) {
-        reject(error)
-      }
-    }
-    const scheduleAfterFrame = () => {
-      window.setTimeout(run, 0)
-    }
-    if (typeof window.requestAnimationFrame === 'function') {
-      window.requestAnimationFrame(scheduleAfterFrame)
-      return
-    }
-    scheduleAfterFrame()
-  })
 }
 
 function resolveDetachedOptimisticValue(
@@ -140,6 +122,7 @@ export function useWorkerWorkbookInteractionState(input: {
   workerHandleRef: MutableRefObject<WorkerHandle | null>
   writesAllowed: boolean
   invokeMutation: (method: WorkbookMutationMethod, ...args: unknown[]) => Promise<void>
+  invokeEditCommitMutation?: (method: WorkbookMutationMethod, ...args: unknown[]) => Promise<void>
   perfSession: WorkbookPerfSession
   reportRuntimeError: (error: unknown) => void
   sendSelectionChanged: (selection: WorkerRuntimeSelection) => void
@@ -154,6 +137,7 @@ export function useWorkerWorkbookInteractionState(input: {
     workerHandleRef,
     writesAllowed,
     invokeMutation,
+    invokeEditCommitMutation = invokeMutation,
     perfSession,
     reportRuntimeError,
     sendSelectionChanged,
@@ -181,8 +165,10 @@ export function useWorkerWorkbookInteractionState(input: {
   const optimisticCellResolvedValuesRef = useRef<Map<string, string>>(new Map())
   const optimisticCellSnapshotsRef = useRef<Map<string, CellSnapshot>>(new Map())
   const editSessionRef = useRef(0)
+  const editorBaseHydrationPendingRef = useRef(false)
   const pendingEditCommitSessionRef = useRef<number | null>(null)
   const pendingEditCommitMovementAppliedRef = useRef(false)
+  const pendingEditCommitQueueRef = useRef<DeferredEditCommitTask[]>([])
 
   useEffect(() => {
     const previousSelection = selectionRef.current
@@ -234,6 +220,17 @@ export function useWorkerWorkbookInteractionState(input: {
         return selectedCell
       }
       return active.viewportStore.getCell(nextSelection.sheetName, nextSelection.address)
+    },
+    [selectedCell, workerHandleRef],
+  )
+
+  const hasLiveSelectedCellSnapshot = useCallback(
+    (nextSelection = selectionRef.current) => {
+      const active = workerHandleRef.current
+      if (!active) {
+        return selectedCell.sheetName === nextSelection.sheetName && selectedCell.address === nextSelection.address
+      }
+      return active.viewportStore.hasCellSnapshot?.(nextSelection.sheetName, nextSelection.address) ?? true
     },
     [selectedCell, workerHandleRef],
   )
@@ -458,26 +455,49 @@ export function useWorkerWorkbookInteractionState(input: {
     [getLiveSelectedCell],
   )
 
+  const resolveEditorBaseSnapshot = useCallback(
+    (targetSelection: WorkerRuntimeSelection, liveSnapshot = cloneLiveSelectedCell(targetSelection)): CellSnapshot => {
+      const baseSnapshot = editorBaseSnapshotRef.current
+      const baseMatchesTarget = baseSnapshot.sheetName === targetSelection.sheetName && baseSnapshot.address === targetSelection.address
+      const hasHydratedTarget = hasLiveSelectedCellSnapshot(targetSelection)
+      if (!baseMatchesTarget) {
+        editorBaseSnapshotRef.current = liveSnapshot
+        editorBaseHydrationPendingRef.current = !hasHydratedTarget
+        return liveSnapshot
+      }
+      if (editorBaseHydrationPendingRef.current && hasHydratedTarget) {
+        editorBaseSnapshotRef.current = liveSnapshot
+        editorBaseHydrationPendingRef.current = false
+        return liveSnapshot
+      }
+      if (hasHydratedTarget) {
+        editorBaseHydrationPendingRef.current = false
+      }
+      return baseSnapshot
+    },
+    [cloneLiveSelectedCell, hasLiveSelectedCellSnapshot],
+  )
+
   const resetEditorConflictTracking = useCallback(
     (nextSelection = selectionRef.current) => {
       editorBaseSnapshotRef.current = cloneLiveSelectedCell(nextSelection)
+      editorBaseHydrationPendingRef.current = !hasLiveSelectedCellSnapshot(nextSelection)
       setEditorConflict(null)
     },
-    [cloneLiveSelectedCell],
+    [cloneLiveSelectedCell, hasLiveSelectedCellSnapshot],
   )
 
   const completeSelectionNavigation = useCallback(
     (targetSelection: WorkerRuntimeSelection, movement?: EditMovement) => {
-      const syncSelectionSnapshot = (nextSelection: WorkerRuntimeSelection) => {
-        const nextSelectionSnapshot = createSingleCellSelectionSnapshot(nextSelection)
-        selectionSnapshotRef.current = nextSelectionSnapshot
-        selectionRangeRef.current = selectionSnapshotToRangeRef(nextSelectionSnapshot)
-        setSelectionSnapshot(nextSelectionSnapshot)
-      }
       if (!movement) {
         selectionRef.current = targetSelection
         editorTargetRef.current = targetSelection
-        syncSelectionSnapshot(targetSelection)
+        const nextSelectionSnapshot = createSingleCellSelectionSnapshot(targetSelection)
+        if (!selectionSnapshotsEqual(selectionSnapshotRef.current, nextSelectionSnapshot)) {
+          selectionSnapshotRef.current = nextSelectionSnapshot
+          selectionRangeRef.current = selectionSnapshotToRangeRef(nextSelectionSnapshot)
+          setSelectionSnapshot(nextSelectionSnapshot)
+        }
         return targetSelection
       }
       const nextAddress = clampSelectionMovement(targetSelection.address, targetSelection.sheetName, movement)
@@ -545,6 +565,7 @@ export function useWorkerWorkbookInteractionState(input: {
       }
       const nextEditorValue = seed ?? toEditorValue(getLiveSelectedCell(nextTarget))
       editorBaseSnapshotRef.current = cloneLiveSelectedCell(nextTarget)
+      editorBaseHydrationPendingRef.current = !hasLiveSelectedCellSnapshot(nextTarget)
       setEditorConflict(null)
       editorValueRef.current = nextEditorValue
       setEditorValue(nextEditorValue)
@@ -554,25 +575,77 @@ export function useWorkerWorkbookInteractionState(input: {
       editingModeRef.current = mode
       setEditingMode(mode)
     },
-    [cloneLiveSelectedCell, getLiveSelectedCell, onSelectionSheetChanged, sendSelectionChanged, writesAllowed],
+    [cloneLiveSelectedCell, getLiveSelectedCell, hasLiveSelectedCellSnapshot, onSelectionSheetChanged, sendSelectionChanged, writesAllowed],
   )
 
   const applyParsedInput = useCallback(
     async (sheetName: string, address: string, parsed: ParsedEditorInput) => {
       if (parsed.kind === 'formula') {
-        await invokeMutation('setCellFormula', sheetName, address, parsed.formula)
+        await invokeEditCommitMutation('setCellFormula', sheetName, address, parsed.formula)
         perfSession.markFirstLocalEditApplied?.()
         return
       }
       if (parsed.kind === 'clear') {
-        await invokeMutation('clearCell', sheetName, address)
+        await invokeEditCommitMutation('clearCell', sheetName, address)
         perfSession.markFirstLocalEditApplied?.()
         return
       }
-      await invokeMutation('setCellValue', sheetName, address, parsed.value)
+      await invokeEditCommitMutation('setCellValue', sheetName, address, parsed.value)
       perfSession.markFirstLocalEditApplied?.()
     },
-    [invokeMutation, perfSession],
+    [invokeEditCommitMutation, perfSession],
+  )
+
+  const flushReadyPendingEditCommits = useCallback(async (): Promise<void> => {
+    const drainReadyTasks = async (): Promise<void> => {
+      const nextTask = pendingEditCommitQueueRef.current[0]
+      if (nextTask?.ready !== true) {
+        return
+      }
+      await nextTask.runNow()
+      if (pendingEditCommitQueueRef.current[0] === nextTask) {
+        pendingEditCommitQueueRef.current.shift()
+      }
+      await drainReadyTasks()
+    }
+    await drainReadyTasks()
+  }, [])
+
+  const flushPendingEditCommit = useCallback(async (): Promise<void> => {
+    const drainPendingTasks = async (): Promise<void> => {
+      const nextTask = pendingEditCommitQueueRef.current[0]
+      if (!nextTask) {
+        return
+      }
+      nextTask.ready = true
+      await nextTask.runNow()
+      if (pendingEditCommitQueueRef.current[0] === nextTask) {
+        pendingEditCommitQueueRef.current.shift()
+      }
+      await drainPendingTasks()
+    }
+    await drainPendingTasks()
+  }, [])
+
+  const enqueueDeferredEditCommit = useCallback(
+    (run: () => Promise<void>): void => {
+      let taskPromise: Promise<void> | null = null
+      const task: DeferredEditCommitTask = {
+        ready: false,
+        runNow() {
+          task.ready = true
+          taskPromise ??= run()
+          return taskPromise
+        },
+      }
+      pendingEditCommitQueueRef.current.push(task)
+      void (async () => {
+        await deferInteractionPersistence()
+        task.ready = true
+        await flushReadyPendingEditCommits()
+      })()
+    },
+    [flushReadyPendingEditCommits],
   )
 
   const commitEditor = useCallback(
@@ -595,7 +668,6 @@ export function useWorkerWorkbookInteractionState(input: {
         (editingModeRef.current === 'idle'
           ? toEditorValue(getLiveSelectedCell(targetSelection))
           : (mountedCellEditorValue ?? editorValueRef.current))
-      const deferCommitPersistenceUntilPaint = editingModeRef.current === 'cell' && mountedCellEditorValue !== null
       const commitSessionId = editSessionRef.current
       if (pendingEditCommitSessionRef.current === commitSessionId) {
         if (movement && !pendingEditCommitMovementAppliedRef.current) {
@@ -608,8 +680,8 @@ export function useWorkerWorkbookInteractionState(input: {
       pendingEditCommitMovementAppliedRef.current = false
       const parsed = parseEditorInput(nextValue)
       const isFreshValueOverride = valueOverride !== undefined && editingModeRef.current === 'idle'
-      const baseSnapshot = editorBaseSnapshotRef.current
       const liveSnapshot = cloneLiveSelectedCell(targetSelection)
+      const baseSnapshot = resolveEditorBaseSnapshot(targetSelection, liveSnapshot)
       const baseMatchesTarget = baseSnapshot.sheetName === targetSelection.sheetName && baseSnapshot.address === targetSelection.address
       const targetBaseSnapshot = isFreshValueOverride ? liveSnapshot : baseMatchesTarget ? baseSnapshot : liveSnapshot
       const draftMatchesLiveSnapshot = parsedEditorInputMatchesSnapshot(parsed, liveSnapshot)
@@ -655,13 +727,9 @@ export function useWorkerWorkbookInteractionState(input: {
       )
       bumpOptimisticSeedRevision((revision) => revision + 1)
       finishEditingAtSelection(nextSelection)
-      const mutationTask = scheduleCellEditorCommitPersistence(
-        () => applyParsedInput(targetSelection.sheetName, targetSelection.address, parsed),
-        deferCommitPersistenceUntilPaint,
-      )
-      void (async () => {
+      enqueueDeferredEditCommit(async () => {
         try {
-          await mutationTask
+          await applyParsedInput(targetSelection.sheetName, targetSelection.address, parsed)
           if (editSessionRef.current !== commitSessionId) {
             return
           }
@@ -680,7 +748,7 @@ export function useWorkerWorkbookInteractionState(input: {
             pendingEditCommitSessionRef.current = null
           }
         }
-      })()
+      })
       return true
     },
     [
@@ -689,11 +757,13 @@ export function useWorkerWorkbookInteractionState(input: {
       clearOptimisticCellSeed,
       cloneLiveSelectedCell,
       completeSelectionNavigation,
+      enqueueDeferredEditCommit,
       finishEditingAtSelection,
       finishEditingWithAuthoritative,
       getLiveSelectedCell,
       refreshMountedEditorTargetSnapshot,
       reportRuntimeError,
+      resolveEditorBaseSnapshot,
       selectedCell,
       writesAllowed,
     ],
@@ -817,6 +887,7 @@ export function useWorkerWorkbookInteractionState(input: {
         editorTargetRef.current = nextTarget
         setEditorTargetSelection(nextTarget)
         editorBaseSnapshotRef.current = cloneLiveSelectedCell(nextTarget)
+        editorBaseHydrationPendingRef.current = !hasLiveSelectedCellSnapshot(nextTarget)
         setEditorConflict(null)
       }
       editorValueRef.current = next
@@ -826,7 +897,7 @@ export function useWorkerWorkbookInteractionState(input: {
         setEditingMode('cell')
       }
     },
-    [cloneLiveSelectedCell],
+    [cloneLiveSelectedCell, hasLiveSelectedCellSnapshot],
   )
 
   const isEditing = editingMode !== 'idle'
@@ -866,6 +937,7 @@ export function useWorkerWorkbookInteractionState(input: {
     editorBaseSnapshotRef,
     editingModeRef,
     cloneLiveSelectedCell,
+    resolveEditorBaseSnapshot,
     completeEditNavigation: completeSelectionNavigation,
     finishEditingWithAuthoritative,
     resetEditorConflictTracking,
@@ -886,6 +958,7 @@ export function useWorkerWorkbookInteractionState(input: {
     editorSelectionBehavior,
     editorTargetSelection,
     fillSelectionRange,
+    flushPendingEditCommit,
     getCellEditorSeed,
     acknowledgeExternalSelectionSync,
     handleEditorChange,

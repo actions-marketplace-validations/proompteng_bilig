@@ -1,30 +1,19 @@
+import { Deflate } from 'fflate-stream'
 import { randomUUID } from 'node:crypto'
 import { closeSync, openSync, renameSync, unlinkSync } from 'node:fs'
 import { deflateRawSync } from 'node:zlib'
-import { Deflate } from 'fflate-stream'
 
+import { decodeCellAddress, decodeCellRange, encodeCellRange, type XlsxCellRange } from './address.js'
+import { writeAllSync, zipSourcePreservingEntriesToFile } from './source-preserving-zip-file.js'
 import {
   crc32Finalize,
   crc32Update,
   type FilePreparedZipEntry,
   type PreparedZipEntry,
   type PreparedZipEntrySizes,
-  writeAllSync,
   zipSourcePreservingEntries,
-  zipSourcePreservingEntriesToFile,
 } from './source-preserving-zip.js'
-import {
-  readXlsxZipEntries,
-  readXlsxZipEntriesLazy,
-  readXlsxZipEntriesLazyFromByteSource,
-  forEachInflatedXlsxZipEntryChunk,
-  getZipText,
-  setZipText,
-  type XlsxZipByteSource,
-  type XlsxZipEntries,
-} from './zip-reader.js'
 import { workbookSheetPathEntriesFromSource } from './workbook-sheet-paths.js'
-import { decodeCellAddress, decodeCellRange, encodeCellRange, type XlsxCellRange } from './address.js'
 import {
   escapeXmlAttribute,
   escapeXmlText,
@@ -33,6 +22,16 @@ import {
   worksheetCellElementPattern,
   worksheetCellOpeningTagPattern,
 } from './xml.js'
+import {
+  forEachInflatedXlsxZipEntryChunk,
+  getZipText,
+  readXlsxZipEntries,
+  readXlsxZipEntriesLazy,
+  readXlsxZipEntriesLazyFromByteSource,
+  setZipText,
+  type XlsxZipByteSource,
+  type XlsxZipEntries,
+} from './zip-reader.js'
 
 export interface XlsxScalarPatchErrorValue {
   readonly kind: 'error'

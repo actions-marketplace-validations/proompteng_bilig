@@ -32,7 +32,7 @@ export async function requireAgentProofMatrixDiscovery({
   }
 
   for (const required of [
-    'title: Agent WorkPaper proof matrix',
+    'title: Agent WorkPaper evaluator matrix',
     'description: Pick the smallest Bilig WorkPaper proof for coding agents',
     'npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json',
     '| WorkPaper service |',
@@ -76,7 +76,7 @@ export async function requireAgentProofMatrixDiscovery({
     '@modelcontextprotocol/inspector@latest',
     'set_cell_contents_and_readback',
     'https://bilig.proompteng.ai/mcp',
-    '[Agent WorkPaper proof matrix](agent-proof-matrix.md)',
+    '[Agent WorkPaper evaluator matrix](agent-proof-matrix.md)',
   ] as const) {
     requireIncludes(mcpSpreadsheetFormulaServerDoc, required, 'docs/mcp-spreadsheet-formula-server-for-coding-agents.md')
   }
@@ -91,7 +91,7 @@ export async function requireAgentProofMatrixDiscovery({
     'streamChunkTypes',
     'createAiSdkWorkPaperTools',
     'MockLanguageModelV3',
-    '[Agent WorkPaper proof matrix](agent-proof-matrix.md)',
+    '[Agent WorkPaper evaluator matrix](agent-proof-matrix.md)',
   ] as const) {
     requireIncludes(aiSdkFormulaReadbackDoc, required, 'docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md')
   }
@@ -109,7 +109,7 @@ export async function requireAgentProofMatrixDiscovery({
     'workbook.calcProperties.fullCalcOnLoad = true',
     'Use ExcelJS for workbook files and Bilig only at the recalculation boundary',
     '[ExcelJS formula recalculation in Node.js](exceljs-formula-recalculation-node.md)',
-    '[Agent WorkPaper proof matrix](agent-proof-matrix.md)',
+    '[Agent WorkPaper evaluator matrix](agent-proof-matrix.md)',
   ] as const) {
     requireIncludes(exceljsFormulaResultNotUpdatingDoc, required, 'docs/exceljs-formula-result-not-updating-after-node-edits.md')
   }

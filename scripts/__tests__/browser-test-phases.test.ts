@@ -51,7 +51,7 @@ describe('browser test phases', () => {
       '--grep',
       '@browser-perf',
       '--grep-invert',
-      '@browser-webgpu',
+      '@browser-webgpu|@browser-sync',
     ])
     expect(phases.find((phase) => phase.label === 'browser webgpu perf tests')).toEqual({
       label: 'browser webgpu perf tests',

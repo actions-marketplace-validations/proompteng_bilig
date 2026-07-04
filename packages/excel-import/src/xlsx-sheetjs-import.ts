@@ -1,6 +1,3 @@
-import type { Unzipped } from 'fflate'
-import { decodeCellAddress, decodeCellRange, encodeCellAddress } from '@bilig/xlsx'
-import type { SheetJsWorkBook } from './xlsx-sheetjs-types.js'
 import type {
   CellStyleRecord,
   WorkbookCommentThreadSnapshot,
@@ -8,12 +5,31 @@ import type {
   WorkbookMetadataSnapshot,
   WorkbookSnapshot,
 } from '@bilig/protocol'
+import { decodeCellAddress, decodeCellRange, encodeCellAddress } from '@bilig/xlsx/browser'
+import type { Unzipped } from 'fflate'
+import {
+  attachImportedRuntimeCoordinates,
+  createImportedRuntimeSheetCells,
+  pushImportedSnapshotCell,
+  sortImportedSnapshotCells,
+  type ImportedRuntimeCellCoordinate,
+  type ImportedRuntimeSheetCells,
+} from './imported-runtime-coordinates.js'
+import {
+  LEGACY_XLS_CONTENT_TYPE,
+  XLSM_CONTENT_TYPE,
+  XLSX_CONTENT_TYPE,
+  type ExcelWorkbookImportContentType,
+} from './workbook-import-content-types.js'
+import { createSheetPreview, normalizeWorkbookName, toDisplayText, type ImportedWorkbookSheetPreview } from './workbook-import-helpers.js'
+import { createWorkbookPreview } from './workbook-import-preview.js'
+import type { ImportedWorkbook } from './workbook-import-result.js'
 import { readImportedArrayFormulaSpills, readImportedWorkbookArrayFormulas } from './xlsx-array-formulas.js'
+import { applyImportedAutoFilterRowVisibility } from './xlsx-autofilter-row-visibility.js'
 import { buildColumnEntries, buildRowEntries } from './xlsx-axis-entries.js'
-import { readImportedWorkbookCalculationSettings, readImportedWorkbookCalculationWarnings } from './xlsx-calculation-settings.js'
 import { shouldUseCachedFormulaOpenMode } from './xlsx-cached-formula-open-mode.js'
+import { readImportedWorkbookCalculationSettings, readImportedWorkbookCalculationWarnings } from './xlsx-calculation-settings.js'
 import { buildImportedCellMetadataReferenceSnapshots, readImportedWorkbookCellMetadata } from './xlsx-cell-metadata.js'
-import { readImportedWorkbookChartDrawingArtifacts } from './xlsx-import-chart-drawing-artifacts.js'
 import { legacyCommentThreadSignature, readImportedWorkbookLegacyCommentVml, type ImportedLegacyCommentVml } from './xlsx-comment-vml.js'
 import { readImportedSheetComments } from './xlsx-comments.js'
 import { readImportedWorkbookConditionalFormatArtifacts, readImportedWorkbookConditionalFormats } from './xlsx-conditional-formats.js'
@@ -24,26 +40,18 @@ import { readImportedDefinedNames } from './xlsx-defined-names.js'
 import { shouldUseDenseSheetJsParse } from './xlsx-dense-sheetjs-parse.js'
 import { readImportedWorkbookExternalConnections } from './xlsx-external-connections.js'
 import {
-  buildImportedExternalCacheSheetPlan,
-  addImportedFormulaExternalLinkCacheUsage,
-  readImportedExternalLinkCaches,
-  readImportedExternalWorkbookReferences,
-  refreshImportedExternalLinkCachesFromWorkbooks,
-  type ImportedExternalLinkCacheUsage,
-  type ImportedExternalCacheSheetSnapshot,
-} from './xlsx-external-references.js'
-import {
   readImportedWorkbookExternalLinkArtifacts,
   refreshImportedWorkbookExternalLinkArtifactCaches,
 } from './xlsx-external-link-artifacts.js'
 import {
-  attachImportedRuntimeCoordinates,
-  createImportedRuntimeSheetCells,
-  pushImportedSnapshotCell,
-  sortImportedSnapshotCells,
-  type ImportedRuntimeCellCoordinate,
-  type ImportedRuntimeSheetCells,
-} from './imported-runtime-coordinates.js'
+  addImportedFormulaExternalLinkCacheUsage,
+  buildImportedExternalCacheSheetPlan,
+  readImportedExternalLinkCaches,
+  readImportedExternalWorkbookReferences,
+  refreshImportedExternalLinkCachesFromWorkbooks,
+  type ImportedExternalCacheSheetSnapshot,
+  type ImportedExternalLinkCacheUsage,
+} from './xlsx-external-references.js'
 import { readImportedWorkbookFilters } from './xlsx-filters.js'
 import { readImportedWorkbookFormulaAudit } from './xlsx-formula-audit.js'
 import { normalizeImportedFormulaSource } from './xlsx-formula-translation.js'
@@ -51,24 +59,25 @@ import { readImportedWorksheetFormulaManifests } from './xlsx-formulas.js'
 import { readImportedWorkbookFreezePanes } from './xlsx-freeze-panes.js'
 import { readImportedSheetHyperlinks } from './xlsx-hyperlinks.js'
 import { readImportedWorkbookIgnoredErrors } from './xlsx-ignored-errors.js'
-import { compareCellAddresses, readImportedLiteralCellValue, readImportedNumberFormat } from './xlsx-import-cell-values.js'
 import { collectStyleCandidateAddresses, readImportedXlsxCellStyle } from './xlsx-import-cell-styles.js'
+import { compareCellAddresses, readImportedLiteralCellValue, readImportedNumberFormat } from './xlsx-import-cell-values.js'
+import { readImportedWorkbookChartDrawingArtifacts } from './xlsx-import-chart-drawing-artifacts.js'
 import { buildImportedFormulaSnapshotCell } from './xlsx-import-formula-cells.js'
+import { denseSheetJsByteThreshold, type XlsxExternalWorkbookHydrationDiagnostics, type XlsxImportOptions } from './xlsx-import-limits.js'
 import { buildImportedSheetMetadata } from './xlsx-import-sheet-metadata.js'
 import { internImportedStyle } from './xlsx-import-style-interning.js'
 import {
   addWorkbookWarnings,
-  readImportedFormulaAuditWarnings,
   dataTableFormulasWarning,
+  externalPivotCachesWarning,
   externalWorkbookCompanionAmbiguousMatchWarning,
   externalWorkbookCompanionNoMatchWarning,
-  externalPivotCachesWarning,
   externalWorkbookReferencesWarning,
+  readImportedFormulaAuditWarnings,
   volatileFormulasWarning,
   workbookDefinedNamesReferenceExternalWorkbook,
 } from './xlsx-import-warnings.js'
 import { buildImportedWorkbookMetadata } from './xlsx-import-workbook-metadata.js'
-import { denseSheetJsByteThreshold, type XlsxExternalWorkbookHydrationDiagnostics, type XlsxImportOptions } from './xlsx-import-limits.js'
 import { createPreservedVbaProjectPayload, type PreservedVbaProjectCodeNames } from './xlsx-macros.js'
 import { buildMergeEntries } from './xlsx-merge-entries.js'
 import { readImportedWorkbookFileNumberFormats } from './xlsx-number-formats.js'
@@ -78,39 +87,30 @@ import { readImportedWorkbookPrintPageSetup } from './xlsx-print-page-setup.js'
 import { readImportedWorkbookPrinterSettings } from './xlsx-printer-settings.js'
 import { readImportedWorkbookProtectedRanges } from './xlsx-protected-ranges.js'
 import { readImportedWorkbookRichTextArtifacts } from './xlsx-rich-text-artifacts.js'
-import { readImportedWorkbookSheetProtections } from './xlsx-sheet-protection.js'
 import { readImportedWorkbookSheetProperties } from './xlsx-sheet-properties.js'
+import { readImportedWorkbookSheetProtections } from './xlsx-sheet-protection.js'
 import { readImportedWorkbookSheetVisibilities } from './xlsx-sheet-visibility.js'
+import { canAttachSourceForUntouchedSheetJsExport } from './xlsx-sheetjs-source-attach-policy.js'
+import type { SheetJsWorkBook } from './xlsx-sheetjs-types.js'
 import { readImportedWorkbookSlicerConnectionArtifacts } from './xlsx-slicer-connection-artifacts.js'
 import { readImportedWorkbookSorts } from './xlsx-sorts.js'
+import { attachImportedXlsxSourceReference, type ImportedXlsxSourceReference } from './xlsx-source-bytes.js'
 import { readImportedWorkbookSparklines } from './xlsx-sparklines.js'
 import { addStyleArtifactCandidateAddresses } from './xlsx-style-artifact-candidate-addresses.js'
-import { mergeStyleRuns, styleRunsToRanges, type HorizontalStyleRun, type RectangularStyleRun } from './xlsx-style-runs.js'
 import { prepareSheetJsParserXlsxBytes } from './xlsx-style-only-blank-cells.js'
+import { mergeStyleRuns, styleRunsToRanges, type HorizontalStyleRun, type RectangularStyleRun } from './xlsx-style-runs.js'
 import { readImportedWorkbookFileStyles, readImportedWorkbookSheetDimensions, readImportedWorkbookStyleArtifacts } from './xlsx-styles.js'
 import { readImportedWorkbookSheetTabColors } from './xlsx-tab-colors.js'
 import { readImportedWorkbookTables } from './xlsx-tables.js'
 import { readImportedWorkbookThreadedCommentArtifacts } from './xlsx-threaded-comment-artifacts.js'
 import { readImportedWorkbookDataValidations } from './xlsx-validations.js'
 import { readImportedWorkbookViewState } from './xlsx-view-state.js'
-import { canAttachSourceForUntouchedSheetJsExport } from './xlsx-sheetjs-source-attach-policy.js'
-import {
-  LEGACY_XLS_CONTENT_TYPE,
-  XLSM_CONTENT_TYPE,
-  XLSX_CONTENT_TYPE,
-  type ExcelWorkbookImportContentType,
-} from './workbook-import-content-types.js'
-import { createSheetPreview, normalizeWorkbookName, toDisplayText, type ImportedWorkbookSheetPreview } from './workbook-import-helpers.js'
-import { createWorkbookPreview } from './workbook-import-preview.js'
-import type { ImportedWorkbook } from './workbook-import-result.js'
+import { readImportedWorkbookDocumentPropertiesArtifacts, readImportedWorkbookProperties } from './xlsx-workbook-properties.js'
 import { readImportedWorkbookProtection } from './xlsx-workbook-protection.js'
 import { workbookDirectorySheetPaths, workbookSheetPathsByName } from './xlsx-workbook-sheet-paths.js'
-import { readImportedWorkbookDocumentPropertiesArtifacts, readImportedWorkbookProperties } from './xlsx-workbook-properties.js'
-import { attachImportedXlsxSourceReference, type ImportedXlsxSourceReference } from './xlsx-source-bytes.js'
 import { worksheetCellAt, worksheetCellEntries, worksheetCellEntriesAtAddresses } from './xlsx-worksheet-cells.js'
 import { readImportedWorksheetTextValues } from './xlsx-worksheet-text-values.js'
 import { releaseInflatedLazyXlsxZipEntries } from './xlsx-zip.js'
-import { applyImportedAutoFilterRowVisibility } from './xlsx-autofilter-row-visibility.js'
 
 const largeWorkbookStyleCandidateThreshold = 100_000
 const sheetJsBlankStyleStripMinCellCount = 1_000

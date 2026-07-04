@@ -6,6 +6,7 @@ import {
   persistStoredDrafts,
   persistStoredSession,
 } from '../workbook-agent-pane-storage.js'
+import { captureExpectedConsoleDebug, captureExpectedConsoleDebugMessages } from './expected-console.js'
 
 const alexScope = {
   documentId: 'doc-1',
@@ -38,13 +39,16 @@ describe('workbook agent pane storage', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   it('removes corrupt stored session JSON after falling back', () => {
+    const storageDebug = captureExpectedConsoleDebug('Failed to load stored workbook agent session')
     storage.set('bilig:workbook-agent:doc-1:alex%40example.com', '{')
 
     expect(loadStoredSession(alexScope)).toBeNull()
     expect(storage.has('bilig:workbook-agent:doc-1:alex%40example.com')).toBe(false)
+    storageDebug.expectLogCount(1)
   })
 
   it('rejects and removes blank stored thread ids', () => {
@@ -82,10 +86,12 @@ describe('workbook agent pane storage', () => {
   })
 
   it('removes corrupt stored draft JSON after falling back', () => {
+    const storageDebug = captureExpectedConsoleDebug('Failed to load stored workbook agent draft')
     storage.set('bilig:workbook-agent-drafts:doc-1:alex%40example.com', '{')
 
     expect(loadStoredDrafts(alexScope)).toEqual({})
     expect(storage.has('bilig:workbook-agent-drafts:doc-1:alex%40example.com')).toBe(false)
+    storageDebug.expectLogCount(1)
   })
 
   it('self-heals stored draft maps with non-string values', () => {
@@ -113,6 +119,7 @@ describe('workbook agent pane storage', () => {
   })
 
   it('does not throw when session storage writes fail', () => {
+    const storageDebug = captureExpectedConsoleDebugMessages()
     vi.stubGlobal('window', {
       sessionStorage: {
         getItem() {
@@ -130,5 +137,7 @@ describe('workbook agent pane storage', () => {
     expect(() => persistStoredSession(alexScope, { threadId: 'thr-1' })).not.toThrow()
     expect(() => persistStoredDrafts(alexScope, { key: 'draft' })).not.toThrow()
     expect(() => clearStoredSession(alexScope)).not.toThrow()
+    storageDebug.expectMessageCount('Failed to clear workbook agent storage', 4)
+    storageDebug.expectMessageCount('Failed to persist workbook agent storage', 2)
   })
 })

@@ -1,9 +1,3 @@
-import type {
-  WorkbookAgentThreadSnapshot,
-  WorkbookAgentStreamEvent,
-  WorkbookAgentThreadSummary,
-  WorkbookAgentWorkflowRun,
-} from '@bilig/contracts'
 import type { WorkbookAgentAppliedBy, WorkbookAgentCommandBundle, WorkbookAgentExecutionRecord } from '@bilig/agent-api'
 import {
   canCancelWorkbookAgentWorkflowRun,
@@ -12,11 +6,24 @@ import {
   resolveWorkbookAgentBundleExecutionPolicyInput,
   toWorkbookAgentCommandBundle,
 } from '@bilig/agent-api'
+import type {
+  WorkbookAgentStreamEvent,
+  WorkbookAgentThreadSnapshot,
+  WorkbookAgentThreadSummary,
+  WorkbookAgentWorkflowRun,
+} from '@bilig/contracts'
 import type { SessionIdentity } from '../http/session.js'
-import type { ZeroSyncService } from '../zero/service.js'
 import { createWorkbookAgentServiceError } from '../workbook-agent-errors.js'
+import type { ZeroSyncService } from '../zero/service.js'
 import type { CodexAppServerTransport } from './codex-app-server-client.js'
+import { attachSharedReviewState, createBundleRangeCitations, createWorkflowTurnId } from './workbook-agent-bundle-state.js'
+import {
+  WorkbookAgentCodexRuntime,
+  createWorkbookAgentThreadResumeInput,
+  createWorkbookAgentThreadStartInput,
+} from './workbook-agent-codex-runtime.js'
 import { DisabledWorkbookAgentService } from './workbook-agent-disabled-service.js'
+import { updateWorkbookAgentDurableUiContextFromUser } from './workbook-agent-durable-context-sync.js'
 import {
   getWorkbookAgentWorkflowFamily,
   isWorkbookAgentRolloutAllowed,
@@ -24,26 +31,6 @@ import {
   resolveWorkbookAgentFeatureFlags,
   type WorkbookAgentFeatureFlags,
 } from './workbook-agent-feature-flags.js'
-import {
-  createSessionBodySchema,
-  createSystemEntry,
-  reviewReviewItemBodySchema,
-  startWorkflowBodySchema,
-  updateContextBodySchema,
-} from './workbook-agent-session-model.js'
-import { attachSharedReviewState, createBundleRangeCitations, createWorkflowTurnId } from './workbook-agent-bundle-state.js'
-import {
-  clearLegacyPrivateBootstrapReviewItem,
-  createWorkbookAgentBootstrappedSessionState,
-  findRecoveredStaleBootstrapWorkflowRuns,
-  planWorkbookAgentBootstrapReviewRecovery,
-  rebaseWorkbookAgentBootstrapReviewItem,
-} from './workbook-agent-service-bootstrap.js'
-import {
-  WorkbookAgentCodexRuntime,
-  createWorkbookAgentThreadResumeInput,
-  createWorkbookAgentThreadStartInput,
-} from './workbook-agent-codex-runtime.js'
 import {
   assertNoWorkbookAgentReviewItem,
   assertWorkbookAgentReviewDismissAllowed,
@@ -54,50 +41,64 @@ import {
   stageWorkbookAgentReviewBundle,
   transitionWorkbookAgentSharedReview,
 } from './workbook-agent-review-transitions.js'
-import { WorkbookAgentThreadRepository } from './workbook-agent-thread-repository.js'
-import { WorkbookAgentSessionAuthority } from './workbook-agent-session-authority.js'
-import {
-  createWorkbookAgentBundleApplicationContext,
-  createWorkbookAgentReviewActionContext,
-} from './workbook-agent-service-action-contexts.js'
-import {
-  buildSnapshot,
-  cloneUiContext,
-  isMutatingWorkflowTemplate,
-  normalizeExecutionPolicy,
-  type WorkbookAgentThreadState,
-  upsertEntry,
-} from './workbook-agent-service-shared.js'
-import { updateWorkbookAgentDurableUiContextFromUser } from './workbook-agent-durable-context-sync.js'
 import {
   assertWorkbookAgentExecutionPolicyChangeAllowed,
   assertWorkbookAgentSharedThreadAccess,
   filterWorkbookAgentThreadSummariesByAccessPolicy,
 } from './workbook-agent-service-access-policy.js'
 import {
-  assertWorkbookAgentTurnQuota,
-  resolveWorkbookAgentActiveTurnActorUserId,
-  resolveWorkbookAgentTurnActorUserId,
-} from './workbook-agent-service-session-policy.js'
-import { WorkbookAgentWorkflowRuntime } from './workbook-agent-workflow-runtime.js'
-import {
-  WorkbookAgentSessionRegistry,
-  type WorkbookAgentObservabilityCounterName,
-  type WorkbookAgentObservabilitySnapshot,
-} from './workbook-agent-session-registry.js'
-import {
-  resolveWorkbookAgentServiceLimits,
-  type EnabledWorkbookAgentServiceOptions,
-  type WorkbookAgentService,
-} from './workbook-agent-service-options.js'
+  createWorkbookAgentBundleApplicationContext,
+  createWorkbookAgentReviewActionContext,
+} from './workbook-agent-service-action-contexts.js'
 import {
   applyWorkbookAgentCommandBundleForSessionState,
   applyWorkbookAgentToolBundleAutomatically,
   finalizeWorkbookAgentPrivateTurnBundle,
 } from './workbook-agent-service-application.js'
+import {
+  clearLegacyPrivateBootstrapReviewItem,
+  createWorkbookAgentBootstrappedSessionState,
+  findRecoveredStaleBootstrapWorkflowRuns,
+  planWorkbookAgentBootstrapReviewRecovery,
+  rebaseWorkbookAgentBootstrapReviewItem,
+} from './workbook-agent-service-bootstrap.js'
+import {
+  resolveWorkbookAgentServiceLimits,
+  type EnabledWorkbookAgentServiceOptions,
+  type WorkbookAgentService,
+  type WorkbookAgentServiceLimits,
+} from './workbook-agent-service-options.js'
 import { applyWorkbookAgentReviewItem, replayWorkbookAgentExecutionRecord } from './workbook-agent-service-review-actions.js'
+import {
+  assertWorkbookAgentTurnQuota,
+  resolveWorkbookAgentActiveTurnActorUserId,
+  resolveWorkbookAgentTurnActorUserId,
+} from './workbook-agent-service-session-policy.js'
+import {
+  buildSnapshot,
+  cloneUiContext,
+  isMutatingWorkflowTemplate,
+  normalizeExecutionPolicy,
+  upsertEntry,
+  type WorkbookAgentThreadState,
+} from './workbook-agent-service-shared.js'
 import { startWorkbookAgentServiceTurn } from './workbook-agent-service-turn-actions.js'
+import { WorkbookAgentSessionAuthority } from './workbook-agent-session-authority.js'
+import {
+  createSessionBodySchema,
+  createSystemEntry,
+  reviewReviewItemBodySchema,
+  startWorkflowBodySchema,
+  updateContextBodySchema,
+} from './workbook-agent-session-model.js'
+import {
+  WorkbookAgentSessionRegistry,
+  type WorkbookAgentObservabilityCounterName,
+  type WorkbookAgentObservabilitySnapshot,
+} from './workbook-agent-session-registry.js'
+import { WorkbookAgentThreadRepository } from './workbook-agent-thread-repository.js'
 import { assertWorkbookAgentToolCallOwnsTurn } from './workbook-agent-turn-lifecycle.js'
+import { WorkbookAgentWorkflowRuntime } from './workbook-agent-workflow-runtime.js'
 
 export type { EnabledWorkbookAgentServiceOptions, WorkbookAgentService } from './workbook-agent-service-options.js'
 
@@ -105,12 +106,7 @@ class EnabledWorkbookAgentService implements WorkbookAgentService {
   readonly enabled = true
   private readonly zeroSyncService: ZeroSyncService
   private readonly now: () => number
-  private readonly maxSessions: number
-  private readonly maxCodexClients: number
-  private readonly maxConcurrentTurnsPerCodexClient: number
-  private readonly maxQueuedTurnsPerCodexClient: number
-  private readonly maxActiveTurnsPerUser: number
-  private readonly maxActiveTurnsPerDocument: number
+  private readonly limits: WorkbookAgentServiceLimits
   private readonly featureFlags: WorkbookAgentFeatureFlags
   private readonly sessionRegistry: WorkbookAgentSessionRegistry
   private readonly sessionAuthority: WorkbookAgentSessionAuthority
@@ -119,21 +115,15 @@ class EnabledWorkbookAgentService implements WorkbookAgentService {
   private readonly workflowRuntime: WorkbookAgentWorkflowRuntime
 
   constructor(options: EnabledWorkbookAgentServiceOptions) {
-    const limits = resolveWorkbookAgentServiceLimits(options)
+    this.limits = resolveWorkbookAgentServiceLimits(options)
     this.zeroSyncService = options.zeroSyncService
     this.now = options.now ?? (() => Date.now())
-    this.maxSessions = limits.maxSessions
-    this.maxCodexClients = limits.maxCodexClients
-    this.maxConcurrentTurnsPerCodexClient = limits.maxConcurrentTurnsPerCodexClient
-    this.maxQueuedTurnsPerCodexClient = limits.maxQueuedTurnsPerCodexClient
-    this.maxActiveTurnsPerUser = limits.maxActiveTurnsPerUser
-    this.maxActiveTurnsPerDocument = limits.maxActiveTurnsPerDocument
     this.featureFlags = {
       ...resolveWorkbookAgentFeatureFlags(),
       ...options.featureFlags,
     }
     this.sessionRegistry = new WorkbookAgentSessionRegistry({
-      maxSessions: this.maxSessions,
+      maxSessions: this.limits.maxSessions,
       now: this.now,
     })
     this.threadRepository = new WorkbookAgentThreadRepository(this.zeroSyncService)
@@ -145,9 +135,9 @@ class EnabledWorkbookAgentService implements WorkbookAgentService {
     this.codexRuntime = new WorkbookAgentCodexRuntime({
       zeroSyncService: this.zeroSyncService,
       now: this.now,
-      maxCodexClients: this.maxCodexClients,
-      maxConcurrentTurnsPerCodexClient: this.maxConcurrentTurnsPerCodexClient,
-      maxQueuedTurnsPerCodexClient: this.maxQueuedTurnsPerCodexClient,
+      maxCodexClients: this.limits.maxCodexClients,
+      maxConcurrentTurnsPerCodexClient: this.limits.maxConcurrentTurnsPerCodexClient,
+      maxQueuedTurnsPerCodexClient: this.limits.maxQueuedTurnsPerCodexClient,
       getSessionByThreadId: (threadId) => this.sessionAuthority.getSessionByThreadId(threadId),
       tryGetSessionByThreadId: (threadId) => this.sessionAuthority.tryGetSessionByThreadId(threadId),
       listSessions: () => this.sessionRegistry.listSessions(),
@@ -301,9 +291,9 @@ class EnabledWorkbookAgentService implements WorkbookAgentService {
       boundThreadCount: 0,
       activeTurnCount: 0,
       queuedTurnCount: 0,
-      maxClients: this.maxCodexClients,
-      maxConcurrentTurnsPerClient: this.maxConcurrentTurnsPerCodexClient,
-      maxQueuedTurnsPerClient: this.maxQueuedTurnsPerCodexClient,
+      maxClients: this.limits.maxCodexClients,
+      maxConcurrentTurnsPerClient: this.limits.maxConcurrentTurnsPerCodexClient,
+      maxQueuedTurnsPerClient: this.limits.maxQueuedTurnsPerCodexClient,
     }
     return this.sessionRegistry.getObservabilitySnapshot({
       featureFlags: this.featureFlags,
@@ -524,8 +514,8 @@ class EnabledWorkbookAgentService implements WorkbookAgentService {
       sessions: this.sessionRegistry.listSessions(),
       documentId,
       actorUserId,
-      maxActiveTurnsPerUser: this.maxActiveTurnsPerUser,
-      maxActiveTurnsPerDocument: this.maxActiveTurnsPerDocument,
+      maxActiveTurnsPerUser: this.limits.maxActiveTurnsPerUser,
+      maxActiveTurnsPerDocument: this.limits.maxActiveTurnsPerDocument,
     })
   }
 

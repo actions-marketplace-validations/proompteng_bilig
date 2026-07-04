@@ -1,3 +1,4 @@
+import type { WorkbookRichTextCellSnapshot, WorkbookSnapshot } from '@bilig/protocol'
 import {
   decodeCellRange,
   encodeCellAddress,
@@ -7,8 +8,7 @@ import {
   type SimpleXlsxSheet,
   type SimpleXlsxStyle,
   type SimpleXlsxWorkbook,
-} from '@bilig/xlsx'
-import type { WorkbookRichTextCellSnapshot, WorkbookSnapshot } from '@bilig/protocol'
+} from '@bilig/xlsx/browser'
 import { buildExportDefinedNames } from './xlsx-defined-names.js'
 import { encodeFormulaForXlsx } from './xlsx-formula-translation.js'
 

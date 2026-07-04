@@ -24,6 +24,7 @@ export function useWorkbookEditorConflict(input: {
   editorBaseSnapshotRef: MutableRefObject<CellSnapshot>
   editingModeRef: MutableRefObject<EditingMode>
   cloneLiveSelectedCell: (nextSelection?: WorkerRuntimeSelection) => CellSnapshot
+  resolveEditorBaseSnapshot?: (targetSelection: WorkerRuntimeSelection, liveSnapshot?: CellSnapshot) => CellSnapshot
   completeEditNavigation: (targetSelection: WorkerRuntimeSelection) => WorkerRuntimeSelection
   finishEditingWithAuthoritative: (targetSelection: WorkerRuntimeSelection) => void
   resetEditorConflictTracking: (nextSelection?: WorkerRuntimeSelection) => void
@@ -47,6 +48,7 @@ export function useWorkbookEditorConflict(input: {
     finishEditingWithAuthoritative,
     resetEditorConflictTracking,
     reportRuntimeError,
+    resolveEditorBaseSnapshot,
     selectedCell,
     selection,
     setEditorConflict,
@@ -64,7 +66,7 @@ export function useWorkbookEditorConflict(input: {
       return
     }
     const authoritativeSnapshot = cloneLiveSelectedCell(targetSelection)
-    const baseSnapshot = editorBaseSnapshotRef.current
+    const baseSnapshot = resolveEditorBaseSnapshot?.(targetSelection, authoritativeSnapshot) ?? editorBaseSnapshotRef.current
     const parsedDraft = parseEditorInput(editorValueRef.current)
 
     if (sameCellContent(baseSnapshot, authoritativeSnapshot) || parsedEditorInputMatchesSnapshot(parsedDraft, authoritativeSnapshot)) {
@@ -103,6 +105,7 @@ export function useWorkbookEditorConflict(input: {
     selectedCell,
     selection.address,
     selection.sheetName,
+    resolveEditorBaseSnapshot,
     setEditorConflict,
   ])
 

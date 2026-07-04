@@ -1,5 +1,5 @@
+import { decodeCellAddress, decodeCellRange, encodeCellAddress } from '@bilig/xlsx/browser'
 import { XMLParser } from 'fast-xml-parser'
-import { decodeCellAddress, decodeCellRange, encodeCellAddress } from '@bilig/xlsx'
 import type { SheetJsWorkBook } from './xlsx-sheetjs-types.js'
 
 import type {
@@ -14,13 +14,14 @@ import type {
   CellStyleProtectionSnapshot,
   CellStyleRecord,
   CellVerticalAlignment,
-  WorkbookAxisMetadataSnapshot,
+  SheetStyleRangeSnapshot,
   WorkbookAxisEntrySnapshot,
+  WorkbookAxisMetadataSnapshot,
   WorkbookSheetFormatPrSnapshot,
   WorkbookSheetStyleArtifactsSnapshot,
   WorkbookStyleArtifactsSnapshot,
-  SheetStyleRangeSnapshot,
 } from '@bilig/protocol'
+import { asArray, isRecord, normalizeRgbColor, numberValue, recordChild, stringValue, toArgbColor } from './xlsx-style-values.js'
 import {
   readXmlAttribute,
   readXmlNonNegativeIntegerAttribute,
@@ -28,7 +29,6 @@ import {
   readXmlOptionalBooleanAttribute,
   readXmlPositiveIntegerAttribute,
 } from './xlsx-style-xml.js'
-import { asArray, isRecord, normalizeRgbColor, numberValue, recordChild, stringValue, toArgbColor } from './xlsx-style-values.js'
 import { readImportedWorkbookThemeArtifact } from './xlsx-theme-artifacts.js'
 import { workbookSheetPathEntries } from './xlsx-workbook-sheet-paths.js'
 import { getZipText as getZipEntryText, readXlsxZipEntries, type XlsxZipEntries, type XlsxZipSource } from './xlsx-zip.js'

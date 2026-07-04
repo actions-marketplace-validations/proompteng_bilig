@@ -1,5 +1,5 @@
+import { decodeCellAddress, decodeCellRange, encodeCellAddress } from '@bilig/xlsx/browser'
 import { XMLParser } from 'fast-xml-parser'
-import { decodeCellAddress, decodeCellRange, encodeCellAddress } from '@bilig/xlsx'
 
 import type {
   CellRangeRef,

@@ -1,4 +1,4 @@
-import { decodeCellAddress, decodeCellRange, decodeColumnAddress, encodeCellAddress, encodeColumnAddress } from '@bilig/xlsx'
+import { decodeCellAddress, decodeCellRange, decodeColumnAddress, encodeCellAddress, encodeColumnAddress } from '@bilig/xlsx/browser'
 import type { SheetJsDefinedName, SheetJsWorkBook } from './xlsx-sheetjs-types.js'
 
 import { formatStructuredReferenceColumnSpecifier } from '@bilig/formula'

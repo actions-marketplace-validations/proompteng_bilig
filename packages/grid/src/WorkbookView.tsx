@@ -331,9 +331,6 @@ export function WorkbookView({
     }
     if (gridFocusApiRef.current) {
       focusCurrentGrid()
-      if (typeof window !== 'undefined') {
-        window.requestAnimationFrame(focusCurrentGrid)
-      }
       return
     }
     flushSync(() => {

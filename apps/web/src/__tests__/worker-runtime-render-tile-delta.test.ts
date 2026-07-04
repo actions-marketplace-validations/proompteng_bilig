@@ -215,7 +215,7 @@ describe('worker-runtime-render-tile-delta', () => {
     )
   })
 
-  it('treats changed-cell render tile deltas as visual paint damage', () => {
+  it('treats changed-cell render tile deltas as content damage', () => {
     const changedEngine = {
       ...engine,
       workbook: {
@@ -247,7 +247,9 @@ describe('worker-runtime-render-tile-delta', () => {
 
     expect(replacement?.kind === 'tileReplace' ? replacement.dirtyLocalRows : null).toEqual(new Uint32Array([5, 5]))
     expect(replacement?.kind === 'tileReplace' ? replacement.dirtyLocalCols : null).toEqual(new Uint32Array([4, 4]))
-    expect(replacement?.kind === 'tileReplace' ? replacement.dirtyMasks : null).toEqual(new Uint32Array([RANGE_VISUAL_DIRTY_MASK]))
+    expect(replacement?.kind === 'tileReplace' ? replacement.dirtyMasks : null).toEqual(
+      new Uint32Array([DirtyMaskV3.Value | DirtyMaskV3.Text]),
+    )
   })
 
   it('materializes only dirty visible tiles for event-driven batches', () => {

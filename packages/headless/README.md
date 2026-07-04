@@ -606,7 +606,7 @@ Use one of these policies:
   artifacts, but treat formula correctness as unaudited for those dependencies.
 - Strict-fail: reject the import when either metadata field above is non-empty.
 
-The real-workbook corpus scorecard reports external references as
+The real-workbook corpus contract report marks external references as
 `xlsx.externalLinks.workbookReferencesPreserved` and direct formula dependencies
 as `xlsx.externalLinks.formulaDependenciesUnsupported`, with linked workbook,
 affected formula, and cached-value counts.

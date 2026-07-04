@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, createElement, useEffect } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ErrorCode, ValueTag, type CellSnapshot } from '@bilig/protocol'
 import type { GridSelectionSnapshot } from '@bilig/grid'
 import type { WorkerHandle, WorkerRuntimeSelection } from '../runtime-session.js'
@@ -67,7 +67,23 @@ function mountHarness(): {
 }
 
 describe('useWorkerWorkbookInteractionState', () => {
+  let originalRequestIdleCallback: Window['requestIdleCallback'] | undefined
+
+  beforeEach(() => {
+    originalRequestIdleCallback = window.requestIdleCallback
+    Object.defineProperty(window, 'requestIdleCallback', {
+      configurable: true,
+      value: undefined,
+      writable: true,
+    })
+  })
+
   afterEach(() => {
+    Object.defineProperty(window, 'requestIdleCallback', {
+      configurable: true,
+      value: originalRequestIdleCallback,
+      writable: true,
+    })
     flushScheduledSelectionPersistence()
     document.body.innerHTML = ''
     vi.useRealTimers()
@@ -144,6 +160,12 @@ describe('useWorkerWorkbookInteractionState', () => {
     })
 
     expect(commitResult).toBe(true)
+    expect(invokeMutation).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await captured?.flushPendingEditCommit()
+    })
+
     expect(invokeMutation).toHaveBeenCalledWith('setCellValue', 'Sheet1', 'A1', 'after')
 
     await act(async () => {
@@ -196,7 +218,65 @@ describe('useWorkerWorkbookInteractionState', () => {
     expect(invokeMutation).not.toHaveBeenCalled()
 
     await act(async () => {
-      await vi.runOnlyPendingTimersAsync()
+      await captured?.flushPendingEditCommit()
+    })
+
+    expect(invokeMutation).toHaveBeenCalledWith('setCellValue', 'Sheet1', 'A1', 'after')
+
+    await act(async () => {
+      harness.root.unmount()
+    })
+  })
+
+  it('keeps click-away selection synchronous after a mounted editor commit is accepted', async () => {
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    vi.useFakeTimers()
+    const selectedCell = stringCell('Sheet1', 'A1', 'before')
+    const workerHandle = {
+      viewportStore: createViewportStoreMapStub([selectedCell, stringCell('Sheet1', 'B1', 'next')]),
+    }
+    const invokeMutation = vi.fn(async () => undefined)
+    const sendSelectionChanged = vi.fn()
+    const editor = document.createElement('textarea')
+    editor.dataset['testid'] = 'cell-editor-input'
+    editor.value = 'after'
+    document.body.appendChild(editor)
+    const harness = mountHarness()
+    let captured: ReturnType<typeof useWorkerWorkbookInteractionState> | null = null
+
+    await harness.render({
+      documentId: 'doc-1',
+      selection: { sheetName: 'Sheet1', address: 'A1' },
+      selectedCell,
+      workerHandle,
+      invokeMutation,
+      sendSelectionChanged,
+      capture: (value) => {
+        captured = value
+      },
+    })
+    if (!captured) {
+      throw new Error('Expected interaction state capture')
+    }
+
+    await act(async () => {
+      captured?.beginEditing()
+      captured?.handleSelectionChange(singleCellSnapshot('Sheet1', 'B1'))
+      await Promise.resolve()
+    })
+
+    expect(workerHandle.viewportStore.getCell('Sheet1', 'A1')).toMatchObject({
+      input: 'after',
+      value: { tag: ValueTag.String, value: 'after' },
+    })
+    expect(captured?.selectionRef.current).toEqual({ sheetName: 'Sheet1', address: 'B1' })
+    expect(captured?.visibleEditorValue).toBe('next')
+    expect(sendSelectionChanged).toHaveBeenCalledWith({ sheetName: 'Sheet1', address: 'B1' })
+    expect(invokeMutation).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await captured?.flushPendingEditCommit()
     })
 
     expect(invokeMutation).toHaveBeenCalledWith('setCellValue', 'Sheet1', 'A1', 'after')
@@ -298,11 +378,17 @@ describe('useWorkerWorkbookInteractionState', () => {
       await Promise.resolve()
     })
 
-    expect(invokeMutation).toHaveBeenCalledWith('clearCell', 'Sheet1', 'A1')
     expect(workerHandle.viewportStore.getCell('Sheet1', 'A1').value).toEqual({ tag: ValueTag.Empty })
     expect(captured?.selectionRef.current).toEqual({ sheetName: 'Sheet1', address: 'B1' })
     expect(captured?.visibleEditorValue).toBe('next')
     expect(sendSelectionChanged).toHaveBeenCalledWith({ sheetName: 'Sheet1', address: 'B1' })
+    expect(invokeMutation).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await captured?.flushPendingEditCommit()
+    })
+
+    expect(invokeMutation).toHaveBeenCalledWith('clearCell', 'Sheet1', 'A1')
 
     await act(async () => {
       harness.root.unmount()
@@ -334,9 +420,16 @@ describe('useWorkerWorkbookInteractionState', () => {
       throw new Error('Expected interaction state capture')
     }
 
+    vi.useFakeTimers()
     await act(async () => {
       captured?.commitEditor(undefined, '=A1="HELLO"')
       await Promise.resolve()
+    })
+
+    expect(invokeMutation).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await captured?.flushPendingEditCommit()
     })
 
     expect(invokeMutation).toHaveBeenCalledWith('setCellFormula', 'Sheet1', 'A1', 'A1="HELLO"')
@@ -464,6 +557,7 @@ describe('useWorkerWorkbookInteractionState', () => {
       throw new Error('Expected interaction state capture')
     }
 
+    vi.useFakeTimers()
     await act(async () => {
       captured?.commitEditor(undefined, '=1+')
       await Promise.resolve()
@@ -477,6 +571,12 @@ describe('useWorkerWorkbookInteractionState', () => {
       expect.objectContaining({ localDirtyMask: expect.any(Number) }),
     )
     expect(captured?.visibleEditorValue).toBe('#VALUE!')
+    expect(invokeMutation).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await captured?.flushPendingEditCommit()
+    })
+
     expect(invokeMutation).toHaveBeenCalledWith('setCellFormula', 'Sheet1', 'A1', '1+')
 
     await act(async () => {
@@ -511,6 +611,7 @@ describe('useWorkerWorkbookInteractionState', () => {
       throw new Error('Expected interaction state capture')
     }
 
+    vi.useFakeTimers()
     await act(async () => {
       captured?.commitEditor(undefined, '=A1="HELLO"')
       await Promise.resolve()
@@ -518,6 +619,12 @@ describe('useWorkerWorkbookInteractionState', () => {
 
     expect(workerHandle.viewportStore.getCell('Sheet1', 'A2').value).toEqual({ tag: ValueTag.Boolean, value: true })
     expect(captured?.visibleResolvedValue).toBe('TRUE')
+    expect(invokeMutation).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await captured?.flushPendingEditCommit()
+    })
+
     expect(invokeMutation).toHaveBeenCalledWith('setCellFormula', 'Sheet1', 'A2', 'A1="HELLO"')
 
     await act(async () => {
@@ -556,6 +663,7 @@ describe('useWorkerWorkbookInteractionState', () => {
       throw new Error('Expected interaction state capture')
     }
 
+    vi.useFakeTimers()
     await act(async () => {
       captured?.beginEditing('', 'select-all', 'formula')
       captured?.handleEditorChange('hello')
@@ -572,12 +680,28 @@ describe('useWorkerWorkbookInteractionState', () => {
       value: { tag: ValueTag.String, value: 'hello' },
     })
     expect(workerHandle.viewportStore.getCell('Sheet1', 'A2').value).toEqual({ tag: ValueTag.Boolean, value: true })
+
+    expect(invokeMutation).not.toHaveBeenCalled()
+    expect(invokeMutation).not.toHaveBeenCalledWith('setCellFormula', 'Sheet1', 'A2', 'A1="HELLO"')
+
+    let flushTask: Promise<void> | null = null
+    await act(async () => {
+      flushTask = captured?.flushPendingEditCommit() ?? null
+      await Promise.resolve()
+    })
+
     expect(invokeMutation).toHaveBeenCalledWith('setCellValue', 'Sheet1', 'A1', 'hello')
-    expect(invokeMutation).toHaveBeenCalledWith('setCellFormula', 'Sheet1', 'A2', 'A1="HELLO"')
+    expect(invokeMutation).not.toHaveBeenCalledWith('setCellFormula', 'Sheet1', 'A2', 'A1="HELLO"')
 
     await act(async () => {
       resolveFirstMutation?.()
       await firstMutation
+      await flushTask
+    })
+
+    expect(invokeMutation).toHaveBeenCalledWith('setCellFormula', 'Sheet1', 'A2', 'A1="HELLO"')
+
+    await act(async () => {
       harness.root.unmount()
     })
   })
@@ -606,6 +730,7 @@ describe('useWorkerWorkbookInteractionState', () => {
       throw new Error('Expected interaction state capture')
     }
 
+    vi.useFakeTimers()
     await act(async () => {
       captured?.commitEditor(undefined, '12')
       await Promise.resolve()
@@ -614,6 +739,12 @@ describe('useWorkerWorkbookInteractionState', () => {
 
     expect(captured?.visibleEditorValue).toBe('12')
     expect(captured?.visibleResolvedValue).toBe('12')
+    expect(invokeMutation).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await captured?.flushPendingEditCommit()
+    })
+
     expect(invokeMutation).toHaveBeenCalledWith('setCellValue', 'Sheet1', 'A1', 12)
 
     await act(async () => {
@@ -1246,6 +1377,9 @@ function createViewportStoreStub(sheetName: string, address: string, cell: CellS
       }
       return stringCell(targetSheetName, targetAddress, '')
     },
+    hasCellSnapshot(targetSheetName: string, targetAddress: string) {
+      return targetSheetName === sheetName && targetAddress === address
+    },
     setCellSnapshot: vi.fn((snapshot: CellSnapshot) => {
       if (snapshot.sheetName === sheetName && snapshot.address === address) {
         activeCell = snapshot
@@ -1259,6 +1393,9 @@ function createViewportStoreMapStub(cells: readonly CellSnapshot[]) {
   return {
     getCell(targetSheetName: string, targetAddress: string) {
       return cellMap.get(`${targetSheetName}!${targetAddress}`) ?? stringCell(targetSheetName, targetAddress, '')
+    },
+    hasCellSnapshot(targetSheetName: string, targetAddress: string) {
+      return cellMap.has(`${targetSheetName}!${targetAddress}`)
     },
     setCellSnapshot: vi.fn((snapshot: CellSnapshot) => {
       cellMap.set(`${snapshot.sheetName}!${snapshot.address}`, snapshot)

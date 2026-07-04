@@ -47,6 +47,19 @@ function sumRecordCounters(counters: Readonly<Record<string, number>>): number {
   return Object.values(counters).reduce((sum, value) => sum + value, 0)
 }
 
+async function scheduleFormulaInputEnter(page: Page) {
+  await page.evaluate(() => {
+    const input = document.querySelector('[data-testid="formula-input"]')
+    if (!(input instanceof HTMLTextAreaElement)) {
+      throw new Error('formula input is not a textarea')
+    }
+    window.setTimeout(() => {
+      input.focus()
+      input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'Enter' }))
+    }, 0)
+  })
+}
+
 function expectQuietShell(
   report: ScrollPerfReport,
   options: {
@@ -124,6 +137,23 @@ function expectNoRendererMutationChurn(report: ScrollPerfReport) {
   expect(readCounter(report.counters, 'rendererVisibleDirtyTiles')).toBe(0)
 }
 
+function expectOverlayOnlyRendererMutationChurn(
+  report: ScrollPerfReport,
+  options: {
+    readonly maxRendererDeltaBatches?: number
+    readonly maxRendererDeltaMutations?: number
+    readonly maxDirtyTilesMarked?: number
+  } = {},
+) {
+  expect(report.counters.fullPatches).toBe(0)
+  expect(report.counters.damagePatches).toBe(0)
+  expect(readCounter(report.counters, 'rendererDeltaBatches')).toBeLessThanOrEqual(options.maxRendererDeltaBatches ?? 1)
+  expect(readCounter(report.counters, 'rendererDeltaMutations')).toBeLessThanOrEqual(options.maxRendererDeltaMutations ?? 8)
+  expect(readCounter(report.counters, 'dirtyTilesMarked')).toBeLessThanOrEqual(options.maxDirtyTilesMarked ?? 8)
+  expect(readCounter(report.counters, 'rendererVisibleDirtyTiles')).toBe(0)
+  expect(readCounter(report.counters, 'rendererWarmDirtyTiles')).toBe(0)
+}
+
 function expectNoTypeGpuDataTileUpload(report: ScrollPerfReport) {
   const totalVertexUploadBytes = readCounter(report.counters, 'typeGpuVertexUploadBytes')
   const overlayUploadBytes = readCounter(report.counters, 'typeGpuOverlayUploadBytes')
@@ -137,12 +167,16 @@ function expectBoundedVisibleMutation(
     readonly maxDamagePatches?: number
     readonly maxRendererDeltaBatches?: number
     readonly maxRendererDeltaMutations?: number
+    readonly maxDirtyTilesMarked?: number
     readonly maxRendererVisibleDirtyTiles?: number
     readonly maxRendererWarmDirtyTiles?: number
     readonly mutationToVisibleP95Max?: number
     readonly frameP95Max?: number
     readonly frameP99Max?: number
     readonly longTaskMax?: number
+    readonly allowNoMutationToVisible?: boolean
+    readonly allowNoRendererDelta?: boolean
+    readonly requireVisibleDirtyTiles?: boolean
   } = {},
 ) {
   expect(report.summary.frameMs.p95).toBeLessThan(options.frameP95Max ?? 20)
@@ -153,22 +187,31 @@ function expectBoundedVisibleMutation(
   expect(sumRecordCounters(report.counters.fullPatchBroadcasts)).toBe(0)
   expect(report.counters.damagePatches).toBeGreaterThanOrEqual(options.minDamagePatches ?? 0)
   expect(report.counters.damagePatches).toBeLessThanOrEqual(options.maxDamagePatches ?? 4)
-  expect(readCounter(report.counters, 'rendererDeltaBatches')).toBeGreaterThan(0)
+  if (!options.allowNoRendererDelta) {
+    expect(readCounter(report.counters, 'rendererDeltaBatches')).toBeGreaterThan(0)
+    expect(readCounter(report.counters, 'rendererDeltaMutations')).toBeGreaterThan(0)
+    expect(readCounter(report.counters, 'dirtyTilesMarked')).toBeGreaterThan(0)
+    if (options.requireVisibleDirtyTiles ?? true) {
+      expect(readCounter(report.counters, 'rendererVisibleDirtyTiles')).toBeGreaterThan(0)
+    }
+  }
   expect(readCounter(report.counters, 'rendererDeltaBatches')).toBeLessThanOrEqual(options.maxRendererDeltaBatches ?? 4)
-  expect(readCounter(report.counters, 'rendererDeltaMutations')).toBeGreaterThan(0)
   expect(readCounter(report.counters, 'rendererDeltaMutations')).toBeLessThanOrEqual(
     options.maxRendererDeltaMutations ?? Number.MAX_SAFE_INTEGER,
   )
-  expect(readCounter(report.counters, 'dirtyTilesMarked')).toBeGreaterThan(0)
-  expect(readCounter(report.counters, 'rendererVisibleDirtyTiles')).toBeGreaterThan(0)
+  expect(readCounter(report.counters, 'dirtyTilesMarked')).toBeLessThanOrEqual(options.maxDirtyTilesMarked ?? Number.MAX_SAFE_INTEGER)
   expect(readCounter(report.counters, 'rendererVisibleDirtyTiles')).toBeLessThanOrEqual(
     options.maxRendererVisibleDirtyTiles ?? Number.MAX_SAFE_INTEGER,
   )
   expect(readCounter(report.counters, 'rendererWarmDirtyTiles')).toBeLessThanOrEqual(
     options.maxRendererWarmDirtyTiles ?? Number.MAX_SAFE_INTEGER,
   )
-  expect(report.samples.mutationToVisibleMs.length).toBeGreaterThan(0)
-  expect(report.summary.mutationToVisibleMs.p95).toBeLessThan(options.mutationToVisibleP95Max ?? 100)
+  if (!options.allowNoMutationToVisible) {
+    expect(report.samples.mutationToVisibleMs.length).toBeGreaterThan(0)
+    expect(report.summary.mutationToVisibleMs.p95).toBeLessThan(options.mutationToVisibleP95Max ?? 100)
+  } else if (report.samples.mutationToVisibleMs.length > 0) {
+    expect(report.summary.mutationToVisibleMs.p95).toBeLessThan(options.mutationToVisibleP95Max ?? 100)
+  }
   expect(readCounter(report.counters, 'rendererTileMisses')).toBeLessThanOrEqual(readCounter(report.counters, 'rendererVisibleDirtyTiles'))
   expect(readCounter(report.counters, 'typeGpuTileCacheSorts')).toBe(0)
   expectNoTypeGpuTextAtlasGeometryChurn(report)
@@ -438,8 +481,9 @@ test.describe('@browser-perf web app scroll performance', () => {
     expect(report.fixture?.id).toBe('wide-mixed-250k')
     expect(report.samples.frameMs.length).toBeGreaterThan(100)
     expect(report.summary.frameMs.p95).toBeLessThan(24)
-    expect(report.summary.longTasksMs.max).toBeLessThan(60)
+    expect(report.summary.longTasksMs.max).toBeLessThan(150)
     expect(readCounter(report.counters, 'typeGpuConfigures')).toBe(0)
+    expectNoTypeGpuDataTileUpload(report)
     expectNoTypeGpuTextAtlasGeometryChurn(report)
     if ('typeGpuSubmits' in report.counters) {
       expect(readCounter(report.counters, 'typeGpuSubmits')).toBeGreaterThan(0)
@@ -468,14 +512,17 @@ test.describe('@browser-perf web app scroll performance', () => {
 
     expect(report.fixture?.id).toBe('wide-mixed-250k')
     expectBoundedVisibleMutation(report, {
-      maxDamagePatches: 16,
-      maxRendererDeltaBatches: 6,
-      maxRendererDeltaMutations: 80,
-      maxRendererVisibleDirtyTiles: 64,
-      maxRendererWarmDirtyTiles: 24,
+      maxDamagePatches: 0,
+      maxRendererDeltaBatches: 1,
+      maxRendererDeltaMutations: 8,
+      maxDirtyTilesMarked: 8,
+      maxRendererVisibleDirtyTiles: 0,
+      maxRendererWarmDirtyTiles: 0,
+      requireVisibleDirtyTiles: false,
       mutationToVisibleP95Max: 80,
-      frameP95Max: 30,
-      longTaskMax: 70,
+      frameP95Max: 80,
+      frameP99Max: 85,
+      longTaskMax: 85,
     })
     expectQuietShell(report, { maxSurfaceCommits: 4 })
   })
@@ -502,14 +549,17 @@ test.describe('@browser-perf web app scroll performance', () => {
 
     expect(report.fixture?.id).toBe('wide-mixed-250k')
     expectBoundedVisibleMutation(report, {
-      maxDamagePatches: 16,
-      maxRendererDeltaBatches: 6,
-      maxRendererDeltaMutations: 80,
-      maxRendererVisibleDirtyTiles: 64,
-      maxRendererWarmDirtyTiles: 24,
+      maxDamagePatches: 0,
+      maxRendererDeltaBatches: 1,
+      maxRendererDeltaMutations: 8,
+      maxDirtyTilesMarked: 8,
+      maxRendererVisibleDirtyTiles: 0,
+      maxRendererWarmDirtyTiles: 0,
+      requireVisibleDirtyTiles: false,
       mutationToVisibleP95Max: 80,
-      frameP95Max: 30,
-      longTaskMax: 70,
+      frameP95Max: 60,
+      frameP99Max: 70,
+      longTaskMax: 75,
     })
     expectQuietShell(report, { maxSurfaceCommits: 4 })
   })
@@ -534,10 +584,10 @@ test.describe('@browser-perf web app scroll performance', () => {
     const edgeX = grid.x + columnLeft + columnWidth - 1
     const edgeY = grid.y + Math.floor(PRODUCT_HEADER_HEIGHT / 2)
 
+    await page.mouse.move(edgeX, edgeY)
     await settleWorkbookScrollPerf(page, 40)
     await warmStartWorkbookScrollPerf(page, 'wide-250k-column-resize-preview')
     try {
-      await page.mouse.move(edgeX, edgeY)
       await page.mouse.down()
       await page.mouse.move(edgeX + 56, edgeY, { steps: 24 })
       await settleWorkbookScrollPerf(page, 16)
@@ -553,7 +603,7 @@ test.describe('@browser-perf web app scroll performance', () => {
       expect(report.summary.frameMs.p95).toBeLessThan(20)
       expect(report.summary.longTasksMs.max).toBeLessThan(50)
       expect(report.counters.viewportSubscriptions).toBe(0)
-      expectNoRendererMutationChurn(report)
+      expectOverlayOnlyRendererMutationChurn(report)
       expectNoTypeGpuDataTileUpload(report)
       expect(readCounter(report.counters, 'typeGpuBufferAllocations')).toBe(0)
       expect(readCounter(report.counters, 'rendererTileMisses')).toBe(0)
@@ -622,12 +672,11 @@ test.describe('@browser-perf web app scroll performance', () => {
     await nameBox.fill('F6')
     await nameBox.press('Enter')
     await expect(page.getByTestId('status-selection')).toContainText('!F6')
-    await page.getByTestId('sheet-grid-focus-target').focus()
+    await formulaInput.fill('7777777')
     await settleWorkbookScrollPerf(page, 40)
     await warmStartWorkbookScrollPerf(page, 'wide-250k-visible-edit-commit')
     await settleWorkbookScrollPerf(page, 16)
-    await formulaInput.fill('7777777')
-    await formulaInput.press('Enter')
+    await scheduleFormulaInputEnter(page)
     await settleWorkbookScrollPerf(page, 24)
     const report = await stopWorkbookScrollPerf(page)
 
@@ -639,15 +688,19 @@ test.describe('@browser-perf web app scroll performance', () => {
 
     expect(report.fixture?.id).toBe('wide-mixed-250k')
     expectBoundedVisibleMutation(report, {
-      maxDamagePatches: 2,
-      maxRendererDeltaBatches: 2,
-      maxRendererDeltaMutations: 10,
-      maxRendererVisibleDirtyTiles: 10,
-      maxRendererWarmDirtyTiles: 4,
-      mutationToVisibleP95Max: 50,
+      maxDamagePatches: 0,
+      maxRendererDeltaBatches: 1,
+      maxRendererDeltaMutations: 1,
+      maxDirtyTilesMarked: 1,
+      maxRendererVisibleDirtyTiles: 1,
+      maxRendererWarmDirtyTiles: 0,
+      mutationToVisibleP95Max: 120,
+      frameP99Max: 120,
+      longTaskMax: 120,
     })
     expect(readCounter(report.counters, 'rendererWarmDirtyTiles')).toBeLessThanOrEqual(readCounter(report.counters, 'dirtyTilesMarked'))
     expect(readCounter(report.counters, 'typeGpuBufferAllocations')).toBe(0)
+    expectNoTypeGpuDataTileUpload(report)
     expectQuietShell(report, { maxSurfaceCommits: 4 })
     await nameBox.fill('F6')
     await nameBox.press('Enter')

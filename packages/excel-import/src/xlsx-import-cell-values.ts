@@ -1,4 +1,4 @@
-import { decodeCellAddress } from '@bilig/xlsx'
+import { decodeCellAddress } from '@bilig/xlsx/browser'
 
 import type { LiteralInput } from '@bilig/protocol'
 import { toLiteralInput } from './workbook-import-helpers.js'
