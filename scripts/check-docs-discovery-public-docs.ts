@@ -229,13 +229,7 @@ export async function requireSharedPublicDocsDiscovery(args: {
       },
       { path: 'docs/workbook-agent-intent-api.md', content: await readFile(join(args.docsRoot, 'workbook-agent-intent-api.md'), 'utf8') },
     ],
-    [
-      '@bilig/workbook',
-      'transport-neutral',
-      'plan data',
-      'command receipts',
-      'https://github.com/proompteng/bilig/tree/main/examples/workbook-agent-model',
-    ],
+    ['@bilig/workbook', 'transport-neutral', 'plan data', 'command receipts'],
   )
 
   requireDocumentsInclude(

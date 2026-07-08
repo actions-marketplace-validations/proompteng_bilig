@@ -14,14 +14,11 @@ npm SheetJS recalculation package: https://www.npmjs.com/package/@bilig/sheetjs-
 npm ExcelJS recalculation package: https://www.npmjs.com/package/@bilig/exceljs-formula-recalc
 remote MCP endpoint: https://bilig.proompteng.ai/mcp
 ChatGPT Apps WorkPaper MCP: https://proompteng.github.io/bilig/chatgpt-apps-workpaper-mcp.html
-Google ADK WorkPaper MCP: https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html
-Microsoft Agent Framework WorkPaper MCP: https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html
 OpenHands WorkPaper MCP setup: https://proompteng.github.io/bilig/openhands-workpaper-mcp.html
 Trae WorkPaper MCP setup: https://proompteng.github.io/bilig/trae-workpaper-mcp.html
 Qodo WorkPaper MCP setup: https://proompteng.github.io/bilig/qodo-workpaper-mcp.html
 OpenCode WorkPaper MCP setup: https://proompteng.github.io/bilig/opencode-workpaper-mcp.html
 Aider WorkPaper conventions: https://proompteng.github.io/bilig/aider-workpaper-conventions.html
-Goose WorkPaper MCP recipe: https://proompteng.github.io/bilig/goose-workpaper-mcp.html
 Trae WorkPaper MCP source: https://github.com/proompteng/bilig/blob/main/docs/trae-workpaper-mcp.md
 Trae WorkPaper MCP config: https://github.com/proompteng/bilig/blob/main/.trae/mcp.json
 Trae WorkPaper rule: https://github.com/proompteng/bilig/blob/main/.trae/rules/bilig-workpaper.md
@@ -154,9 +151,6 @@ openssf scorecard: https://scorecard.dev/viewer/?uri=github.com/proompteng/bilig
   https://github.com/proompteng/bilig/blob/main/docs/agent-rule-chooser.md
   https://proompteng.github.io/bilig/aider-workpaper-conventions.html
   https://github.com/proompteng/bilig/blob/main/docs/aider-workpaper-conventions.md
-  https://proompteng.github.io/bilig/goose-workpaper-mcp.html
-  https://github.com/proompteng/bilig/blob/main/docs/goose-workpaper-mcp.md
-  https://github.com/proompteng/bilig/tree/main/examples/goose-workpaper-mcp
   `npx --yes skills@latest add proompteng/bilig --skill bilig-workpaper --list`
   `npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json`.
   `npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --scenario provider-backed --json`.
@@ -183,8 +177,7 @@ openssf scorecard: https://scorecard.dev/viewer/?uri=github.com/proompteng/bilig
   helpers, the MCP binary, or no-key proof commands.
 - Use `@bilig/workbook` when another runtime owns calculation but a product,
   tool host, or adapter needs transport-neutral model, plan data, command receipts,
-  checks, and proof data. Example:
-  https://github.com/proompteng/bilig/tree/main/examples/workbook-agent-model
+  checks, and proof data.
 
 ## evaluator doors
 
@@ -274,13 +267,10 @@ restoring it, and confirming the restored value matches. Return `editedCell`,
 - https://proompteng.github.io/bilig/ai-agent-spreadsheet-tool-node.html
 - https://proompteng.github.io/bilig/agent-framework-workbook-tools.html
 - https://proompteng.github.io/bilig/browser-use-workpaper-formula-tool.html
-- https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html
-- https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html
 - https://proompteng.github.io/bilig/openhands-workpaper-mcp.html
 - https://proompteng.github.io/bilig/opencode-workpaper-mcp.html
 - https://proompteng.github.io/bilig/workbook-runtime-intent-api.html
 - https://proompteng.github.io/bilig/workbook-agent-intent-api.html
-- https://github.com/proompteng/bilig/tree/main/examples/workbook-agent-model
 - https://github.com/proompteng/bilig/blob/main/docs/agent-framework-workbook-tools.md
 - https://github.com/proompteng/bilig/blob/main/docs/browser-use-workpaper-formula-tool.md
 - https://proompteng.github.io/bilig/headless-spreadsheet-engine-node-services-agents.html
@@ -325,9 +315,7 @@ restoring it, and confirming the restored value matches. Return `editedCell`,
 - https://proompteng.github.io/bilig/chatgpt-apps-workpaper-mcp.html
 - https://proompteng.github.io/bilig/openai-agents-sdk-workpaper-tool.html
 - https://proompteng.github.io/bilig/vercel-ai-sdk-langchain-spreadsheet-tool.html
-- https://proompteng.github.io/bilig/mastra-workpaper-spreadsheet-tool.html
 - https://proompteng.github.io/bilig/llamaindex-workpaper-spreadsheet-tool.html
-- https://proompteng.github.io/bilig/langgraph-workpaper-toolnode-spreadsheet.html
 - https://proompteng.github.io/bilig/open-multi-agent-workpaper-mcp.html
 - https://github.com/proompteng/bilig/blob/main/docs/open-multi-agent-workpaper-mcp.md
 - https://proompteng.github.io/bilig/copilotkit-workpaper-spreadsheet-action.html
@@ -350,29 +338,9 @@ restoring it, and confirming the restored value matches. Return `editedCell`,
 - https://proompteng.github.io/bilig/lobehub-workpaper-mcp.html
 - https://proompteng.github.io/bilig/anythingllm-workpaper-mcp.html
 - https://proompteng.github.io/bilig/sim-workpaper-mcp.html
-- https://proompteng.github.io/bilig/fastmcp-workpaper-client.html
-- https://github.com/proompteng/bilig/blob/main/docs/fastmcp-workpaper-client.md
-- https://github.com/proompteng/bilig/tree/main/examples/fastmcp-workpaper-client
-- https://proompteng.github.io/bilig/agno-workpaper-mcp.html
-- https://github.com/proompteng/bilig/blob/main/docs/agno-workpaper-mcp.md
-- https://github.com/proompteng/bilig/tree/main/examples/agno-workpaper-mcp
-- https://proompteng.github.io/bilig/pydantic-ai-workpaper-mcp.html
-- https://github.com/proompteng/bilig/blob/main/docs/pydantic-ai-workpaper-mcp.md
-- https://github.com/proompteng/bilig/tree/main/examples/pydantic-ai-workpaper-mcp
-- https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html
-- https://github.com/proompteng/bilig/blob/main/docs/google-adk-workpaper-mcp.md
-- https://github.com/proompteng/bilig/tree/main/examples/google-adk-workpaper-mcp
-- https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html
-- https://github.com/proompteng/bilig/blob/main/docs/microsoft-agent-framework-workpaper-mcp.md
-- https://github.com/proompteng/bilig/tree/main/examples/microsoft-agent-framework-workpaper-mcp
 - https://proompteng.github.io/bilig/openhands-workpaper-mcp.html
 - https://github.com/proompteng/bilig/blob/main/docs/openhands-workpaper-mcp.md
 - https://github.com/proompteng/bilig/blob/main/.agents/skills/bilig-workpaper/SKILL.md
-- https://proompteng.github.io/bilig/smolagents-workpaper-tool.html
-- https://github.com/proompteng/bilig/blob/main/docs/smolagents-workpaper-tool.md
-- https://github.com/proompteng/bilig/tree/main/examples/smolagents-workpaper-tool
-- https://proompteng.github.io/bilig/huggingface-workpaper-space.html
-- https://github.com/proompteng/bilig/tree/main/examples/huggingface-workpaper-space
 - https://proompteng.github.io/bilig/claude-desktop-mcpb-workpaper.html
 - https://proompteng.github.io/bilig/agent-workpaper-tool-calling-recipe.html
 - https://proompteng.github.io/bilig/openai-responses-workpaper-tool-call.html
@@ -380,13 +348,6 @@ restoring it, and confirming the restored value matches. Return `editedCell`,
 - https://proompteng.github.io/bilig/node-service-workpaper-recipe.html
 - https://proompteng.github.io/bilig/serverless-workpaper-api-route.html
 - https://proompteng.github.io/bilig/node-framework-workpaper-adapters.html
-- https://proompteng.github.io/bilig/windmill-workpaper-script.html
-- https://proompteng.github.io/bilig/triggerdev-workpaper-task.html
-- https://proompteng.github.io/bilig/airbyte-workpaper-validation.html
-- https://proompteng.github.io/bilig/temporal-workpaper-activity.html
-- https://proompteng.github.io/bilig/airflow-workpaper-dag.html
-- https://proompteng.github.io/bilig/dagster-workpaper-asset.html
-- https://proompteng.github.io/bilig/kestra-workpaper-flow.html
 - https://github.com/proompteng/bilig/blob/main/docs/workbook-automation-examples-node.md
 - https://github.com/proompteng/bilig/tree/main/examples/headless-workpaper#agent-framework-adapters
 - https://github.com/proompteng/bilig/tree/main/examples/headless-workpaper#mcp-tool-server-shape
@@ -724,35 +685,23 @@ npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./
   https://proompteng.github.io/bilig/agent-framework-workbook-tools.html
   https://proompteng.github.io/bilig/browser-use-workpaper-formula-tool.html
   https://proompteng.github.io/bilig/openhands-workpaper-mcp.html
-  https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html
   https://github.com/proompteng/bilig/blob/main/docs/agent-framework-workbook-tools.md
   https://github.com/proompteng/bilig/blob/main/docs/browser-use-workpaper-formula-tool.md
   https://github.com/proompteng/bilig/blob/main/docs/openhands-workpaper-mcp.md
-  https://github.com/proompteng/bilig/blob/main/docs/microsoft-agent-framework-workpaper-mcp.md
 - framework-specific spreadsheet tool pages:
-  https://proompteng.github.io/bilig/mastra-workpaper-spreadsheet-tool.html
   https://proompteng.github.io/bilig/llamaindex-workpaper-spreadsheet-tool.html
-  https://proompteng.github.io/bilig/langgraph-workpaper-toolnode-spreadsheet.html
   https://proompteng.github.io/bilig/open-multi-agent-workpaper-mcp.html
-  https://proompteng.github.io/bilig/agno-workpaper-mcp.html
-  https://proompteng.github.io/bilig/pydantic-ai-workpaper-mcp.html
-  https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html
   https://proompteng.github.io/bilig/copilotkit-workpaper-spreadsheet-action.html
   https://proompteng.github.io/bilig/cloudflare-agents-workpaper-spreadsheet-tool.html
   https://proompteng.github.io/bilig/crewai-workpaper-spreadsheet-tool.html
-  https://proompteng.github.io/bilig/semantic-kernel-workpaper-mcp.html
-  https://github.com/proompteng/bilig/tree/main/examples/microsoft-agent-framework-workpaper-mcp
 - Gemini CLI WorkPaper extension:
   gemini extensions install https://github.com/proompteng/bilig --ref main
   https://proompteng.github.io/bilig/gemini-cli-workpaper-extension.html
   https://github.com/proompteng/bilig/blob/main/gemini-extension.json
   https://github.com/proompteng/bilig/blob/main/gemini-workpaper-context.md
-- runnable AI SDK, LangChain, Mastra, LlamaIndex.TS, LangGraph.js, CopilotKit,
+- runnable AI SDK, LangChain, LlamaIndex.TS, LangGraph.js, CopilotKit,
   Cloudflare Agents, and CrewAI adapter example:
   https://github.com/proompteng/bilig/blob/main/examples/headless-workpaper/agent-framework-adapters.ts
-- runnable Mastra createTool WorkPaper smoke:
-  pnpm --dir examples/mastra-workpaper-tool run smoke
-  https://github.com/proompteng/bilig/tree/main/examples/mastra-workpaper-tool
 - runnable AI SDK generateText WorkPaper tool smoke:
   https://github.com/proompteng/bilig/blob/main/examples/headless-workpaper/ai-sdk-generate-text-tool-smoke.ts
 - runnable AI SDK streamText WorkPaper tool smoke:
@@ -762,77 +711,11 @@ npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./
   n8n community node package: @bilig/n8n-nodes-workpaper
   https://www.npmjs.com/package/@bilig/n8n-nodes-workpaper
   https://github.com/proompteng/bilig/tree/main/integrations/n8n-nodes-workpaper
-  Directus custom Flow operation source:
-  https://proompteng.github.io/bilig/directus-workpaper-flow-operation.html
-  https://github.com/proompteng/bilig/blob/main/docs/directus-workpaper-flow-operation.md
-  https://github.com/proompteng/bilig/tree/main/examples/directus-workpaper-flow-operation
-  Windmill TypeScript script source:
-  https://proompteng.github.io/bilig/windmill-workpaper-script.html
-  https://github.com/proompteng/bilig/blob/main/docs/windmill-workpaper-script.md
-  https://github.com/proompteng/bilig/tree/main/examples/windmill-workpaper-script
-  Trigger.dev durable task source:
-  https://proompteng.github.io/bilig/triggerdev-workpaper-task.html
-  https://github.com/proompteng/bilig/blob/main/docs/triggerdev-workpaper-task.md
-  https://github.com/proompteng/bilig/tree/main/examples/triggerdev-workpaper-task
-  Inngest durable step source:
-  https://proompteng.github.io/bilig/inngest-workpaper-step.html
-  https://github.com/proompteng/bilig/blob/main/docs/inngest-workpaper-step.md
-  https://github.com/proompteng/bilig/tree/main/examples/inngest-workpaper-step
-  Airbyte post-sync validation source:
-  https://proompteng.github.io/bilig/airbyte-workpaper-validation.html
-  https://github.com/proompteng/bilig/blob/main/docs/airbyte-workpaper-validation.md
-  https://github.com/proompteng/bilig/tree/main/examples/airbyte-workpaper-validation
-  Meltano custom utility validation source:
-  https://proompteng.github.io/bilig/meltano-workpaper-utility.html
-  https://github.com/proompteng/bilig/blob/main/docs/meltano-workpaper-utility.md
-  https://github.com/proompteng/bilig/tree/main/examples/meltano-workpaper-utility
-  Temporal WorkPaper Activity source:
-  https://proompteng.github.io/bilig/temporal-workpaper-activity.html
-  https://github.com/proompteng/bilig/blob/main/docs/temporal-workpaper-activity.md
-  https://github.com/proompteng/bilig/tree/main/examples/temporal-workpaper-activity
-  Airflow DAG source:
-  https://proompteng.github.io/bilig/airflow-workpaper-dag.html
-  https://github.com/proompteng/bilig/blob/main/docs/airflow-workpaper-dag.md
-  https://github.com/proompteng/bilig/tree/main/examples/airflow-workpaper-dag
-  Dagster asset source:
-  https://proompteng.github.io/bilig/dagster-workpaper-asset.html
-  https://github.com/proompteng/bilig/blob/main/docs/dagster-workpaper-asset.md
-  https://github.com/proompteng/bilig/tree/main/examples/dagster-workpaper-asset
-  Kestra Node Commands flow source:
-  https://proompteng.github.io/bilig/kestra-workpaper-flow.html
-  https://github.com/proompteng/bilig/blob/main/docs/kestra-workpaper-flow.md
-  https://github.com/proompteng/bilig/tree/main/examples/kestra-workpaper-flow
-  Prefect flow source:
-  https://proompteng.github.io/bilig/prefect-workpaper-flow.html
-  https://github.com/proompteng/bilig/blob/main/docs/prefect-workpaper-flow.md
-  https://github.com/proompteng/bilig/tree/main/examples/prefect-workpaper-flow
   n8n workflow source:
   https://proompteng.github.io/bilig/n8n-workpaper-formula-readback.html
   https://github.com/proompteng/bilig/blob/main/docs/n8n-workpaper-formula-readback.md
-  https://github.com/proompteng/bilig/tree/main/examples/n8n-workpaper-formula-readback
-  https://proompteng.github.io/bilig/dify-workpaper-formula-readback.html
-  https://github.com/proompteng/bilig/blob/main/docs/dify-workpaper-formula-readback.md
-  https://github.com/proompteng/bilig/tree/main/examples/dify-workpaper-formula-readback
-  https://proompteng.github.io/bilig/flowise-workpaper-formula-readback.html
-  https://github.com/proompteng/bilig/blob/main/docs/flowise-workpaper-formula-readback.md
-  https://github.com/proompteng/bilig/tree/main/examples/flowise-workpaper-formula-readback
-  Python agent tool sources:
-  https://proompteng.github.io/bilig/agno-workpaper-mcp.html
-  https://github.com/proompteng/bilig/blob/main/docs/agno-workpaper-mcp.md
-  https://github.com/proompteng/bilig/tree/main/examples/agno-workpaper-mcp
-  https://proompteng.github.io/bilig/pydantic-ai-workpaper-mcp.html
-  https://github.com/proompteng/bilig/blob/main/docs/pydantic-ai-workpaper-mcp.md
-  https://github.com/proompteng/bilig/tree/main/examples/pydantic-ai-workpaper-mcp
-  https://proompteng.github.io/bilig/smolagents-workpaper-tool.html
-  https://github.com/proompteng/bilig/blob/main/docs/smolagents-workpaper-tool.md
-  https://github.com/proompteng/bilig/tree/main/examples/smolagents-workpaper-tool
-  Hugging Face WorkPaper MCP Space:
-  https://proompteng.github.io/bilig/huggingface-workpaper-space.html
-  https://huggingface.co/spaces/gregkonush/bilig-workpaper-mcp-readback
-  https://github.com/proompteng/bilig/tree/main/examples/huggingface-workpaper-space
-  Use this path when Inngest, Trigger.dev, Windmill, Directus, n8n, Dify, Flowise, smolagents, or another workflow builder
-  should orchestrate the task while Bilig owns workbook formula state,
-  readback, JSON proof, and persistence.
+  Use this path when n8n should orchestrate the task while Bilig owns workbook
+  formula state, readback, JSON proof, and persistence.
 - MCP spreadsheet tool server guide:
   https://proompteng.github.io/bilig/mcp-workpaper-tool-server.html
   https://github.com/proompteng/bilig/blob/main/docs/mcp-workpaper-tool-server.md

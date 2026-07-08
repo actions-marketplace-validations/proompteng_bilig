@@ -333,6 +333,8 @@ const generatedSourceChecks: readonly CiTask[] = [
     ],
   },
   bunScript('public claims check', 'scripts/check-public-claims.ts'),
+  bunScript('repository garbage policy check', 'scripts/check-repo-garbage.ts'),
+  bunScript('owned examples check', 'scripts/check-owned-examples.ts'),
   bunScript('workspace resolution check', 'scripts/gen-workspace-resolution.ts', '--check'),
   bunScript('canonical naming check', 'scripts/check-canonical-naming.ts'),
   tsxScript('docs hero asset check', 'scripts/render-hero-workbook-api.ts', '--check'),

@@ -44,6 +44,17 @@ describe('web preview build gate', () => {
     expect(source).toContain("terminateProcessTree(child, 'SIGKILL')")
   })
 
+  it('enforces a bounded startup bundle after production web builds', () => {
+    const source = readFileSync(resolve(repoRoot, 'scripts/run-web-bundle-build.ts'), 'utf8')
+    const viteSource = readFileSync(resolve(repoRoot, 'apps/web/vite.config.ts'), 'utf8')
+
+    expect(source).toContain('BILIG_WEB_BUNDLE_ENTRY_SCRIPT_MAX_BYTES')
+    expect(source).toContain('BILIG_WEB_BUNDLE_ENTRY_STYLESHEET_MAX_BYTES')
+    expect(source).toContain('checkWebBundleEntryBudget()')
+    expect(source).toContain('modulepreload is disabled for the bounded startup shell')
+    expect(viteSource).toContain('modulePreload: false')
+  })
+
   it('ensures the wasm kernel artifact before the preview web-server build', () => {
     const source = readFileSync(resolve(repoRoot, 'scripts/run-dev-web-local.ts'), 'utf8')
 

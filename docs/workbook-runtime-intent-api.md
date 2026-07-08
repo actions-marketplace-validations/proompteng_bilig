@@ -109,7 +109,7 @@ console.log(describeRunResult(result));
 
 | Package | Owns | Best first proof |
 | --- | --- | --- |
-| `@bilig/workbook` | Workbook intent, plan data, requirements, checks, schemas, and runtime proof. | [workbook-agent-model](https://github.com/proompteng/bilig/tree/main/examples/workbook-agent-model) |
+| `@bilig/workbook` | Workbook intent, plan data, requirements, checks, schemas, and runtime proof. | Package unit tests and [public API docs](public-api.md) |
 | `@bilig/workpaper` | WorkPaper state, recalculation, JSON persistence, MCP, and service tools. | [WorkPaper service evaluator](eval-workpaper-service.md) |
 | `@bilig/xlsx-formula-recalc` | File-level XLSX formula recalculation after input edits. | [XLSX recalculation evaluator](eval-xlsx-recalc.md) |
 

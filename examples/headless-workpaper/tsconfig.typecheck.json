@@ -1,13 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2023"],
-    "paths": {
-      "@bilig/headless": ["../../packages/headless/src/index.ts"],
-      "@bilig/headless/mcp": ["../../packages/headless/src/mcp.ts"],
-      "@bilig/workpaper/ai-sdk": ["../../packages/workpaper/src/ai-sdk.ts"],
-      "bilig-workpaper": ["../../packages/bilig/src/index.ts"],
-      "bilig-workpaper/mcp": ["../../packages/bilig/src/mcp.ts"]
-    }
+    "lib": ["ES2023"]
   }
 }

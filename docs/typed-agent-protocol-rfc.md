@@ -13,9 +13,9 @@ Archived historical RFC.
 
 ## Current proof points
 
-- [apps/bilig/src/http/sync-server.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/http/sync-server.ts)
-- [apps/bilig/src/workbook-runtime/document-session-manager.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/workbook-runtime/document-session-manager.ts)
-- [packages/agent-api/src/index.ts](/Users/gregkonush/github.com/bilig/packages/agent-api/src/index.ts)
+- [apps/bilig/src/http/sync-server.ts](../apps/bilig/src/http/sync-server.ts)
+- [apps/bilig/src/workbook-runtime/document-session-manager.ts](../apps/bilig/src/workbook-runtime/document-session-manager.ts)
+- [packages/agent-api/src/index.ts](../packages/agent-api/src/index.ts)
 
 ## Historical note
 

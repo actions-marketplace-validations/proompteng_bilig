@@ -52,15 +52,14 @@ export async function requireAgentProofMatrixDiscovery({
     '| Vercel AI SDK `generateText()` |',
     '| Vercel AI SDK `streamText()` |',
     '| OpenAI Responses function call |',
-    '| LangGraph ToolNode |',
-    '| Semantic Kernel MCP plugin |',
-    '| Mastra tool |',
     'listedResourcesAndPrompts',
     'restartReadbackMatchesAfter',
-    'Do not duplicate that outreach.',
     '[MCP spreadsheet formula server for coding agents](mcp-spreadsheet-formula-server-for-coding-agents.md)',
   ] as const) {
     requireIncludes(agentProofMatrixDoc, required, 'docs/agent-proof-matrix.md')
+  }
+  for (const removed of ['Microsoft Agent Framework', 'Semantic Kernel', 'Mastra tool'] as const) {
+    requireNotIncludes(agentProofMatrixDoc, removed, 'docs/agent-proof-matrix.md')
   }
 
   for (const required of [

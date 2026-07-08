@@ -22,7 +22,7 @@ export function requirePackageCliSurfaceDiscovery(args: {
 }): void {
   requireIncludes(args.scopedWorkpaperPackageJson, '"bilig-agent-start": "./bin/bilig-agent-start.js"', 'packages/workpaper/package.json')
   requireIncludes(args.scopedWorkpaperPackageJson, '"bilig-evaluate": "./bin/bilig-evaluate.js"', 'packages/workpaper/package.json')
-  requireIncludes(args.scopedWorkpaperPackageJson, '"@bilig/xlsx-formula-recalc": "workspace:*"', 'packages/workpaper/package.json')
+  requireNotIncludes(args.scopedWorkpaperPackageJson, '"@bilig/xlsx-formula-recalc"', 'packages/workpaper/package.json')
   requireIncludes(args.scopedWorkpaperPackageJson, 'Run workbook-shaped business rules in Node services', 'packages/workpaper/package.json')
   requireIncludes(args.scopedWorkpaperPackageJson, 'workbook-runtime', 'packages/workpaper/package.json')
   requireIncludes(args.scopedWorkpaperPackageJson, 'workpaper-json', 'packages/workpaper/package.json')

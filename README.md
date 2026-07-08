@@ -172,18 +172,8 @@ Run one evaluator first. Then use the recipe that matches the platform boundary:
   <https://proompteng.github.io/bilig/openai-agents-sdk-workpaper-tool.html>.
 - ChatGPT Apps WorkPaper MCP:
   <https://proompteng.github.io/bilig/chatgpt-apps-workpaper-mcp.html>.
-- Hugging Face Gradio MCP Space:
-  <https://proompteng.github.io/bilig/huggingface-workpaper-space.html>.
-- n8n self-hosted workflows can use `@bilig/n8n-nodes-workpaper`; Pipedream
-  formula readback is documented at
-  <https://proompteng.github.io/bilig/pipedream-workpaper-formula-readback.html>
-  and sourced from `docs/pipedream-workpaper-formula-readback.md`.
-- Directus Persisted Calculated Fields:
-  <https://proompteng.github.io/bilig/directus-workpaper-flow-operation.html>.
-- Trigger.dev Durable Formula Tasks and Dagster Formula Assets are covered in
-  the workflow recipe docs.
-- ELT validation recipes: `airbyte-workpaper-validation` and
-  `meltano-workpaper-utility`.
+- n8n self-hosted workflows can use the owned community node package:
+  `@bilig/n8n-nodes-workpaper`.
 
 ## Choose An Evaluation Path
 
@@ -192,7 +182,7 @@ Run one evaluator first. Then use the recipe that matches the platform boundary:
 | Node service formulas             | [Node service WorkPaper evaluator](docs/eval-workpaper-service.md)                                                                                                                                                                                                                                           | A starter writes one input, recalculates, persists JSON, restores, and prints `verified: true`.           |
 | MCP tool contract                 | [MCP workbook evaluator](docs/eval-agent-mcp.md)                                                                                                                                                                                                                                                             | MCP tool discovery, input edit, formula readback, persistence, and restart proof all pass.                |
 | Integration proof chooser         | [Tool-host evaluator matrix](docs/agent-proof-matrix.md), [MCP spreadsheet tool server](docs/mcp-spreadsheet-formula-server-for-coding-agents.md), and [Vercel AI SDK formula readback](docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md) | The integration path starts with the smallest verified proof and avoids write-only or UI-only claims.     |
-| Runtime intent adapters           | [Workbook runtime intent API](docs/workbook-runtime-intent-api.md) and [runtime intent example](https://github.com/proompteng/bilig/tree/main/examples/workbook-agent-model)                                                                                                                                 | A model prepares transport-neutral plan data, strict runtime proof, command receipts, and check evidence. |
+| Runtime intent adapters           | [Workbook runtime intent API](docs/workbook-runtime-intent-api.md)                                                                                                                                                                                                                                           | A model prepares transport-neutral plan data, strict runtime proof, command receipts, and check evidence. |
 | Basic fit                         | [Why use Bilig?](docs/why-use-bilig.md)                                                                                                                                                                                                                                                                      | The problem is workbook-shaped business logic that needs API readback and persistence.                    |
 | Published npm package             | [90-second Node quickstart](docs/try-bilig-headless-in-node.md)                                                                                                                                                                                                                                              | `@bilig/workpaper` edits one input, recalculates, persists JSON, restores, and prints `verified: true`.   |
 | Backend service shape             | [Quote approval WorkPaper API](docs/quote-approval-workpaper-api.md)                                                                                                                                                                                                                                         | A realistic route-style workflow returns formula readback and `restoredMatchesAfter: true`.               |
@@ -449,15 +439,11 @@ the [Node spreadsheet formula engine guide](docs/node-spreadsheet-formula-engine
 [workbook fixture submissions](docs/submit-workbook-fixture.md),
 [OpenAI Agents SDK tools](docs/openai-agents-sdk-workpaper-tool.md),
 [Browser Use formula tool](docs/browser-use-workpaper-formula-tool.md),
-[Google ADK MCP tools](docs/google-adk-workpaper-mcp.md),
 [OpenHands MCP setup](docs/openhands-workpaper-mcp.md),
 [OpenCode MCP setup](docs/opencode-workpaper-mcp.md),
-[Microsoft Agent Framework MCP tools](docs/microsoft-agent-framework-workpaper-mcp.md),
-[Goose MCP recipe](docs/goose-workpaper-mcp.md),
 [tool-host evaluator matrix](docs/agent-proof-matrix.md),
 [MCP spreadsheet formula server for tool hosts](docs/mcp-spreadsheet-formula-server-for-coding-agents.md),
 [Vercel AI SDK formula readback](docs/vercel-ai-sdk-spreadsheet-tool-formula-readback.md),
-[AI SDK and LangChain tools](docs/vercel-ai-sdk-langchain-spreadsheet-tool.md),
 [CrewAI adapter](docs/crewai-workpaper-spreadsheet-tool.md),
 the [WorkPaper host handbook](docs/headless-workpaper-agent-handbook.md),
 the [MCP server guide](docs/mcp-workpaper-tool-server.md),
@@ -465,7 +451,6 @@ the [MCP server guide](docs/mcp-workpaper-tool-server.md),
 [MCP directory status](docs/mcp-spreadsheet-server-directory.md),
 [MCP client setup](docs/mcp-client-setup.md),
 [Gemini CLI extension](docs/gemini-cli-workpaper-extension.md),
-[FastMCP Python client](docs/fastmcp-workpaper-client.md),
 [Claude Desktop MCPB bundle](docs/claude-desktop-mcpb-workpaper.md),
 [npm provenance and package trust](docs/npm-provenance-package-trust.md),
 [JavaScript library comparison](docs/javascript-spreadsheet-library-headless-node.md),
@@ -561,9 +546,6 @@ pnpm --dir examples/headless-workpaper run agent:ai-sdk-generate-text
 pnpm --dir examples/headless-workpaper run agent:ai-sdk-stream-text
 pnpm --dir examples/headless-workpaper run agent:framework-adapters
 pnpm --dir examples/serverless-workpaper-api run hono-route
-pnpm --dir examples/mastra-workpaper-tool run smoke
-pnpm --dir examples/langgraph-workpaper-tool-state run smoke
-pnpm --dir examples/langchain-mcp-workpaper-toolnode run smoke
 pnpm --dir examples/headless-workpaper run agent:mcp-tools
 pnpm --dir examples/headless-workpaper run agent:mcp-file-transcript
 pnpm --dir examples/headless-workpaper run agent:mcp-xlsx-risk-preflight
@@ -583,14 +565,8 @@ It shows the public `/mcp` endpoint as a data/tool-only remote MCP app and keeps
 custom Apps SDK component UI as future scope.
 The OpenAI Responses guide is
 [`docs/openai-responses-workpaper-tool-call.md`](docs/openai-responses-workpaper-tool-call.md).
-The agent framework guide is
-[`docs/vercel-ai-sdk-langchain-spreadsheet-tool.md`](docs/vercel-ai-sdk-langchain-spreadsheet-tool.md).
-The Mastra guide includes a real `@mastra/core` `createTool()` smoke:
-[`docs/mastra-workpaper-spreadsheet-tool.md`](docs/mastra-workpaper-spreadsheet-tool.md).
-The LangGraph.js ToolNode proof is
-[`docs/langgraph-workpaper-toolnode-spreadsheet.md`](docs/langgraph-workpaper-toolnode-spreadsheet.md).
-It includes a no-key `@langchain/mcp-adapters` smoke that discovers the
-published WorkPaper MCP stdio tools and executes them through `ToolNode`.
+The retained agent framework examples live in `examples/headless-workpaper` and
+are covered by its local smoke scripts.
 
 The package also ships the MCP stdio binary:
 

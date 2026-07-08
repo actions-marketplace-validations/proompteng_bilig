@@ -50,7 +50,6 @@
   },
   "dependencies": {
     "@bilig/core": "workspace:*",
-    "@bilig/headless": "workspace:*",
     "@bilig/protocol": "workspace:*"
   },
   "engines": {

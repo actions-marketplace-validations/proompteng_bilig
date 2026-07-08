@@ -34,7 +34,7 @@ Playwright coverage must include:
 
 ## Performance coverage
 
-The source of truth for SLOs is [performance-budgets.md](/Users/gregkonush/github.com/bilig/docs/performance-budgets.md). CI and release checks must gate on those budgets rather than narrative claims.
+The source of truth for SLOs is [performance-budgets.md](../docs/performance-budgets.md). CI and release checks must gate on those budgets rather than narrative claims.
 
 ## Current tranche status
 

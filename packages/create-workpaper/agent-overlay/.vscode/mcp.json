@@ -1,11 +1,14 @@
 {
   "servers": {
-    "bilig-workpaper": {
+    "biligWorkpaperDemo": {
+      "type": "http",
+      "url": "https://bilig.proompteng.ai/mcp"
+    },
+    "biligWorkpaperFile": {
       "type": "stdio",
       "command": "npm",
       "args": [
         "exec",
-        "--yes",
         "--package",
         "@bilig/workpaper@latest",
         "--",
@@ -14,8 +17,7 @@
         "__WORKPAPER_PATH__",
         "--init-demo-workpaper",
         "--writable"
-      ],
-      "env": {}
+      ]
     }
   }
 }

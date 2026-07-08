@@ -27,26 +27,17 @@
       "workpaper",
       "workpaper-json"
     ],
-    "dependencyNames": [
-      "@bilig/core",
-      "@bilig/formula",
-      "@bilig/protocol",
-      "@bilig/wasm-kernel",
-      "@bilig/xlsx",
-      "fast-xml-parser",
-      "fflate",
-      "fflate-stream"
-    ],
+    "dependencyNames": ["@bilig/core", "@bilig/formula", "@bilig/protocol", "@bilig/xlsx", "fflate"],
     "hasFormulaClinicBinary": true,
     "hasXlsxSubpath": true,
     "hasMcpBinary": true
   },
   "npmPackDryRun": {
-    "tarballBytes": 860001,
-    "unpackedBytes": 5249591,
+    "tarballBytes": 861334,
+    "unpackedBytes": 5259867,
     "entryCount": 841,
-    "readmeBytes": 50216,
-    "packageJsonBytes": 3254
+    "readmeBytes": 49595,
+    "packageJsonBytes": 3140
   },
   "coldStartProbe": {
     "runtime": "node",

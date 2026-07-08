@@ -254,35 +254,6 @@ export function requireAgentJsonPublicDiscovery(parsedAgentJson: object): void {
     !hasCapability(
       agentJsonCapabilities,
       (capability) =>
-        Reflect.get(capability, 'name') === 'google-adk-workpaper-mcp' &&
-        Reflect.get(capability, 'framework') === 'Google Agent Development Kit' &&
-        Reflect.get(capability, 'command') ===
-          'uv run --python 3.12 --with google-adk --with mcp python examples/google-adk-workpaper-mcp/google_adk_workpaper_mcp.py --output .tmp/google-adk-workpaper-proof.json' &&
-        Reflect.get(capability, 'docs') === 'https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html' &&
-        Reflect.get(capability, 'source') === 'https://github.com/proompteng/bilig/tree/main/examples/google-adk-workpaper-mcp',
-    )
-  ) {
-    throw new Error('docs/.well-known/agent.json must advertise the Google ADK WorkPaper MCP capability')
-  }
-  if (
-    !hasCapability(
-      agentJsonCapabilities,
-      (capability) =>
-        Reflect.get(capability, 'name') === 'microsoft-agent-framework-workpaper-mcp' &&
-        Reflect.get(capability, 'framework') === 'Microsoft Agent Framework' &&
-        Reflect.get(capability, 'command') ===
-          'python examples/microsoft-agent-framework-workpaper-mcp/scripts/check-microsoft-agent-framework-recipe.py' &&
-        Reflect.get(capability, 'docs') === 'https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html' &&
-        Reflect.get(capability, 'source') ===
-          'https://github.com/proompteng/bilig/tree/main/examples/microsoft-agent-framework-workpaper-mcp',
-    )
-  ) {
-    throw new Error('docs/.well-known/agent.json must advertise the Microsoft Agent Framework WorkPaper MCP capability')
-  }
-  if (
-    !hasCapability(
-      agentJsonCapabilities,
-      (capability) =>
         Reflect.get(capability, 'name') === 'openhands-workpaper-mcp' &&
         Reflect.get(capability, 'framework') === 'OpenHands' &&
         Reflect.get(capability, 'command') ===
@@ -342,34 +313,31 @@ export function requireAgentJsonPublicDiscovery(parsedAgentJson: object): void {
   ) {
     throw new Error('docs/.well-known/agent.json must advertise the OpenCode WorkPaper MCP capability')
   }
-  if (
-    !hasCapability(
-      agentJsonCapabilities,
-      (capability) =>
-        Reflect.get(capability, 'name') === 'goose-workpaper-mcp' &&
-        Reflect.get(capability, 'framework') === 'Goose' &&
-        Reflect.get(capability, 'command') === 'python examples/goose-workpaper-mcp/scripts/check-goose-recipe.py' &&
-        Reflect.get(capability, 'recipe_path') ===
-          'https://github.com/proompteng/bilig/blob/main/examples/goose-workpaper-mcp/recipe.yaml' &&
-        Reflect.get(capability, 'docs') === 'https://proompteng.github.io/bilig/goose-workpaper-mcp.html' &&
-        Reflect.get(capability, 'source') === 'https://github.com/proompteng/bilig/tree/main/examples/goose-workpaper-mcp',
-    )
-  ) {
-    throw new Error('docs/.well-known/agent.json must advertise the Goose WorkPaper MCP recipe capability')
-  }
-  if (
-    !hasCapability(
-      agentJsonCapabilities,
-      (capability) =>
-        Reflect.get(capability, 'name') === 'mastra-workpaper-tool' &&
-        Reflect.get(capability, 'framework') === 'Mastra' &&
-        Reflect.get(capability, 'api_shape') === 'createTool -> execute -> WorkPaper readback' &&
-        Reflect.get(capability, 'command') === 'pnpm --dir examples/mastra-workpaper-tool run smoke' &&
-        Reflect.get(capability, 'docs') === 'https://proompteng.github.io/bilig/mastra-workpaper-spreadsheet-tool.html' &&
-        Reflect.get(capability, 'source') === 'https://github.com/proompteng/bilig/tree/main/examples/mastra-workpaper-tool',
-    )
-  ) {
-    throw new Error('docs/.well-known/agent.json must advertise the Mastra WorkPaper tool capability')
+  const capabilityNames = new Set(
+    agentJsonCapabilities
+      .map((capability) =>
+        typeof capability === 'object' && capability !== null && !Array.isArray(capability) ? Reflect.get(capability, 'name') : undefined,
+      )
+      .filter((name): name is string => typeof name === 'string'),
+  )
+  for (const deletedCapability of [
+    'fastmcp-workpaper-client',
+    'agno-workpaper-mcp',
+    'pydantic-ai-workpaper-mcp',
+    'google-adk-workpaper-mcp',
+    'microsoft-agent-framework-workpaper-mcp',
+    'goose-workpaper-mcp',
+    'mastra-workpaper-tool',
+    'semantic-kernel-workpaper-mcp',
+    'smolagents-workpaper-tool',
+    'huggingface-workpaper-space-template',
+    'inngest-workpaper-step',
+    'airbyte-workpaper-validation',
+    'meltano-workpaper-utility',
+  ] as const) {
+    if (capabilityNames.has(deletedCapability)) {
+      throw new Error(`docs/.well-known/agent.json must not advertise deleted capability ${deletedCapability}`)
+    }
   }
   if (
     !hasCapability(
@@ -442,13 +410,7 @@ const requiredPublicEntrypoints = [
   'https://proompteng.github.io/bilig/openai-agents-sdk-workpaper-tool.html',
   'https://proompteng.github.io/bilig/openai-responses-workpaper-tool-call.html',
   'https://proompteng.github.io/bilig/browser-use-workpaper-formula-tool.html',
-  'https://proompteng.github.io/bilig/langgraph-workpaper-toolnode-spreadsheet.html',
-  'https://proompteng.github.io/bilig/mastra-workpaper-spreadsheet-tool.html',
   'https://proompteng.github.io/bilig/llamaindex-workpaper-spreadsheet-tool.html',
-  'https://proompteng.github.io/bilig/agno-workpaper-mcp.html',
-  'https://proompteng.github.io/bilig/pydantic-ai-workpaper-mcp.html',
-  'https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html',
-  'https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html',
   'https://proompteng.github.io/bilig/openhands-workpaper-mcp.html',
   'https://github.com/proompteng/bilig/blob/main/docs/openhands-workpaper-mcp.md',
   'https://github.com/proompteng/bilig/blob/main/.agents/skills/bilig-workpaper/SKILL.md',
@@ -459,15 +421,8 @@ const requiredPublicEntrypoints = [
   'https://proompteng.github.io/bilig/opencode-workpaper-mcp.html',
   'https://github.com/proompteng/bilig/blob/main/docs/opencode-workpaper-mcp.md',
   'https://github.com/proompteng/bilig/blob/main/.opencode/agents/bilig-workpaper.md',
-  'https://proompteng.github.io/bilig/goose-workpaper-mcp.html',
-  'https://github.com/proompteng/bilig/tree/main/examples/goose-workpaper-mcp',
   'https://proompteng.github.io/bilig/crewai-workpaper-spreadsheet-tool.html',
   'https://proompteng.github.io/bilig/cloudflare-agents-workpaper-spreadsheet-tool.html',
-  'https://proompteng.github.io/bilig/semantic-kernel-workpaper-mcp.html',
   'https://proompteng.github.io/bilig/gemini-cli-workpaper-extension.html',
   'https://proompteng.github.io/bilig/n8n-workpaper-formula-readback.html',
-  'https://proompteng.github.io/bilig/dify-workpaper-formula-readback.html',
-  'https://proompteng.github.io/bilig/flowise-workpaper-formula-readback.html',
-  'https://proompteng.github.io/bilig/triggerdev-workpaper-task.html',
-  'https://proompteng.github.io/bilig/temporal-workpaper-activity.html',
 ] as const

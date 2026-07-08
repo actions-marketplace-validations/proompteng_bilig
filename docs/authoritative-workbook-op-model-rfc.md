@@ -13,9 +13,9 @@ Archived historical RFC. The authoritative workbook model is now implemented ins
 
 ## Active proof points
 
-- [apps/bilig/src/zero/server-mutators.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/zero/server-mutators.ts)
-- [apps/bilig/src/zero/store.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/zero/store.ts)
-- [apps/web/src/zero/ZeroWorkbookBridge.ts](/Users/gregkonush/github.com/bilig/apps/web/src/zero/ZeroWorkbookBridge.ts)
+- [apps/bilig/src/zero/server-mutators.ts](../apps/bilig/src/zero/server-mutators.ts)
+- [apps/bilig/src/zero/store.ts](../apps/bilig/src/zero/store.ts)
+- [apps/web/src/zero/ZeroWorkbookBridge.ts](../apps/web/src/zero/ZeroWorkbookBridge.ts)
 
 ## Historical note
 

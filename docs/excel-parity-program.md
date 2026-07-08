@@ -28,9 +28,9 @@ Match Excel 365 worksheet semantics as of `2026-03-15` across:
 
 ## Milestone docs
 
-- [formula-canonical-program.md](/Users/gregkonush/github.com/bilig/docs/formula-canonical-program.md)
-- [formula-canonical-matrix.md](/Users/gregkonush/github.com/bilig/docs/formula-canonical-matrix.md)
-- [formula-oracle-capture.md](/Users/gregkonush/github.com/bilig/docs/formula-oracle-capture.md)
+- [formula-canonical-program.md](../docs/formula-canonical-program.md)
+- [formula-canonical-matrix.md](../docs/formula-canonical-matrix.md)
+- [formula-oracle-capture.md](../docs/formula-oracle-capture.md)
 
 ## Exit gate
 

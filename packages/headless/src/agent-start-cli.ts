@@ -16,7 +16,6 @@ const agentStartRuleTargets = [
   'continue',
   'windsurf',
   'gemini',
-  'goose',
   'junie',
   'openhands',
   'qodo',
@@ -159,7 +158,6 @@ export function agentStartHelpText(): string {
     '  continue     .continue/rules/bilig-workpaper.md',
     '  windsurf     .devin/rules/bilig-workpaper.md or .windsurf/rules/bilig-workpaper.md',
     '  gemini       GEMINI.md, gemini-extension.json, gemini-workpaper-context.md',
-    '  goose        examples/goose-workpaper-mcp/recipe.yaml',
     '  junie        .junie/mcp/mcp.json',
     '  openhands    AGENTS.md, .agents/skills/bilig-workpaper/SKILL.md',
     '  qodo        Qodo IDE Agentic Tools MCP JSON',
@@ -266,11 +264,6 @@ export function buildAgentStartDecisionCard(): AgentStartDecisionCard {
         command: 'npm exec --yes --package @bilig/workpaper@latest -- bilig-agent-start --rules gemini',
       },
       {
-        target: 'goose',
-        file: 'examples/goose-workpaper-mcp/recipe.yaml',
-        command: 'npm exec --yes --package @bilig/workpaper@latest -- bilig-agent-start --rules goose',
-      },
-      {
         target: 'junie',
         file: '.junie/mcp/mcp.json',
         command: 'npm exec --yes --package @bilig/workpaper@latest -- bilig-agent-start --rules junie',
@@ -358,7 +351,6 @@ function renderAgentStartRules(card: AgentStartDecisionCard, target: AgentStartR
     copilot: 'GitHub Copilot',
     cursor: 'Cursor',
     gemini: 'Gemini CLI',
-    goose: 'Goose',
     junie: 'Junie',
     opencode: 'OpenCode',
     openhands: 'OpenHands',
@@ -526,12 +518,6 @@ with \`openhands mcp add bilig-workpaper --transport stdio npm -- exec --yes
 --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper
 ./.bilig/pricing.workpaper.json --init-demo-workpaper --writable\`, then use
 \`/mcp\` and restart after config changes.`
-  }
-  if (target === 'goose') {
-    return `Goose should use \`examples/goose-workpaper-mcp/recipe.yaml\` for
-the local file-backed WorkPaper MCP server. Validate the recipe before sharing
-results with \`python examples/goose-workpaper-mcp/scripts/check-goose-recipe.py\`
-and \`goose recipe validate examples/goose-workpaper-mcp/recipe.yaml\`.`
   }
   if (target === 'zed') {
     return `Zed should use the project \`.zed/settings.json\` context server

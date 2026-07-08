@@ -12,6 +12,6 @@ Current summary for the monolith backend.
 
 ## Current proof points
 
-- [apps/bilig/src/index.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/index.ts)
-- [apps/bilig/src/http/sync-server.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/http/sync-server.ts)
-- [apps/bilig/src/zero/service.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/zero/service.ts)
+- [apps/bilig/src/index.ts](../apps/bilig/src/index.ts)
+- [apps/bilig/src/http/sync-server.ts](../apps/bilig/src/http/sync-server.ts)
+- [apps/bilig/src/zero/service.ts](../apps/bilig/src/zero/service.ts)

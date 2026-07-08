@@ -69,10 +69,10 @@ The worksheet engine keeps non-worksheet Excel surfaces behind the adapter contr
 
 ## Canonical companions
 
-- [formula-canonical-program.md](/Users/gregkonush/github.com/bilig/docs/formula-canonical-program.md)
-- [formula-canonical-matrix.md](/Users/gregkonush/github.com/bilig/docs/formula-canonical-matrix.md)
-- [formula-oracle-capture.md](/Users/gregkonush/github.com/bilig/docs/formula-oracle-capture.md)
-- [wasm-runtime-contract.md](/Users/gregkonush/github.com/bilig/docs/wasm-runtime-contract.md)
-- [dynamic-array-runtime.md](/Users/gregkonush/github.com/bilig/docs/dynamic-array-runtime.md)
-- [workbook-metadata-model.md](/Users/gregkonush/github.com/bilig/docs/workbook-metadata-model.md)
+- [formula-canonical-program.md](../docs/formula-canonical-program.md)
+- [formula-canonical-matrix.md](../docs/formula-canonical-matrix.md)
+- [formula-oracle-capture.md](../docs/formula-oracle-capture.md)
+- [wasm-runtime-contract.md](../docs/wasm-runtime-contract.md)
+- [dynamic-array-runtime.md](../docs/dynamic-array-runtime.md)
+- [workbook-metadata-model.md](../docs/workbook-metadata-model.md)
 - `packages/formula/src/__tests__/fixtures/formula-compatibility-snapshot.json`

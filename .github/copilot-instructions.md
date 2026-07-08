@@ -29,7 +29,7 @@
 - `packages/core` is the framework-agnostic spreadsheet engine. It owns workbook state, storage, dependency scheduling, snapshots, selectors, events, sync state, and execution routing.
 - `packages/formula` owns A1 addressing, lexer/parser, binding, optimization, translation, compatibility, and the JS evaluator.
 - `packages/wasm-kernel` is the AssemblyScript/WASM numeric fast path. `packages/core` decides when formulas stay on the JS path versus the WASM path.
-- `packages/crdt`, `packages/binary-protocol`, `packages/worker-transport`, `packages/agent-api`, `packages/storage-browser`, and `packages/storage-server` make up the local-first sync and transport stack used by the browser and server runtimes.
+- `packages/crdt`, `packages/binary-protocol`, `packages/worker-transport`, `packages/agent-api`, and `packages/storage-server` make up the local-first sync and transport stack used by the browser and server runtimes.
 - `packages/renderer` is the custom workbook reconciler and workbook DSL.
 - `packages/grid` is the reusable React spreadsheet UI: selection, editing, metrics, inspectors, and workbook/grid views.
 - `apps/web` is the thin React/Vite shell around the shared workbook surface. Shared behavior should usually live in `packages/renderer` or `packages/grid`, not inside app folders.
@@ -102,6 +102,6 @@ References:
 - Import workspace code through `@bilig/*` package names. Vitest aliases those imports directly to `src/` entrypoints, so tests exercise source modules rather than built `dist/` output.
 - The public cell model includes `format` alongside `addr`, `value`, and `formula`. Preserve format-only changes in APIs, events, snapshots, and tests.
 - `apps/web` is the only browser shell. Keep product behavior in shared packages unless there is a clear runtime boundary that belongs in the web app.
-- `pnpm naming:check` is a real repository gate. Avoid introducing `top50`, `top100`, or related terminology outside allowed historical paths.
+- `pnpm naming:check` is a real repository gate. Avoid introducing legacy leaderboard-style terminology outside allowed historical paths.
 - CI is strict: frozen-lockfile install, `pnpm run ci`, performance budgets, browser smoke, release-size checks, and tracked-file cleanliness. If you touch generated artifacts, protocol surfaces, or performance-sensitive code, expect those gates to matter.
 - TypeScript and linting are intentionally strict. The shared baseline includes `strict`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitThis`, `noEmitOnError`, `exactOptionalPropertyTypes`, and `noUncheckedIndexedAccess`. Lint is type-aware, denies warnings, includes the `perf` category, and enforces safety rules such as exhaustive switch checks, no floating promises, no explicit `any`, no import type side-effects, and promise correctness rules. Follow the existing type-safe patterns instead of weakening types or bypassing lint rules.

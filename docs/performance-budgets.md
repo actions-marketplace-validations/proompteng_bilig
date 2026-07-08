@@ -28,5 +28,5 @@
 
 See:
 
-- [bilig-lab-contract.md](/Users/gregkonush/github.com/bilig/docs/bilig-lab-contract.md)
-- [/Users/gregkonush/github.com/lab/docs/bilig-observability-contract.md](/Users/gregkonush/github.com/lab/docs/bilig-observability-contract.md)
+- [bilig-lab-contract.md](../docs/bilig-lab-contract.md)
+- `lab/docs/bilig-observability-contract.md` in the deployment repository

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { spawn, type ChildProcess } from 'node:child_process'
+import { readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -19,6 +20,8 @@ const viteCli = resolve(repoRoot, 'node_modules/vite/bin/vite.js')
 const timeoutMs = readPositiveIntegerEnv('BILIG_WEB_BUNDLE_BUILD_TIMEOUT_MS', 120_000)
 const attempts = readPositiveIntegerEnv('BILIG_WEB_BUNDLE_BUILD_ATTEMPTS', 2)
 const killGraceMs = readPositiveIntegerEnv('BILIG_WEB_BUNDLE_BUILD_KILL_GRACE_MS', 5_000)
+const entryScriptMaxBytes = readPositiveIntegerEnv('BILIG_WEB_BUNDLE_ENTRY_SCRIPT_MAX_BYTES', 128 * 1024)
+const entryStylesheetMaxBytes = readPositiveIntegerEnv('BILIG_WEB_BUNDLE_ENTRY_STYLESHEET_MAX_BYTES', 128 * 1024)
 const command = [process.execPath, viteCli, 'build', '--configLoader', 'runner'] as const
 
 function readPositiveIntegerEnv(name: string, fallback: number): number {
@@ -104,10 +107,61 @@ function runBuildAttempt(attempt: number): Promise<BuildAttemptResult> {
   })
 }
 
+function htmlAttributeValues(html: string, tagName: 'link' | 'script', attributeName: 'href' | 'src', requiredToken?: string): string[] {
+  const values: string[] = []
+  const tagPattern = new RegExp(`<${tagName}\\b[^>]*>`, 'giu')
+  for (const tagMatch of html.matchAll(tagPattern)) {
+    const tag = tagMatch[0]
+    if (requiredToken && !tag.includes(requiredToken)) {
+      continue
+    }
+    const attributePattern = new RegExp(`\\b${attributeName}=["']([^"']+)["']`, 'iu')
+    const attributeMatch = attributePattern.exec(tag)
+    const value = attributeMatch?.[1]
+    if (value) {
+      values.push(value)
+    }
+  }
+  return values
+}
+
+function localDistAssetBytes(publicPath: string): number | undefined {
+  if (!publicPath.startsWith('/assets/')) {
+    return undefined
+  }
+  return statSync(resolve(webRoot, 'dist', publicPath.slice(1))).size
+}
+
+function checkWebBundleEntryBudget(): number {
+  const indexHtml = readFileSync(resolve(webRoot, 'dist/index.html'), 'utf8')
+  const violations: string[] = []
+  const modulePreloads = htmlAttributeValues(indexHtml, 'link', 'href', 'rel="modulepreload"')
+  for (const modulePreload of modulePreloads) {
+    violations.push(`${modulePreload}: modulepreload is disabled for the bounded startup shell`)
+  }
+  for (const scriptPath of htmlAttributeValues(indexHtml, 'script', 'src', 'type="module"')) {
+    const bytes = localDistAssetBytes(scriptPath)
+    if (bytes !== undefined && bytes > entryScriptMaxBytes) {
+      violations.push(`${scriptPath}: entry script is ${String(bytes)} bytes, limit is ${String(entryScriptMaxBytes)}`)
+    }
+  }
+  for (const stylesheetPath of htmlAttributeValues(indexHtml, 'link', 'href', 'rel="stylesheet"')) {
+    const bytes = localDistAssetBytes(stylesheetPath)
+    if (bytes !== undefined && bytes > entryStylesheetMaxBytes) {
+      violations.push(`${stylesheetPath}: entry stylesheet is ${String(bytes)} bytes, limit is ${String(entryStylesheetMaxBytes)}`)
+    }
+  }
+  if (violations.length === 0) {
+    return 0
+  }
+  console.error(`[web-bundle] entry bundle budget failed:\n${violations.map((violation) => `- ${violation}`).join('\n')}`)
+  return 1
+}
+
 async function runBuildWithRetries(attempt: number): Promise<number> {
   const result = await runBuildAttempt(attempt)
   if (result.code === 0 && !result.timedOut) {
-    return 0
+    return checkWebBundleEntryBudget()
   }
   const reason = result.timedOut
     ? `timed out after ${formatSeconds(timeoutMs)}`

@@ -10,7 +10,28 @@
   "workspaces": {
     ".": {
       "ignoreFiles": ["**/__tests__/**", "**/*.test.ts?(x)", "e2e/**", "scripts/**", "playwright.config.ts", "playwright.prod.config.ts"],
-      "entry": ["e2e/tests/prod-smoke.pw.ts", "scripts/bench-worker-runtime.ts"]
+      "entry": [
+        "actions/xlsx-cache-doctor/*.mjs",
+        "docs/assets/hero-scene.js",
+        "docs/assets/site-nav.js",
+        "docs/external-workbook-recalc-proof.ts",
+        "docs/formula-clinic-report.ts",
+        "docs/npm-eval.ts",
+        "docs/xlsx-recalculation-proof.ts",
+        "e2e/tests/prod-smoke.pw.ts",
+        "examples/headless-workpaper/*.ts",
+        "examples/recalc-bridge-workflows/*.mjs",
+        "examples/serverless-workpaper-api/*.ts",
+        "examples/xlsx-cache-doctor-ci/scripts/*.ts",
+        "examples/xlsx-recalculation-node/recalculate-xlsx.ts",
+        "integrations/n8n-nodes-workpaper/.prettierrc.js",
+        "integrations/n8n-nodes-workpaper/eslint.config.mjs",
+        "integrations/n8n-nodes-workpaper/nodes/Workpaper/BiligWorkpaper.node.ts",
+        "scripts/bench-worker-runtime.ts"
+      ]
+    },
+    "packages/create-workpaper": {
+      "entry": ["template/src/index.ts"]
     },
     "packages/wasm-kernel": {
       "entry": ["assembly/index.ts"],

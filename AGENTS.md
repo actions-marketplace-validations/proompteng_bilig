@@ -49,7 +49,6 @@ or restore evidence, not a write-call status.
 - OpenCode: use `opencode.jsonc` and
   `.opencode/agents/bilig-workpaper.md`.
 - Aider: use `CONVENTIONS.md`, loaded by `.aider.conf.yml`.
-- Goose: validate and use `examples/goose-workpaper-mcp/recipe.yaml`.
 - JetBrains Junie: use `.junie/mcp/mcp.json`.
 - Gemini CLI: use `GEMINI.md`, `gemini-extension.json`, and
   `gemini-workpaper-context.md`.

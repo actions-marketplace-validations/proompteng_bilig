@@ -1,7 +1,6 @@
 type RequireIncludes = (haystack: string, needle: string, context: string) => void
 
 export function requireFormulaProofDiscovery({
-  communityLaunchPack,
   formulaWorkbooksProof,
   headlessReadme,
   index,
@@ -10,7 +9,6 @@ export function requireFormulaProofDiscovery({
   requireIncludes,
   showHnFormulaWorkbooksProof,
 }: {
-  readonly communityLaunchPack: string
   readonly formulaWorkbooksProof: string
   readonly headlessReadme: string
   readonly index: string
@@ -40,13 +38,6 @@ export function requireFormulaProofDiscovery({
   requireIncludes(readme, 'docs/formula-workbooks-node-services-agent-tools.md', 'README.md')
   requireIncludes(headlessReadme, 'formula workbooks for Node services and tool integrations', 'packages/headless/README.md')
   requireIncludes(headlessReadme, 'docs/formula-workbooks-node-services-agent-tools.md', 'packages/headless/README.md')
-  requireIncludes(
-    communityLaunchPack,
-    'https://proompteng.github.io/bilig/formula-workbooks-node-services-agent-tools.html',
-    'internal/growth/community-launch-pack.md',
-  )
-  requireIncludes(communityLaunchPack, 'Do not paste canned launch comments.', 'internal/growth/community-launch-pack.md')
-
   for (const required of [
     "title: 'Bilig maintainer note: formula WorkPapers for Node services and tool hosts'",
     'uses the latest published package',

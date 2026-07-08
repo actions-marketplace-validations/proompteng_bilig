@@ -245,15 +245,3 @@ each requested style or number-format component must cover every resolved cell.
 Low-level `WorkbookOp`, `WorkbookTxn`, `EngineOp`, `EngineOpBatch`, and related
 guards stay public for runtimes that need them. Most models should start with
 `writeFormula`, `writeValue`, `format`, `clear`, and checks instead.
-
-## Example
-
-See [examples/workbook-agent-model](../../examples/workbook-agent-model) for a
-generic model that plans, verifies, describes, transports, runs, and prints proof
-without depending on a hardcoded business model:
-
-```sh
-pnpm --dir examples/workbook-agent-model install
-pnpm --dir examples/workbook-agent-model start
-pnpm --dir examples/workbook-agent-model run typecheck
-```

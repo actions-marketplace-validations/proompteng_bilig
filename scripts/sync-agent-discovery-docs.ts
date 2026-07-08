@@ -19,6 +19,14 @@ import {
 } from './agent-discovery-mcp-configs.ts'
 import { mcpServerCardManifest } from './agent-discovery-mcp-card.ts'
 import { buildWorkpaperPackageAgentInstructions, buildWorkpaperPackageSkillDocument } from './agent-discovery-package-docs.ts'
+import {
+  buildStarterAgentOverlayInstructions,
+  buildStarterClaudeInstructions,
+  buildStarterGeminiInstructions,
+  buildStarterOverlayPackageJson,
+  buildStarterOverlayReadme,
+  withStarterWorkpaperPath,
+} from './agent-discovery-starter-overlay.ts'
 import { readTextFileIfExists } from './read-if-exists.ts'
 import { syncVersionedStaticReferences } from './sync-agent-static-references.ts'
 import {
@@ -495,26 +503,10 @@ If any readback step fails, report the blocker instead of claiming the workbook 
 - MCP server guide: ${siteRoot}/mcp-workpaper-tool-server.html
 - OpenHands MCP setup: ${siteRoot}/openhands-workpaper-mcp.html
 - OpenCode MCP setup: ${siteRoot}/opencode-workpaper-mcp.html
-- Goose MCP recipe: ${siteRoot}/goose-workpaper-mcp.html
 - Open WebUI tool setup: ${siteRoot}/open-webui-workpaper-mcp.html
 - LobeHub MCP setup: ${siteRoot}/lobehub-workpaper-mcp.html
 - AnythingLLM MCP setup: ${siteRoot}/anythingllm-workpaper-mcp.html
 - Sim MCP setup: ${siteRoot}/sim-workpaper-mcp.html
-- FastMCP Python client: ${siteRoot}/fastmcp-workpaper-client.html
-- Agno WorkPaper MCP tools: ${siteRoot}/agno-workpaper-mcp.html
-- Pydantic AI WorkPaper MCP tools: ${siteRoot}/pydantic-ai-workpaper-mcp.html
-- smolagents WorkPaper tool: ${siteRoot}/smolagents-workpaper-tool.html
-- Hugging Face WorkPaper Space template: ${siteRoot}/huggingface-workpaper-space.html
-- Windmill TypeScript script: ${siteRoot}/windmill-workpaper-script.html
-- Trigger.dev task: ${siteRoot}/triggerdev-workpaper-task.html
-- Inngest step: ${siteRoot}/inngest-workpaper-step.html
-- Airbyte validation: ${siteRoot}/airbyte-workpaper-validation.html
-- Meltano utility: ${siteRoot}/meltano-workpaper-utility.html
-- Temporal Activity: ${siteRoot}/temporal-workpaper-activity.html
-- Airflow DAG: ${siteRoot}/airflow-workpaper-dag.html
-- Dagster asset: ${siteRoot}/dagster-workpaper-asset.html
-- Kestra Node flow: ${siteRoot}/kestra-workpaper-flow.html
-- Prefect flow: ${siteRoot}/prefect-workpaper-flow.html
 - Formula clinic: ${siteRoot}/formula-bug-clinic.html
 - Compatibility limits: ${siteRoot}/where-bilig-is-not-excel-compatible-yet.html
 - Repository: ${repositoryUrl}
@@ -561,10 +553,6 @@ function stripFrontmatter(content: string): string {
     return content.trim()
   }
   return content.replace(/^---\n[\s\S]*?\n---\n+/, '').trim()
-}
-
-function withStarterWorkpaperPath(content: string): string {
-  return content.replaceAll('./.bilig/pricing.workpaper.json', '__WORKPAPER_PATH__')
 }
 
 async function buildLlmsFull(): Promise<string> {
@@ -683,17 +671,80 @@ async function generatedTargets(): Promise<ReadonlyArray<readonly [string, strin
     ['skills/bilig-workpaper/SKILL.md', skillDocument],
     ['packages/workpaper/SKILL.md', skillDocument],
     ['packages/workpaper/AGENTS.md', docsAgentInstructions],
+    ['packages/create-workpaper/agent-overlay/AGENTS.md', buildStarterAgentOverlayInstructions()],
+    ['packages/create-workpaper/agent-overlay/CLAUDE.md', buildStarterClaudeInstructions()],
+    ['packages/create-workpaper/agent-overlay/GEMINI.md', buildStarterGeminiInstructions()],
+    ['packages/create-workpaper/agent-overlay/README.md', buildStarterOverlayReadme()],
+    ['packages/create-workpaper/agent-overlay/package.json', buildStarterOverlayPackageJson()],
+    ['packages/create-workpaper/agent-overlay/CONVENTIONS.md', withStarterWorkpaperPath(buildAiderConventions(ideRuleInput))],
+    ['packages/create-workpaper/agent-overlay/.aider.conf.yml', buildAiderConfig()],
+    ['packages/create-workpaper/agent-overlay/.agents/skills/bilig-workpaper/SKILL.md', withStarterWorkpaperPath(skillDocument)],
+    ['packages/create-workpaper/agent-overlay/.claude/skills/bilig-workpaper/SKILL.md', withStarterWorkpaperPath(skillDocument)],
+    [
+      'packages/create-workpaper/agent-overlay/.claude/commands/bilig-workpaper-proof.md',
+      withStarterWorkpaperPath(buildClaudeCodeWorkpaperCommand(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.clinerules/bilig-workpaper.md',
+      withStarterWorkpaperPath(buildClineWorkpaperRule(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.continue/rules/bilig-workpaper.md',
+      withStarterWorkpaperPath(buildContinueWorkpaperRule(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.cursor/rules/bilig-workpaper.mdc',
+      withStarterWorkpaperPath(buildCursorWorkpaperRule(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.devin/rules/bilig-workpaper.md',
+      withStarterWorkpaperPath(buildWindsurfWorkpaperRule(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.github/copilot-instructions.md',
+      withStarterWorkpaperPath(buildGithubCopilotInstructions(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.github/instructions/bilig-workpaper.instructions.md',
+      withStarterWorkpaperPath(buildGithubCopilotWorkpaperInstructions(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.github/prompts/bilig-workpaper-proof.prompt.md',
+      withStarterWorkpaperPath(buildGithubCopilotWorkpaperPrompt(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.opencode/agents/bilig-workpaper.md',
+      withStarterWorkpaperPath(buildOpenCodeWorkpaperAgent(ideRuleInput)),
+    ],
+    [
+      'packages/create-workpaper/agent-overlay/.roo/rules/bilig-workpaper.md',
+      withStarterWorkpaperPath(buildRooWorkpaperRule(ideRuleInput)),
+    ],
     [
       'packages/create-workpaper/agent-overlay/.kiro/steering/bilig-workpaper.md',
       withStarterWorkpaperPath(buildKiroWorkpaperSteering(ideRuleInput)),
     ],
+    [
+      'packages/create-workpaper/agent-overlay/.windsurf/rules/bilig-workpaper.md',
+      withStarterWorkpaperPath(buildWindsurfWorkpaperRule(ideRuleInput)),
+    ],
     ['packages/create-workpaper/agent-overlay/.kiro/settings/mcp.json', withStarterWorkpaperPath(buildKiroMcpConfig(ideRuleInput))],
+    ['packages/create-workpaper/agent-overlay/.mcp.json', withStarterWorkpaperPath(buildClaudeCodeMcpConfig(ideRuleInput))],
+    ['packages/create-workpaper/agent-overlay/.cursor/mcp.json', withStarterWorkpaperPath(buildCursorMcpConfig(ideRuleInput))],
+    ['packages/create-workpaper/agent-overlay/.junie/mcp/mcp.json', withStarterWorkpaperPath(buildJunieMcpConfig(ideRuleInput))],
+    ['packages/create-workpaper/agent-overlay/.roo/mcp.json', withStarterWorkpaperPath(buildRooMcpConfig(ideRuleInput))],
     ['packages/create-workpaper/agent-overlay/.trae/mcp.json', withStarterWorkpaperPath(buildTraeMcpConfig(ideRuleInput))],
     [
       'packages/create-workpaper/agent-overlay/.trae/rules/bilig-workpaper.md',
       withStarterWorkpaperPath(buildTraeWorkpaperRule(ideRuleInput)),
     ],
     ['packages/create-workpaper/agent-overlay/.zed/settings.json', withStarterWorkpaperPath(buildZedSettingsConfig(ideRuleInput))],
+    ['packages/create-workpaper/agent-overlay/.vscode/mcp.json', withStarterWorkpaperPath(buildVscodeMcpConfig(ideRuleInput))],
+    ['packages/create-workpaper/agent-overlay/opencode.jsonc', withStarterWorkpaperPath(buildOpenCodeMcpConfig(ideRuleInput))],
+    [
+      'packages/create-workpaper/agent-overlay/mcp/bilig-workpaper.mcp.json',
+      withStarterWorkpaperPath(buildReusableMcpConfig(ideRuleInput)),
+    ],
     [
       'packages/create-workpaper/agent-overlay/.continue/mcpServers/bilig-workpaper.yaml',
       withStarterWorkpaperPath(buildContinueMcpServerConfig(ideRuleInput)),

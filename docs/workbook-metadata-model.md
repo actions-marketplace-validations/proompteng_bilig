@@ -31,5 +31,5 @@ The canonical formula corpus cannot close without workbook metadata because:
 
 ## See also
 
-- [workbook-metadata-runtime-rfc.md](/Users/gregkonush/github.com/bilig/docs/workbook-metadata-runtime-rfc.md)
-- [authoritative-workbook-op-model-rfc.md](/Users/gregkonush/github.com/bilig/docs/authoritative-workbook-op-model-rfc.md)
+- [workbook-metadata-runtime-rfc.md](../docs/workbook-metadata-runtime-rfc.md)
+- [authoritative-workbook-op-model-rfc.md](../docs/authoritative-workbook-op-model-rfc.md)

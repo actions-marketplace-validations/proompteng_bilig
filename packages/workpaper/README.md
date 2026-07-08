@@ -76,43 +76,25 @@ If the workbook has provider-backed formulas such as `IMPORTRANGE`, run
 That proves the formula fails closed with an adapter diagnostic, then verifies a
 local synthetic adapter readback. It does not call Google Sheets.
 
-Framework examples live in the repo instead of this first screen. Use them after
-one evaluator passes:
+Framework examples live in the repo instead of this first screen. Use the owned
+examples after one evaluator passes:
 
-- Tool runtimes: Vercel AI SDK, LangGraph, LangChain MCP adapters, Open WebUI,
-  FastMCP, Agno, Pydantic AI, smolagents.
-- Workflow engines: Trigger.dev, Inngest, Temporal, Airflow, Dagster, Kestra,
-  Prefect, Windmill.
-- Low-code and data tools: n8n, Pipedream, Directus, Airbyte, Meltano.
+- Tool runtimes: Vercel AI SDK, OpenAI Agents SDK, OpenAI Responses, Open WebUI,
+  and the retained adapter smoke paths under `examples/headless-workpaper`.
+- Workflow engines: the retained serverless and n8n package examples.
 - Saved workbook files: use the saved-file boundary section only when a file is
   the contract.
 
 ## Searchable Example Guides
 
-These are integration guide names that users search for on npm. They are links,
+These are retained guide names that users search for on npm. They are links,
 not the first-run path:
 
-| Guide need                                              | Start here                                                                     |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Windmill TypeScript workflow fields                     | <https://proompteng.github.io/bilig/windmill-workpaper-script.html>            |
-| Trigger.dev durable task fields                         | <https://proompteng.github.io/bilig/triggerdev-workpaper-task.html>            |
-| Inngest durable step fields                             | <https://proompteng.github.io/bilig/inngest-workpaper-step.html>               |
-| Temporal TypeScript Activity decisions                  | <https://proompteng.github.io/bilig/temporal-workpaper-activity.html>          |
-| Apache Airflow DAG task outputs                         | <https://proompteng.github.io/bilig/airflow-workpaper-dag.html>                |
-| Dagster asset materialization metadata                  | <https://proompteng.github.io/bilig/dagster-workpaper-asset.html>              |
-| Kestra Node Commands flow fields                        | <https://proompteng.github.io/bilig/kestra-workpaper-flow.html>                |
-| Prefect flow fields                                     | <https://proompteng.github.io/bilig/prefect-workpaper-flow.html>               |
-| Directus Flow operation for persisted calculated fields | <https://proompteng.github.io/bilig/directus-workpaper-flow-operation.html>    |
-| n8n formula readback for self-hosted workflows          | <https://proompteng.github.io/bilig/n8n-workpaper-formula-readback.html>       |
-| Dify formula readback                                   | <https://proompteng.github.io/bilig/dify-workpaper-formula-readback.html>      |
-| Flowise formula readback                                | <https://proompteng.github.io/bilig/flowise-workpaper-formula-readback.html>   |
-| Pipedream formula readback                              | <https://proompteng.github.io/bilig/pipedream-workpaper-formula-readback.html> |
-| FastMCP Python client for hosted and local stdio checks | <https://proompteng.github.io/bilig/fastmcp-workpaper-client.html>             |
-| Agno MCPTools workbook readback                         | <https://proompteng.github.io/bilig/agno-workpaper-mcp.html>                   |
-| Pydantic AI MCPToolset typed readback                   | <https://proompteng.github.io/bilig/pydantic-ai-workpaper-mcp.html>            |
-| Google ADK McpToolset workbook readback                 | <https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html>             |
-| Hugging Face smolagents tool                            | <https://proompteng.github.io/bilig/smolagents-workpaper-tool.html>            |
-| Hugging Face Gradio MCP Space                           | <https://proompteng.github.io/bilig/huggingface-workpaper-space.html>          |
+| Guide need                                     | Start here                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------- |
+| n8n formula readback for self-hosted workflows | <https://proompteng.github.io/bilig/n8n-workpaper-formula-readback.html>  |
+| Serverless API route shape                     | <https://proompteng.github.io/bilig/serverless-workpaper-api-route.html>  |
+| Saved XLSX formula recalculation               | <https://proompteng.github.io/bilig/xlsx-formula-recalculation-node.html> |
 
 ## Use A WorkPaper In Node
 
@@ -257,48 +239,10 @@ orchestrate the task but Bilig should own workbook state:
 npm exec --package @bilig/workpaper@latest -- bilig-n8n-formula-server --port 4321
 ```
 
-Start from the repo examples:
+The retained owned example is the n8n community-node package:
+`integrations/n8n-nodes-workpaper`.
 
-- `examples/directus-workpaper-flow-operation`
-- `examples/windmill-workpaper-script`
-- `examples/triggerdev-workpaper-task`
-- `examples/airbyte-workpaper-validation`
-- `examples/meltano-workpaper-utility`
-- `examples/temporal-workpaper-activity`
-- `examples/airflow-workpaper-dag`
-- `examples/dagster-workpaper-asset`
-- `examples/kestra-workpaper-flow`
-- `examples/prefect-workpaper-flow`
-- `examples/n8n-workpaper-formula-readback/bilig-workpaper-formula-readback.n8n.json`
-- `examples/dify-workpaper-formula-readback` mirrors the Dify plugin source;
-  the package was merged upstream in
-  <https://github.com/langgenius/dify-plugins/pull/2451>
-- `examples/flowise-workpaper-formula-readback/bilig-workpaper-formula-readback.flowise-tool.json`
-- `integrations/pipedream-bilig-workpaper` mirrors the Pipedream action shape;
-  the public review is <https://github.com/PipedreamHQ/pipedream/pull/20972>
-- `examples/fastmcp-workpaper-client`
-- `examples/langchain-mcp-workpaper-toolnode`
-- `examples/smolagents-workpaper-tool`
-
-Docs:
-
-- <https://proompteng.github.io/bilig/directus-workpaper-flow-operation.html>
-- <https://proompteng.github.io/bilig/windmill-workpaper-script.html>
-- <https://proompteng.github.io/bilig/triggerdev-workpaper-task.html>
-- <https://proompteng.github.io/bilig/airbyte-workpaper-validation.html>
-- <https://proompteng.github.io/bilig/meltano-workpaper-utility.html>
-- <https://proompteng.github.io/bilig/temporal-workpaper-activity.html>
-- <https://proompteng.github.io/bilig/airflow-workpaper-dag.html>
-- <https://proompteng.github.io/bilig/dagster-workpaper-asset.html>
-- <https://proompteng.github.io/bilig/kestra-workpaper-flow.html>
-- <https://proompteng.github.io/bilig/prefect-workpaper-flow.html>
-- <https://proompteng.github.io/bilig/open-webui-workpaper-mcp.html>
-- <https://proompteng.github.io/bilig/n8n-workpaper-formula-readback.html>
-- <https://proompteng.github.io/bilig/dify-workpaper-formula-readback.html>
-- <https://proompteng.github.io/bilig/flowise-workpaper-formula-readback.html>
-- <https://proompteng.github.io/bilig/fastmcp-workpaper-client.html>
-- <https://proompteng.github.io/bilig/langgraph-workpaper-toolnode-spreadsheet.html>
-- <https://proompteng.github.io/bilig/smolagents-workpaper-tool.html>
+Docs: <https://proompteng.github.io/bilig/n8n-workpaper-formula-readback.html>
 
 ## Saved File Boundaries
 

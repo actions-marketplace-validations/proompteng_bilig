@@ -27,8 +27,6 @@ export interface DocsDiscoveryContext {
   readonly docsSkill: string
   readonly agentSkillsIndex: string
   readonly legacySkillsIndex: string
-  readonly communityLaunchPack: string
-  readonly productHuntLaunchKit: string
   readonly starterIssues: string
   readonly newContributorGuide: string
   readonly headlessPackageJson: string
@@ -69,7 +67,6 @@ export interface DocsDiscoveryContext {
   readonly agentFrameworkWorkbookToolsDoc: string
   readonly headlessWorkpaperAgentHandbook: string
   readonly agentToolCallingDoc: string
-  readonly aiSdkLangChainDoc: string
   readonly mcpWorkPaperToolServerDoc: string
   readonly mcpSpreadsheetServerDirectoryDoc: string
   readonly mcpClientSetupDoc: string
@@ -90,7 +87,6 @@ export interface DocsDiscoveryContext {
 export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> {
   const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
   const docsRoot = join(repoRoot, 'docs')
-  const growthRoot = join(repoRoot, 'internal', 'growth')
   const siteRoot = 'https://proompteng.github.io/bilig/'
   const expectedSitemapUrls = docsSiteSources.map(([urlPath]) => `${siteRoot}${urlPath}`)
   const sourceFilesByUrl = new Map<string, string>(docsSiteSources.map(([urlPath, sourceFile]) => [`${siteRoot}${urlPath}`, sourceFile]))
@@ -112,8 +108,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     docsSkill,
     agentSkillsIndex,
     legacySkillsIndex,
-    communityLaunchPack,
-    productHuntLaunchKit,
     starterIssues,
     newContributorGuide,
     headlessPackageJson,
@@ -154,7 +148,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     agentFrameworkWorkbookToolsDoc,
     headlessWorkpaperAgentHandbook,
     agentToolCallingDoc,
-    aiSdkLangChainDoc,
     mcpWorkPaperToolServerDoc,
     mcpSpreadsheetServerDirectoryDoc,
     mcpClientSetupDoc,
@@ -187,8 +180,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     readFile(join(docsRoot, 'skill.md'), 'utf8'),
     readFile(join(docsRoot, '.well-known', 'agent-skills', 'index.json'), 'utf8'),
     readFile(join(docsRoot, '.well-known', 'skills', 'index.json'), 'utf8'),
-    readFile(join(growthRoot, 'community-launch-pack.md'), 'utf8'),
-    readFile(join(growthRoot, 'product-hunt-launch-kit.md'), 'utf8'),
     readFile(join(docsRoot, 'starter-issues.md'), 'utf8'),
     readFile(join(docsRoot, 'new-contributor-guide.md'), 'utf8'),
     readFile(join(repoRoot, 'packages', 'headless', 'package.json'), 'utf8'),
@@ -229,7 +220,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     readFile(join(docsRoot, 'agent-framework-workbook-tools.md'), 'utf8'),
     readFile(join(docsRoot, 'headless-workpaper-agent-handbook.md'), 'utf8'),
     readFile(join(docsRoot, 'agent-workpaper-tool-calling-recipe.md'), 'utf8'),
-    readFile(join(docsRoot, 'vercel-ai-sdk-langchain-spreadsheet-tool.md'), 'utf8'),
     readFile(join(docsRoot, 'mcp-workpaper-tool-server.md'), 'utf8'),
     readFile(join(docsRoot, 'mcp-spreadsheet-server-directory.md'), 'utf8'),
     readFile(join(docsRoot, 'mcp-client-setup.md'), 'utf8'),
@@ -270,8 +260,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     docsSkill,
     agentSkillsIndex,
     legacySkillsIndex,
-    communityLaunchPack,
-    productHuntLaunchKit,
     starterIssues,
     newContributorGuide,
     headlessPackageJson,
@@ -312,7 +300,6 @@ export async function loadDocsDiscoveryContext(): Promise<DocsDiscoveryContext> 
     agentFrameworkWorkbookToolsDoc,
     headlessWorkpaperAgentHandbook,
     agentToolCallingDoc,
-    aiSdkLangChainDoc,
     mcpWorkPaperToolServerDoc,
     mcpSpreadsheetServerDirectoryDoc,
     mcpClientSetupDoc,

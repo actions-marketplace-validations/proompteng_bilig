@@ -55,5 +55,5 @@
 
 ## See also
 
-- [architecture.md](/Users/gregkonush/github.com/bilig/docs/architecture.md)
-- [backend-sync-service.md](/Users/gregkonush/github.com/bilig/docs/backend-sync-service.md)
+- [architecture.md](../docs/architecture.md)
+- [backend-sync-service.md](../docs/backend-sync-service.md)

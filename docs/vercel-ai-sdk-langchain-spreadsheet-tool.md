@@ -371,9 +371,7 @@ Official docs for the framework shapes:
 
 Framework-specific WorkPaper pages:
 
-- [Mastra WorkPaper spreadsheet tool](mastra-workpaper-spreadsheet-tool.md)
 - [LlamaIndex.TS WorkPaper spreadsheet tool](llamaindex-workpaper-spreadsheet-tool.md)
-- [LangGraph.js WorkPaper ToolNode spreadsheet tool](langgraph-workpaper-toolnode-spreadsheet.md)
 - [CopilotKit WorkPaper spreadsheet action](copilotkit-workpaper-spreadsheet-action.md)
 - [Cloudflare Agents WorkPaper spreadsheet tool](cloudflare-agents-workpaper-spreadsheet-tool.md)
 
@@ -381,8 +379,6 @@ Framework-specific WorkPaper pages:
 
 - adapter script:
   [`examples/headless-workpaper/agent-framework-adapters.ts`](../examples/headless-workpaper/agent-framework-adapters.ts)
-- real Mastra `createTool()` smoke:
-  [`examples/mastra-workpaper-tool/src/mastra-workpaper-tool.ts`](../examples/mastra-workpaper-tool/src/mastra-workpaper-tool.ts)
 - example README:
   [`examples/headless-workpaper/README.md#agent-framework-adapters`](../examples/headless-workpaper/README.md#agent-framework-adapters)
 - longer tool-calling recipe:

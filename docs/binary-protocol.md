@@ -54,6 +54,6 @@ Agent traffic is adjacent but not fully unified yet. The sync protocol is alread
 
 ## See also
 
-- [authoritative-workbook-op-model-rfc.md](/Users/gregkonush/github.com/bilig/docs/authoritative-workbook-op-model-rfc.md)
-- [durable-multiplayer-replication-rfc.md](/Users/gregkonush/github.com/bilig/docs/durable-multiplayer-replication-rfc.md)
-- [typed-agent-protocol-rfc.md](/Users/gregkonush/github.com/bilig/docs/typed-agent-protocol-rfc.md)
+- [authoritative-workbook-op-model-rfc.md](../docs/authoritative-workbook-op-model-rfc.md)
+- [durable-multiplayer-replication-rfc.md](../docs/durable-multiplayer-replication-rfc.md)
+- [typed-agent-protocol-rfc.md](../docs/typed-agent-protocol-rfc.md)

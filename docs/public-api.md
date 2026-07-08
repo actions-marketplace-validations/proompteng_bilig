@@ -339,10 +339,8 @@ op fields, nested ranges, and batch clocks do not satisfy `isWorkbookOp` or
 `isEngineOpBatch`. Accessor-backed required fields, nested fields, and op-array
 entries are rejected from descriptors without invoking getters.
 
-The generic runnable example lives in
-[`examples/workbook-agent-model`](../examples/workbook-agent-model). Domain
-examples such as revenue, forecast, and quote approval belong under consumer app
-or WorkPaper examples, not inside `@bilig/workbook` itself.
+Domain examples such as revenue, forecast, and quote approval belong under
+consumer app or WorkPaper examples, not inside `@bilig/workbook` itself.
 
 Full export surface:
 

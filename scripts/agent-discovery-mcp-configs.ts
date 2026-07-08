@@ -95,38 +95,35 @@ export function buildTraeMcpConfig(input: AgentIdeRuleInput): string {
 
 export function buildOpenCodeMcpConfig(input: AgentIdeRuleInput): string {
   const { remoteMcpEndpoint, workpaperPackageSpec } = input
-  return `${JSON.stringify(
-    {
-      $schema: 'https://opencode.ai/config.json',
-      instructions: ['AGENTS.md'],
-      mcp: {
-        'bilig-workpaper': {
-          type: 'local',
-          command: [
-            'npm',
-            'exec',
-            '--yes',
-            '--package',
-            workpaperPackageSpec,
-            '--',
-            'bilig-workpaper-mcp',
-            '--workpaper',
-            './.bilig/pricing.workpaper.json',
-            '--init-demo-workpaper',
-            '--writable',
-          ],
-          enabled: true,
-        },
-        'bilig-workpaper-demo': {
-          type: 'remote',
-          url: remoteMcpEndpoint,
-          enabled: false,
-        },
-      },
+  return `{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "mcp": {
+    "bilig-workpaper": {
+      "type": "local",
+      "command": [
+        "npm",
+        "exec",
+        "--yes",
+        "--package",
+        ${JSON.stringify(workpaperPackageSpec)},
+        "--",
+        "bilig-workpaper-mcp",
+        "--workpaper",
+        "./.bilig/pricing.workpaper.json",
+        "--init-demo-workpaper",
+        "--writable",
+      ],
+      "enabled": true,
     },
-    null,
-    2,
-  )}\n`
+    "bilig-workpaper-demo": {
+      "type": "remote",
+      "url": ${JSON.stringify(remoteMcpEndpoint)},
+      "enabled": false,
+    },
+  },
+}
+`
 }
 
 export function buildFileBackedMcpServerConfig(input: {

@@ -30,10 +30,7 @@ Use this file when an AI coding agent, MCP client, or tool host needs workbook f
 12. If you are using OpenHands, read `AGENTS.md`, then the project skill at
     `.agents/skills/bilig-workpaper/SKILL.md`; add the local MCP server with
     `https://proompteng.github.io/bilig/openhands-workpaper-mcp.html`.
-13. If you are using Goose, start from the local recipe at
-    `examples/goose-workpaper-mcp/recipe.yaml` and the proof guide at
-    `https://proompteng.github.io/bilig/goose-workpaper-mcp.html`.
-14. If you are using Cursor, Kiro, Trae, Qodo IDE, Zed, Windsurf/Cascade, Cline, or Continue, use
+13. If you are using Cursor, Kiro, Trae, Qodo IDE, Zed, Windsurf/Cascade, Cline, or Continue, use
     `.cursor/rules/bilig-workpaper.mdc` or
     `.kiro/steering/bilig-workpaper.md`,
     `.trae/rules/bilig-workpaper.md` with `.trae/mcp.json`,
@@ -45,7 +42,7 @@ Use this file when an AI coding agent, MCP client, or tool host needs workbook f
     `.continue/rules/bilig-workpaper.md`. Continue Agent mode can also use
     `.continue/mcpServers/bilig-workpaper.yaml` for the project-local
     file-backed WorkPaper MCP server.
-15. Start the MCP server or import `@bilig/workpaper` directly.
+14. Start the MCP server or import `@bilig/workpaper` directly.
 
 Remote MCP clients that support Streamable HTTP can smoke-test the stateless
 demo endpoint at `https://bilig.proompteng.ai/mcp`. Directory scanners that inspect the

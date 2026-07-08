@@ -28,6 +28,6 @@
 
 ## Companion docs
 
-- [/Users/gregkonush/github.com/lab/docs/bilig-deployment-contract.md](/Users/gregkonush/github.com/lab/docs/bilig-deployment-contract.md)
-- [/Users/gregkonush/github.com/lab/docs/bilig-rollout-gates.md](/Users/gregkonush/github.com/lab/docs/bilig-rollout-gates.md)
-- [/Users/gregkonush/github.com/lab/docs/bilig-observability-contract.md](/Users/gregkonush/github.com/lab/docs/bilig-observability-contract.md)
+- `lab/docs/bilig-deployment-contract.md` in the deployment repository
+- `lab/docs/bilig-rollout-gates.md` in the deployment repository
+- `lab/docs/bilig-observability-contract.md` in the deployment repository

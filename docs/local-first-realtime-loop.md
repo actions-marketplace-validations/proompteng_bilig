@@ -13,10 +13,10 @@ Archived summary of the old cutover discussion. The current shipped loop is work
 
 ## Current proof points
 
-- [apps/web/src/WorkerWorkbookApp.tsx](/Users/gregkonush/github.com/bilig/apps/web/src/WorkerWorkbookApp.tsx)
-- [apps/web/src/zero/ZeroWorkbookBridge.ts](/Users/gregkonush/github.com/bilig/apps/web/src/zero/ZeroWorkbookBridge.ts)
-- [apps/bilig/src/zero/recalc-worker.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/zero/recalc-worker.ts)
-- [apps/bilig/src/zero/store.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/zero/store.ts)
+- [apps/web/src/WorkerWorkbookApp.tsx](../apps/web/src/WorkerWorkbookApp.tsx)
+- [apps/web/src/zero/ZeroWorkbookBridge.ts](../apps/web/src/zero/ZeroWorkbookBridge.ts)
+- [apps/bilig/src/zero/recalc-worker.ts](../apps/bilig/src/zero/recalc-worker.ts)
+- [apps/bilig/src/zero/store.ts](../apps/bilig/src/zero/store.ts)
 
 ## No longer current
 

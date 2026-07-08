@@ -151,18 +151,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html</loc>
-    <lastmod>2026-06-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html</loc>
-    <lastmod>2026-06-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://proompteng.github.io/bilig/openhands-workpaper-mcp.html</loc>
     <lastmod>2026-06-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -183,12 +171,6 @@
   <url>
     <loc>https://proompteng.github.io/bilig/opencode-workpaper-mcp.html</loc>
     <lastmod>2026-06-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/goose-workpaper-mcp.html</loc>
-    <lastmod>2026-06-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -355,19 +337,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://proompteng.github.io/bilig/mastra-workpaper-spreadsheet-tool.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.78</priority>
-  </url>
-  <url>
     <loc>https://proompteng.github.io/bilig/llamaindex-workpaper-spreadsheet-tool.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.78</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/langgraph-workpaper-toolnode-spreadsheet.html</loc>
     <lastmod>2026-05-13</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.78</priority>
@@ -387,12 +357,6 @@
   <url>
     <loc>https://proompteng.github.io/bilig/crewai-workpaper-spreadsheet-tool.html</loc>
     <lastmod>2026-05-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.78</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/semantic-kernel-workpaper-mcp.html</loc>
-    <lastmod>2026-05-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.78</priority>
   </url>
@@ -691,72 +655,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://proompteng.github.io/bilig/directus-workpaper-flow-operation.html</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/windmill-workpaper-script.html</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/triggerdev-workpaper-task.html</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/inngest-workpaper-step.html</loc>
-    <lastmod>2026-05-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/temporal-workpaper-activity.html</loc>
-    <lastmod>2026-05-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/airbyte-workpaper-validation.html</loc>
-    <lastmod>2026-05-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/meltano-workpaper-utility.html</loc>
-    <lastmod>2026-05-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/airflow-workpaper-dag.html</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/dagster-workpaper-asset.html</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/kestra-workpaper-flow.html</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/prefect-workpaper-flow.html</loc>
-    <lastmod>2026-05-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
     <loc>https://proompteng.github.io/bilig/open-webui-workpaper-mcp.html</loc>
     <lastmod>2026-05-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -785,54 +683,6 @@
     <lastmod>2026-05-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/fastmcp-workpaper-client.html</loc>
-    <lastmod>2026-05-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/agno-workpaper-mcp.html</loc>
-    <lastmod>2026-06-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/pydantic-ai-workpaper-mcp.html</loc>
-    <lastmod>2026-06-02</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/smolagents-workpaper-tool.html</loc>
-    <lastmod>2026-05-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/huggingface-workpaper-space.html</loc>
-    <lastmod>2026-06-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.72</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/dify-workpaper-formula-readback.html</loc>
-    <lastmod>2026-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/flowise-workpaper-formula-readback.html</loc>
-    <lastmod>2026-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://proompteng.github.io/bilig/pipedream-workpaper-formula-readback.html</loc>
-    <lastmod>2026-05-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://proompteng.github.io/bilig/llms.txt</loc>

@@ -1,12 +1,12 @@
 ---
 name: bilig-workpaper
 version: 0.1.0
-description: Use @bilig/workpaper WorkPaper state for workbook formulas, agent spreadsheet tools, MCP file-backed or remote demo editing, and XLSX formula bug reports without driving spreadsheet UI.
+description: Use @bilig/workpaper WorkPaper state for workbook formulas, MCP editing, and tool integrations without driving spreadsheet UI.
 tags:
-  - ai-agents
-  - spreadsheet-automation
+  - agents
+  - workbook-runtime
   - formulas
-  - xlsx
+  - workpaper
   - mcp
   - typescript
 ---
@@ -24,7 +24,7 @@ Trigger this skill for tasks involving:
 - quote, budget, payout, pricing, import-validation, or forecast models;
 - agent spreadsheet tools that need deterministic cell addresses;
 - MCP clients that can run a stdio server or call a Streamable HTTP endpoint;
-- reduced XLSX formula bugs that need a local report.
+- reduced formula/import bugs that need a local report.
 
 Do not trigger it for manual spreadsheet editing, Office macros, VBA, pivots, charts, COM automation, or exact Excel desktop behavior unless the user explicitly asks to compare Bilig against an Excel oracle.
 
@@ -32,29 +32,27 @@ Do not trigger it for manual spreadsheet editing, Office macros, VBA, pivots, ch
 
 Do not build shell commands by concatenating user text. Treat the commands below as literal templates, validate workbook paths before use, and reject values containing newlines, backticks, `$(`, `;`, `&`, `|`, `<`, or `>`. Prefer MCP client `command` plus `args` arrays or direct TypeScript calls when inserting user-provided paths or cell references.
 
-## First Check: Agent Evaluator
+## First Check: Agent Triage
 
-Before wiring a client, prove the published agent door with the package-owned evaluator.
-It exercises MCP discovery, cell mutation, recalculated `SUM`, `SUMIF`,
-`XLOOKUP`, `FILTER`, a named expression, JSON export, restart restore, and
-returns `verified: true`:
+Before wiring a client or opening a spreadsheet UI, print the compact decision
+card:
 
 ```json
 {
   "command": "npm",
-  "args": [
-    "exec",
-    "--yes",
-    "--package",
-    "@bilig/workpaper@latest",
-    "--",
-    "bilig-evaluate",
-    "--door",
-    "agent-mcp",
-    "--scenario",
-    "revenue-plan",
-    "--json"
-  ]
+  "args": ["exec", "--yes", "--package", "@bilig/workpaper@latest", "--", "bilig-agent-start", "--json"]
+}
+```
+
+## First Check: Agent Evaluator
+
+Before wiring a client, prove the published agent door with the package-owned evaluator.
+It exercises MCP discovery, cell mutation, formula readback, JSON export, restart restore, and returns `verified: true`:
+
+```json
+{
+  "command": "npm",
+  "args": ["exec", "--yes", "--package", "@bilig/workpaper@latest", "--", "bilig-evaluate", "--door", "agent-mcp", "--json"]
 }
 ```
 
@@ -98,9 +96,11 @@ npx --yes skills@latest add proompteng/bilig --skill bilig-workpaper --list
 }
 ```
 
-Run `bilig-evaluate --door agent-mcp --scenario revenue-plan --json` first. If the evaluator fails,
-run `bilig-mcp-challenge` and treat its returned `tools` array as the source
-of truth for the currently published package. The core file-backed tools are:
+Run `bilig-evaluate --door agent-mcp --json` first. If the workbook contains
+provider-backed formulas such as `IMPORTRANGE`, run
+`bilig-evaluate --door agent-mcp --scenario provider-backed --json` to confirm
+the adapter boundary. If the evaluator fails, run `bilig-mcp-challenge` and
+treat its returned `tools` array as the source of truth for the currently published package. The core file-backed tools are:
 
 - `list_sheets`
 - `read_range`
@@ -110,6 +110,20 @@ of truth for the currently published package. The core file-backed tools are:
 - `get_cell_display_value`
 - `export_workpaper_document`
 - `validate_formula`
+
+When the server is started through `@bilig/workpaper@latest` with
+`--from-xlsx ./pricing.xlsx`, `tools/list` also includes
+`analyze_workbook_risk`. That tool is fixed to the source XLSX passed at
+startup and reports workbook risk indicators before a workflow trusts the imported
+WorkPaper. Without `--workpaper --writable`, edits stay in memory; add a
+WorkPaper JSON path only when the task needs persisted file state. It does not
+certify Excel compatibility.
+
+For a maintained XLSX preflight transcript, run
+`pnpm --dir examples/headless-workpaper run agent:mcp-xlsx-risk-preflight`.
+It requires `analyze_workbook_risk`, `set_cell_contents_and_readback`,
+`export_workpaper_document`, `Inputs!B3`, `Summary!B3`, `60000 -> 96000`,
+and `verified: true`.
 
 After a write, always read the dependent output cell and export the WorkPaper
 document. If the listed tool set includes `set_cell_contents_and_readback`,
@@ -134,9 +148,9 @@ stdio command when the workflow must persist a project WorkPaper JSON file.
 Use `@bilig/workpaper` directly when workbook logic belongs in a service, queue worker, test, or route:
 
 ```ts
-import { WorkPaper, exportWorkPaperDocument, serializeWorkPaperDocument } from '@bilig/workpaper'
+import { buildA1WorkPaper } from '@bilig/workpaper'
 
-const workbook = WorkPaper.buildFromSheets({
+const book = buildA1WorkPaper({
   Inputs: [
     ['Metric', 'Value'],
     ['Customers', 20],
@@ -148,22 +162,24 @@ const workbook = WorkPaper.buildFromSheets({
   ],
 })
 
-const inputs = workbook.getSheetId('Inputs')
-const summary = workbook.getSheetId('Summary')
-if (inputs === undefined || summary === undefined) {
-  throw new Error('Workbook is missing required sheets')
-}
+const proof = book.editAndReadback('Inputs!B2', 32, {
+  readbackRange: 'Summary!B2',
+})
 
-workbook.setCellContents({ sheet: inputs, row: 1, col: 1 }, 32)
-const revenue = workbook.getCellDisplayValue({ sheet: summary, row: 1, col: 1 })
-const saved = serializeWorkPaperDocument(exportWorkPaperDocument(workbook, { includeConfig: true }))
+console.log({
+  editedCell: proof.editedCell,
+  after: proof.afterReadback.displayValues,
+  afterRestore: proof.restoredReadback.displayValues,
+  persistedDocumentBytes: proof.persistedDocumentBytes,
+  verified: proof.verified,
+})
 
-console.log({ revenue, savedBytes: saved.length })
+book.dispose()
 ```
 
-## XLSX Formula Clinic
+## Formula Clinic
 
-When the user has a reduced XLSX formula/import bug, generate a local report through an argument array:
+When the user has a reduced workbook formula/import bug, generate a local report through an argument array:
 
 ```json
 {
@@ -185,7 +201,7 @@ The report is local. It does not upload workbook contents. Ask for a reduced pub
 
 ## Required Verification
 
-Return readback, not vibes. A successful agent response should include:
+Return readback, not a write-only claim. A successful agent response should include:
 
 - the exact edited sheet and A1 cell;
 - before values for relevant inputs and dependent outputs;
@@ -199,27 +215,16 @@ If any readback step fails, report the blocker instead of claiming the workbook 
 ## Reference URLs
 
 - Compact docs map: https://proompteng.github.io/bilig/llms.txt
-- Full agent context: https://proompteng.github.io/bilig/llms-full.txt
-- Agent handbook: https://proompteng.github.io/bilig/headless-workpaper-agent-handbook.html
+- Full host context: https://proompteng.github.io/bilig/llms-full.txt
+- Host handbook: https://proompteng.github.io/bilig/headless-workpaper-agent-handbook.html
 - Agent workbook challenge: https://proompteng.github.io/bilig/agent-workbook-challenge.html
 - MCP server guide: https://proompteng.github.io/bilig/mcp-workpaper-tool-server.html
+- OpenHands MCP setup: https://proompteng.github.io/bilig/openhands-workpaper-mcp.html
+- OpenCode MCP setup: https://proompteng.github.io/bilig/opencode-workpaper-mcp.html
 - Open WebUI tool setup: https://proompteng.github.io/bilig/open-webui-workpaper-mcp.html
 - LobeHub MCP setup: https://proompteng.github.io/bilig/lobehub-workpaper-mcp.html
 - AnythingLLM MCP setup: https://proompteng.github.io/bilig/anythingllm-workpaper-mcp.html
 - Sim MCP setup: https://proompteng.github.io/bilig/sim-workpaper-mcp.html
-- FastMCP Python client: https://proompteng.github.io/bilig/fastmcp-workpaper-client.html
-- smolagents WorkPaper tool: https://proompteng.github.io/bilig/smolagents-workpaper-tool.html
-- Hugging Face WorkPaper Space template: https://proompteng.github.io/bilig/huggingface-workpaper-space.html
-- Windmill TypeScript script: https://proompteng.github.io/bilig/windmill-workpaper-script.html
-- Trigger.dev task: https://proompteng.github.io/bilig/triggerdev-workpaper-task.html
-- Inngest step: https://proompteng.github.io/bilig/inngest-workpaper-step.html
-- Airbyte validation: https://proompteng.github.io/bilig/airbyte-workpaper-validation.html
-- Meltano utility: https://proompteng.github.io/bilig/meltano-workpaper-utility.html
-- Temporal Activity: https://proompteng.github.io/bilig/temporal-workpaper-activity.html
-- Airflow DAG: https://proompteng.github.io/bilig/airflow-workpaper-dag.html
-- Dagster asset: https://proompteng.github.io/bilig/dagster-workpaper-asset.html
-- Kestra Node flow: https://proompteng.github.io/bilig/kestra-workpaper-flow.html
-- Prefect flow: https://proompteng.github.io/bilig/prefect-workpaper-flow.html
-- XLSX formula clinic: https://proompteng.github.io/bilig/formula-bug-clinic.html
+- Formula clinic: https://proompteng.github.io/bilig/formula-bug-clinic.html
 - Compatibility limits: https://proompteng.github.io/bilig/where-bilig-is-not-excel-compatible-yet.html
 - Repository: https://github.com/proompteng/bilig

@@ -1,31 +1,38 @@
 ---
 name: bilig-workpaper-proof
-description: Prove a WorkPaper formula edit with readback and persistence evidence.
+description: Verify a workbook formula edit with Bilig WorkPaper instead of spreadsheet UI automation.
 agent: agent
 ---
 
 Use this prompt when the task is workbook-shaped: pricing, quotes, budgets,
-payout checks, import validation, forecasts, or agent spreadsheet tools.
+payout checks, import validation, forecasts, agent spreadsheet tools, stale
+XLSX formula values, or formula readback after changing cells.
 
 Task: ${input:task:Describe the workbook or formula workflow}
 
-Start with:
+Read the repository instructions first:
+
+- [Copilot instructions](../copilot-instructions.md)
+- [WorkPaper agent handbook](../../docs/headless-workpaper-agent-handbook.md)
+- [MCP client setup](../../docs/mcp-client-setup.md)
+
+Start with the smallest check that matches the task:
 
 ```sh
-npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --scenario revenue-plan --json
+npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json
+npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --scenario provider-backed --json
+npm exec --package @bilig/workpaper@latest -- bilig-agent-challenge --json
+npm exec --package @bilig/workpaper@latest -- bilig-mcp-challenge --json
+npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper __WORKPAPER_PATH__ --init-demo-workpaper --writable
+npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --from-xlsx ./pricing.xlsx
 ```
 
-That evaluator checks MCP tool discovery, mutation, recalculated `SUM`,
-`SUMIF`, `XLOOKUP`, `FILTER`, a named expression, persistence, and restart
-readback.
+If VS Code MCP tools are available, prefer the workspace server named
+`biligWorkpaperFile` for project-local persistence, or
+`biligWorkpaperDemo` for no-file hosted smoke tests. The shared MCP config is
+at [`.vscode/mcp.json`](../../.vscode/mcp.json).
 
-For MCP use:
-
-```sh
-npm exec --yes --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper __WORKPAPER_PATH__ --init-demo-workpaper --writable
-```
-
-Return proof, not a status sentence:
+Return readback, not a status sentence:
 
 ```json
 {
@@ -42,11 +49,15 @@ Return proof, not a status sentence:
 Rules:
 
 - read the relevant input and dependent output before editing;
-- prefer `set_cell_contents_and_readback` for one-call edit plus dependent
-  output readback;
-- otherwise write one small input or formula change and then read the
-  dependent calculated output after recalculation;
+- write one small input or formula change;
+- read the dependent calculated output after recalculation;
 - export or serialize the WorkPaper document;
 - restore or restart when file boundaries matter;
 - report unsupported formulas or Excel-only features honestly;
 - do not claim success from a write call alone.
+
+Reference docs:
+
+- https://proompteng.github.io/bilig/llms.txt
+- https://proompteng.github.io/bilig/agent-adoption-kit.html
+- https://proompteng.github.io/bilig/headless-workpaper-agent-handbook.html

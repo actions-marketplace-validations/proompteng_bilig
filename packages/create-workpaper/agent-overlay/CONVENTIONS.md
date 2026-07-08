@@ -29,6 +29,13 @@ For workbook-file risk diagnostics:
 npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --from-xlsx ./pricing.xlsx
 ```
 
+Use the hosted endpoint only for remote MCP connector discovery or stateless
+smoke tests:
+
+```text
+https://bilig.proompteng.ai/mcp
+```
+
 ## Required Readback
 
 Before saying the workbook is updated, return readback with:
@@ -42,8 +49,20 @@ Before saying the workbook is updated, return readback with:
 
 Do not claim success from a write call alone.
 
+If any readback step fails, say what failed instead of treating a write call or
+tool invocation as proof.
+
 ## Command Safety
 
-Do not build shell commands by concatenating user text. Prefer MCP `command`
-plus `args` arrays or direct TypeScript calls. Reject workbook paths or cell
-arguments containing newlines, backticks, `$(`, `;`, `&`, `|`, `<`, or `>`.
+Do not build shell commands by concatenating user text. Prefer MCP
+`command` plus `args` arrays or direct TypeScript calls. Reject workbook
+paths or cell arguments containing newlines, backticks, `$(`, `;`, `&`,
+`|`, `<`, or `>`.
+
+## References
+
+- Docs map: https://proompteng.github.io/bilig/llms.txt
+- Full context: https://proompteng.github.io/bilig/llms-full.txt
+- Agent handbook: https://proompteng.github.io/bilig/headless-workpaper-agent-handbook.html
+- MCP setup: https://proompteng.github.io/bilig/mcp-client-setup.html
+- Repository: https://github.com/proompteng/bilig

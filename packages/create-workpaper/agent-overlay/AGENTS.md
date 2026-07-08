@@ -82,6 +82,3 @@ Expected tools:
 - `get_cell_display_value`
 - `export_workpaper_document`
 - `validate_formula`
-
-Use `bilig://workpaper/agent-handoff` or the `edit_and_verify_workpaper`
-prompt first when the MCP client supports resources or prompts.

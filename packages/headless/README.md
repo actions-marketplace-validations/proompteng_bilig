@@ -139,7 +139,7 @@ mcp:server`.
 
 Current checked npm footprint for `@bilig/headless@0.164.11`:
 
-- Pack dry run: `860 kB` tarball, `5.25 MB` unpacked, `841` package entries.
+- Pack dry run: `861 kB` tarball, `5.26 MB` unpacked, `841` package entries.
 - Boundary: the main import is the WorkPaper formula/JSON runtime; XLSX
   import/export stays behind the `@bilig/headless/xlsx` subpath; MCP is the
   `bilig-workpaper-mcp` binary wrapper; reduced workbook reports use the
@@ -406,17 +406,8 @@ Agent and tool-call examples:
   path in
   [`ai-sdk-stream-text-tool-smoke.ts`](https://github.com/proompteng/bilig/blob/main/examples/headless-workpaper/ai-sdk-stream-text-tool-smoke.ts).
 - `npm run agent:framework-adapters` maps the same validated WorkPaper
-  operations into AI SDK, LangChain, Mastra, LlamaIndex.TS, LangGraph.js,
-  CopilotKit, and Cloudflare Agents:
+  operations into retained in-repo framework adapter smoke paths:
   <https://github.com/proompteng/bilig/tree/main/examples/headless-workpaper#agent-framework-adapters>.
-- `pnpm --dir examples/mastra-workpaper-tool run smoke` uses the real
-  `@mastra/core` `createTool()` API around the same WorkPaper read/write
-  contract:
-  <https://github.com/proompteng/bilig/tree/main/examples/mastra-workpaper-tool>.
-- `uv run --python 3.12 --with google-adk --with mcp python examples/google-adk-workpaper-mcp/google_adk_workpaper_mcp.py`
-  proves Google ADK `McpToolset` can import the same file-backed WorkPaper MCP
-  tools and return verified formula readback:
-  <https://github.com/proompteng/bilig/blob/main/docs/google-adk-workpaper-mcp.md>.
 
 MCP examples:
 
@@ -797,7 +788,7 @@ When the sanity check passes, these are the next useful pages.
   [agent tool-calling recipe](https://github.com/proompteng/bilig/blob/main/docs/agent-workpaper-tool-calling-recipe.md),
   [OpenAI Agents SDK guide](https://github.com/proompteng/bilig/blob/main/docs/openai-agents-sdk-workpaper-tool.md),
   [OpenAI Responses guide](https://github.com/proompteng/bilig/blob/main/docs/openai-responses-workpaper-tool-call.md),
-  [AI SDK, LangChain, and agent framework guide](https://github.com/proompteng/bilig/blob/main/docs/vercel-ai-sdk-langchain-spreadsheet-tool.md),
+  [agent framework adapter smoke](https://github.com/proompteng/bilig/tree/main/examples/headless-workpaper#agent-framework-adapters),
   [MCP server guide](https://github.com/proompteng/bilig/blob/main/docs/mcp-workpaper-tool-server.md),
   [MCP directory page](https://github.com/proompteng/bilig/blob/main/docs/mcp-spreadsheet-server-directory.md),
   [MCP client setup](https://github.com/proompteng/bilig/blob/main/docs/mcp-client-setup.md),

@@ -22,7 +22,7 @@ const publicLatestRuleTargets = [
   'opencode',
 ] as const
 
-const sourceOnlyRuleTargets = ['aider', 'goose', 'junie', 'openhands', 'qodo', 'trae', 'zed'] as const
+const sourceOnlyRuleTargets = ['aider', 'junie', 'openhands', 'qodo', 'trae', 'zed'] as const
 
 export function buildDocsAgentInstructions(input: DocsAgentInstructionInput): string {
   const {
@@ -68,10 +68,7 @@ Use this file when an AI coding agent, MCP client, or tool host needs workbook f
 12. If you are using OpenHands, read \`AGENTS.md\`, then the project skill at
     \`.agents/skills/bilig-workpaper/SKILL.md\`; add the local MCP server with
     \`${siteRoot}/openhands-workpaper-mcp.html\`.
-13. If you are using Goose, start from the local recipe at
-    \`examples/goose-workpaper-mcp/recipe.yaml\` and the proof guide at
-    \`${siteRoot}/goose-workpaper-mcp.html\`.
-14. If you are using Cursor, Kiro, Trae, Qodo IDE, Zed, Windsurf/Cascade, Cline, or Continue, use
+13. If you are using Cursor, Kiro, Trae, Qodo IDE, Zed, Windsurf/Cascade, Cline, or Continue, use
     \`.cursor/rules/bilig-workpaper.mdc\` or
     \`.kiro/steering/bilig-workpaper.md\`,
     \`.trae/rules/bilig-workpaper.md\` with \`.trae/mcp.json\`,
@@ -83,7 +80,7 @@ Use this file when an AI coding agent, MCP client, or tool host needs workbook f
     \`.continue/rules/bilig-workpaper.md\`. Continue Agent mode can also use
     \`.continue/mcpServers/bilig-workpaper.yaml\` for the project-local
     file-backed WorkPaper MCP server.
-15. Start the MCP server or import \`@bilig/workpaper\` directly.
+14. Start the MCP server or import \`@bilig/workpaper\` directly.
 
 Remote MCP clients that support Streamable HTTP can smoke-test the stateless
 demo endpoint at \`${remoteMcpEndpoint}\`. Directory scanners that inspect the
@@ -185,7 +182,7 @@ For an existing repo that should receive the full starter overlay, run:
 npm create @bilig/workpaper@latest . -- --add-agent
 \`\`\`
 
-Suggested files: \`AGENTS.md\`, \`CONVENTIONS.md\`, \`.aider.conf.yml\`, \`CLAUDE.md\`, \`GEMINI.md\`, \`.agents/skills/bilig-workpaper/SKILL.md\`, \`.github/copilot-instructions.md\`, \`.github/instructions/bilig-workpaper.instructions.md\`, \`.github/prompts/bilig-workpaper-proof.prompt.md\`, \`.vscode/mcp.json\`, \`opencode.jsonc\`, \`.opencode/agents/bilig-workpaper.md\`, \`.cursor/rules/bilig-workpaper.mdc\`, \`.kiro/steering/bilig-workpaper.md\`, \`.kiro/settings/mcp.json\`, \`.junie/mcp/mcp.json\`, \`.trae/mcp.json\`, \`.trae/rules/bilig-workpaper.md\`, \`.zed/settings.json\`, \`.devin/rules/bilig-workpaper.md\`, \`.clinerules/bilig-workpaper.md\`, \`.continue/rules/bilig-workpaper.md\`, \`.continue/mcpServers/bilig-workpaper.yaml\`, \`.windsurf/rules/bilig-workpaper.md\`, \`gemini-extension.json\`, \`gemini-workpaper-context.md\`, and \`examples/goose-workpaper-mcp/recipe.yaml\`.
+Suggested files: \`AGENTS.md\`, \`CONVENTIONS.md\`, \`.aider.conf.yml\`, \`CLAUDE.md\`, \`GEMINI.md\`, \`.agents/skills/bilig-workpaper/SKILL.md\`, \`.github/copilot-instructions.md\`, \`.github/instructions/bilig-workpaper.instructions.md\`, \`.github/prompts/bilig-workpaper-proof.prompt.md\`, \`.vscode/mcp.json\`, \`opencode.jsonc\`, \`.opencode/agents/bilig-workpaper.md\`, \`.cursor/rules/bilig-workpaper.mdc\`, \`.kiro/steering/bilig-workpaper.md\`, \`.kiro/settings/mcp.json\`, \`.junie/mcp/mcp.json\`, \`.trae/mcp.json\`, \`.trae/rules/bilig-workpaper.md\`, \`.zed/settings.json\`, \`.devin/rules/bilig-workpaper.md\`, \`.clinerules/bilig-workpaper.md\`, \`.continue/rules/bilig-workpaper.md\`, \`.continue/mcpServers/bilig-workpaper.yaml\`, \`.windsurf/rules/bilig-workpaper.md\`, \`gemini-extension.json\`, and \`gemini-workpaper-context.md\`.
 
 ## Provider-backed formulas
 

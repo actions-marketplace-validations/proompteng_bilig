@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "bilig-workpaper": {
+    "biligWorkpaperFile": {
       "type": "stdio",
       "command": "npm",
       "args": [

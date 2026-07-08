@@ -23,7 +23,6 @@ const sourceRoot = fileURLToPath(new URL('../', import.meta.url))
 const testRoot = fileURLToPath(new URL('./', import.meta.url))
 const packageJsonPath = new URL('../../package.json', import.meta.url)
 const readmePath = new URL('../../README.md', import.meta.url)
-const examplePath = new URL('../../../../examples/workbook-agent-model/named-range-formula.ts', import.meta.url)
 const workspaceResolutionPath = new URL('../../../../workspace-resolution.generated.json', import.meta.url)
 
 const bannedRuntimeDependencies = Object.freeze([
@@ -284,6 +283,7 @@ describe('@bilig/workbook package boundary', () => {
     expect(readme).toContain('plugin registration, projection interceptors, and UI contribution metadata live')
     expect(readme).not.toContain('The main API is intentionally small')
     expect(readme).not.toContain('They are intentionally not on the root import path')
+    expect(readme).not.toContain('examples/workbook-agent-model')
     expect(readme.split(/\r?\n/).length).toBeLessThanOrEqual(260)
 
     expect(example).toContain("workbook.findName('input')")
@@ -293,21 +293,6 @@ describe('@bilig/workbook package boundary', () => {
     expect(example).toContain('runWorkbookPlan(prepared.planData, adapter, { strict: true })')
     for (const term of businessExampleTerms) {
       expect(example.includes(term), `README first example contains ${term}`).toBe(false)
-    }
-  })
-
-  it('keeps the runnable example neutral and strict-proof oriented', () => {
-    const example = readFileSync(examplePath, 'utf8')
-
-    expect(example).toContain("workbook.findName('input')")
-    expect(example).toContain("workbook.findName('factor')")
-    expect(example).toContain("workbook.findName('result')")
-    expect(example).toContain("prepareWorkbookAction(model, 'calculate')")
-    expect(example).toContain('runWorkbookPlan(transportedPlan, adapter, { strict: true })')
-    expect(example).toContain('commandReceipts')
-    expect(example).toContain('resolvedRefs')
-    for (const term of businessExampleTerms) {
-      expect(example.includes(term), `runnable example contains ${term}`).toBe(false)
     }
   })
 })

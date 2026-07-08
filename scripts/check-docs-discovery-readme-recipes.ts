@@ -10,6 +10,7 @@ export function requireReadmeAgentWorkflowRecipeLinks(readme: string): void {
   requireIncludes(section, 'https://proompteng.github.io/bilig/open-webui-workpaper-mcp.html', context)
   requireIncludes(section, 'https://proompteng.github.io/bilig/openai-agents-sdk-workpaper-tool.html', context)
   requireIncludes(section, 'MCPServerStreamableHttp', context)
-  requireIncludes(section, 'https://proompteng.github.io/bilig/pipedream-workpaper-formula-readback.html', context)
-  requireIncludes(section, 'https://proompteng.github.io/bilig/directus-workpaper-flow-operation.html', context)
+  requireIncludes(section, '@bilig/n8n-nodes-workpaper', context)
+  requireNotIncludes(section, 'pipedream-workpaper-formula-readback', context)
+  requireNotIncludes(section, 'directus-workpaper-flow-operation', context)
 }

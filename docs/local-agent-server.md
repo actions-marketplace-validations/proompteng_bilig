@@ -12,6 +12,6 @@ Retired as a standalone HTTP surface.
 
 ## Proof points
 
-- [apps/bilig/src/index.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/index.ts)
-- [apps/bilig/src/workbook-runtime/local-document-supervisor.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/workbook-runtime/local-document-supervisor.ts)
-- [apps/bilig/src/workbook-runtime/worksheet-executor.ts](/Users/gregkonush/github.com/bilig/apps/bilig/src/workbook-runtime/worksheet-executor.ts)
+- [apps/bilig/src/index.ts](../apps/bilig/src/index.ts)
+- [apps/bilig/src/workbook-runtime/local-document-supervisor.ts](../apps/bilig/src/workbook-runtime/local-document-supervisor.ts)
+- [apps/bilig/src/workbook-runtime/worksheet-executor.ts](../apps/bilig/src/workbook-runtime/worksheet-executor.ts)

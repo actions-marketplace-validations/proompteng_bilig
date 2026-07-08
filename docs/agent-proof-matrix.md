@@ -64,10 +64,6 @@ Expected invariants:
 | Vercel AI SDK `streamText()` | `pnpm --dir examples/headless-workpaper run agent:ai-sdk-stream-text` | `apiShape: "AI SDK streamText -> tool -> execute"`, `streamChunkTypes` | Streaming tool calls can carry the same WorkPaper proof while the model streams final text. | Browser UI streaming, telemetry retention, or non-deterministic provider output. |
 | OpenAI Responses function call | `pnpm --dir examples/headless-workpaper run agent:openai-responses` | `function_call_output`, `verified: true` | OpenAI tool calling can wrap WorkPaper readback as a structured function result. | Hosted remote MCP app review or ChatGPT UI behavior. |
 | OpenAI Agents SDK hosted MCP | `pnpm --dir examples/headless-workpaper run agent:openai-agents-sdk-hosted-mcp` | `MCPServerStreamableHttp`, `set_cell_contents_and_readback` | An OpenAI Agents SDK agent can call the hosted Streamable HTTP MCP endpoint. | Private writable workbook state. Use local stdio for that. |
-| LangGraph ToolNode | `pnpm --dir examples/headless-workpaper run agent:langgraph-toolnode` | `SpreadsheetAgentProof`, `restoredMatchesAfter` | Graph state can carry the proof object instead of only a scalar formula value. | Whether every graph architecture should store workbook state. |
-| Microsoft Agent Framework MCP tools | `python examples/microsoft-agent-framework-workpaper-mcp/scripts/check-microsoft-agent-framework-recipe.py` | `MCPStdioTool`, `MCPStreamableHTTPTool`, `set_cell_contents_and_readback` | Agent Framework can host the same Bilig MCP boundary for local file-backed or hosted no-key workbook readback proof. | LLM quality, private hosted storage, or exact import stability across every Agent Framework package version. |
-| Semantic Kernel MCP plugin | `python examples/semantic-kernel-workpaper-mcp/semantic_kernel_workpaper_mcp.py --smoke` | `verified: true`, `pluginBoundary` | A .NET-oriented agent path can keep WorkPaper behind a plugin or MCP boundary. | .NET package publication or C# parity for every TypeScript example. |
-| Mastra tool | `pnpm --dir examples/mastra-workpaper-tool run smoke` | `Mastra createTool -> execute -> WorkPaper readback` | The repo-local Mastra example uses a real `createTool()` wrapper around formula readback. | A new Mastra catalog submission, issue, or PR. Do not duplicate that outreach. |
 
 ## Selection Rules
 
@@ -75,9 +71,8 @@ Use `agent-mcp` first when the caller is an agent, MCP client, tool host, or
 integration reviewer. It proves discovery, write/readback, resources, prompts,
 and restart state in one command.
 
-Use the Vercel AI SDK, OpenAI, LangGraph, Microsoft Agent Framework, Semantic
-Kernel, or Mastra examples only after the generic evaluator passes. Those
-examples verify host fit, not a stronger workbook runtime.
+Use the Vercel AI SDK and OpenAI examples only after the generic evaluator
+passes. Those examples verify host fit, not a stronger workbook runtime.
 
 Use the XLSX and ExcelJS paths when a saved file or ExcelJS object is already
 the contract. Do not force a WorkPaper model when the job is mostly workbook
@@ -103,7 +98,6 @@ manual UI workflows.
 - [Evaluate Bilig as an agent MCP workbook tool](eval-agent-mcp.md)
 - [Agent XLSX risk preflight](agent-xlsx-risk-preflight.md)
 - [MCP spreadsheet formula server for coding agents](mcp-spreadsheet-formula-server-for-coding-agents.md)
-- [Microsoft Agent Framework WorkPaper MCP tools](microsoft-agent-framework-workpaper-mcp.md)
 - [Vercel AI SDK spreadsheet tool: generateText and streamText with formula readback](vercel-ai-sdk-spreadsheet-tool-formula-readback.md)
 - [ExcelJS formula result not updating after Node edits](exceljs-formula-result-not-updating-after-node-edits.md)
 - [Workbook tools for agent frameworks](agent-framework-workbook-tools.md)

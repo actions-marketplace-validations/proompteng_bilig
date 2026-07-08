@@ -1,5 +1,5 @@
 ---
-description: Use Bilig WorkPaper when Cascade needs workbook formulas, MCP spreadsheet tools, or formula readback without Excel UI automation.
+description: Use Bilig WorkPaper when Cascade needs workbook formulas, MCP WorkPaper tools, or formula readback without Excel UI automation.
 trigger: model_decision
 ---
 
@@ -24,7 +24,7 @@ npm exec --package @bilig/workpaper@latest -- bilig-mcp-challenge --json
 For a writable project file, run:
 
 ```sh
-npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper ./.bilig/pricing.workpaper.json --init-demo-workpaper --writable
+npm exec --package @bilig/workpaper@latest -- bilig-workpaper-mcp --workpaper __WORKPAPER_PATH__ --init-demo-workpaper --writable
 ```
 
 For remote MCP connector smoke tests only:

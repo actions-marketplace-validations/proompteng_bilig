@@ -12,10 +12,10 @@ The current production architecture is not CRDT-authoritative. The active design
 
 ## Current source of truth
 
-- [design.md](/Users/gregkonush/github.com/bilig/docs/design.md)
-- [architecture.md](/Users/gregkonush/github.com/bilig/docs/architecture.md)
-- [05-06-next-phase.md](/Users/gregkonush/github.com/bilig/docs/05-06-next-phase.md)
-- [backend-sync-service.md](/Users/gregkonush/github.com/bilig/docs/backend-sync-service.md)
+- [design.md](../docs/design.md)
+- [architecture.md](../docs/architecture.md)
+- [05-06-next-phase.md](../docs/05-06-next-phase.md)
+- [backend-sync-service.md](../docs/backend-sync-service.md)
 
 ## Why this file remains
 

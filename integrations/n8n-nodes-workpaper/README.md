@@ -43,6 +43,8 @@ package is the canonical package name.
 
 ### Forecast: Verify Formula Readback
 
+Operation value: `verifyReadback`.
+
 Posts to:
 
 ```text
@@ -60,6 +62,8 @@ Default parameters:
 ```
 
 ### WorkPaper JSON: Evaluate Document
+
+Operation value: `evaluateDocument`.
 
 Posts to:
 
@@ -153,25 +157,9 @@ community nodes.
 7. Use the returned `verified` and `checks` fields as a gate before the workflow
    continues.
 
-For a no-install workflow, see:
-
-```text
-examples/n8n-workpaper-formula-readback/bilig-workpaper-formula-readback.n8n.json
-```
-
-After installing this community node, import the native node workflow:
-
-```text
-examples/n8n-workpaper-formula-readback/bilig-workpaper-native-node.n8n.json
-```
-
-That workflow runs both the forecast smoke test and the generic WorkPaper JSON
-operation through the actual Bilig WorkPaper node.
-
 ## Resources
 
 - [Bilig GitHub repository](https://github.com/proompteng/bilig)
-- [Bilig n8n workflow example](https://github.com/proompteng/bilig/tree/main/examples/n8n-workpaper-formula-readback)
 - [Bilig n8n formula readback docs](https://proompteng.github.io/bilig/n8n-workpaper-formula-readback.html)
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
 

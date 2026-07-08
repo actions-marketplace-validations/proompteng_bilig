@@ -165,8 +165,7 @@
       "package": "@bilig/workbook",
       "runtime": "Node.js >=22",
       "install": "npm install @bilig/workbook",
-      "docs": "https://proompteng.github.io/bilig/workbook-runtime-intent-api.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/workbook-agent-model"
+      "docs": "https://proompteng.github.io/bilig/workbook-runtime-intent-api.html"
     },
     {
       "name": "workpaper-formula-runtime",
@@ -327,46 +326,6 @@
       "proof_command": "npm exec --yes --package @bilig/workpaper@latest -- bilig-evaluate --door agent-mcp --json"
     },
     {
-      "name": "fastmcp-workpaper-client",
-      "type": "python-mcp-client-smoke-test",
-      "endpoint": "https://bilig.proompteng.ai/mcp",
-      "client": "FastMCP",
-      "docs": "https://proompteng.github.io/bilig/fastmcp-workpaper-client.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/fastmcp-workpaper-client"
-    },
-    {
-      "name": "agno-workpaper-mcp",
-      "type": "python-agent-mcp-smoke-test",
-      "framework": "Agno",
-      "command": "uv run --python 3.12 --with agno --with mcp --with openai python examples/agno-workpaper-mcp/agno_workpaper_mcp.py --output .tmp/agno-workpaper-proof.json",
-      "docs": "https://proompteng.github.io/bilig/agno-workpaper-mcp.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/agno-workpaper-mcp"
-    },
-    {
-      "name": "pydantic-ai-workpaper-mcp",
-      "type": "python-agent-mcp-smoke-test",
-      "framework": "Pydantic AI",
-      "command": "uv run --python 3.12 --with pydantic-ai --with mcp --with fastmcp python examples/pydantic-ai-workpaper-mcp/pydantic_ai_workpaper_mcp.py --output .tmp/pydantic-ai-workpaper-proof.json",
-      "docs": "https://proompteng.github.io/bilig/pydantic-ai-workpaper-mcp.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/pydantic-ai-workpaper-mcp"
-    },
-    {
-      "name": "google-adk-workpaper-mcp",
-      "type": "python-agent-mcp-smoke-test",
-      "framework": "Google Agent Development Kit",
-      "command": "uv run --python 3.12 --with google-adk --with mcp python examples/google-adk-workpaper-mcp/google_adk_workpaper_mcp.py --output .tmp/google-adk-workpaper-proof.json",
-      "docs": "https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/google-adk-workpaper-mcp"
-    },
-    {
-      "name": "microsoft-agent-framework-workpaper-mcp",
-      "type": "python-dotnet-agent-mcp-recipe",
-      "framework": "Microsoft Agent Framework",
-      "command": "python examples/microsoft-agent-framework-workpaper-mcp/scripts/check-microsoft-agent-framework-recipe.py",
-      "docs": "https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/microsoft-agent-framework-workpaper-mcp"
-    },
-    {
       "name": "openhands-workpaper-mcp",
       "type": "coding-agent-mcp-setup",
       "framework": "OpenHands",
@@ -405,72 +364,6 @@
       "agent_path": "https://github.com/proompteng/bilig/blob/main/.opencode/agents/bilig-workpaper.md",
       "docs": "https://proompteng.github.io/bilig/opencode-workpaper-mcp.html",
       "source": "https://github.com/proompteng/bilig/blob/main/docs/opencode-workpaper-mcp.md"
-    },
-    {
-      "name": "goose-workpaper-mcp",
-      "type": "coding-agent-mcp-recipe",
-      "framework": "Goose",
-      "command": "python examples/goose-workpaper-mcp/scripts/check-goose-recipe.py",
-      "recipe_path": "https://github.com/proompteng/bilig/blob/main/examples/goose-workpaper-mcp/recipe.yaml",
-      "docs": "https://proompteng.github.io/bilig/goose-workpaper-mcp.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/goose-workpaper-mcp"
-    },
-    {
-      "name": "mastra-workpaper-tool",
-      "type": "typescript-agent-tool-smoke-test",
-      "framework": "Mastra",
-      "api_shape": "createTool -> execute -> WorkPaper readback",
-      "command": "pnpm --dir examples/mastra-workpaper-tool run smoke",
-      "docs": "https://proompteng.github.io/bilig/mastra-workpaper-spreadsheet-tool.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/mastra-workpaper-tool"
-    },
-    {
-      "name": "semantic-kernel-workpaper-mcp",
-      "type": "python-agent-mcp-smoke-test",
-      "framework": "Microsoft Semantic Kernel",
-      "command": "uv run --python 3.12 --with 'semantic-kernel[mcp]' python examples/semantic-kernel-workpaper-mcp/semantic_kernel_workpaper_mcp.py --output .tmp/semantic-kernel-workpaper-proof.json",
-      "docs": "https://proompteng.github.io/bilig/semantic-kernel-workpaper-mcp.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/semantic-kernel-workpaper-mcp"
-    },
-    {
-      "name": "smolagents-workpaper-tool",
-      "type": "python-agent-tool-smoke-test",
-      "framework": "smolagents",
-      "command": "uv run --python 3.12 --with smolagents python examples/smolagents-workpaper-tool/smolagents_workpaper_tool.py",
-      "docs": "https://proompteng.github.io/bilig/smolagents-workpaper-tool.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/smolagents-workpaper-tool"
-    },
-    {
-      "name": "huggingface-workpaper-space-template",
-      "type": "gradio-mcp-space-template",
-      "framework": "Hugging Face Spaces",
-      "command": "cd examples/huggingface-workpaper-space && npm install --omit=dev --package-lock=false && uv run --python 3.12 --with 'gradio[mcp]>=6.0,<7' python app.py --check",
-      "docs": "https://proompteng.github.io/bilig/huggingface-workpaper-space.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/huggingface-workpaper-space"
-    },
-    {
-      "name": "inngest-workpaper-step",
-      "type": "durable-workflow-step-smoke-test",
-      "framework": "Inngest",
-      "command": "cd examples/inngest-workpaper-step && pnpm install --ignore-workspace --lockfile=false && pnpm run smoke",
-      "docs": "https://proompteng.github.io/bilig/inngest-workpaper-step.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/inngest-workpaper-step"
-    },
-    {
-      "name": "airbyte-workpaper-validation",
-      "type": "post-sync-validation-smoke-test",
-      "framework": "Airbyte",
-      "command": "cd examples/airbyte-workpaper-validation && pnpm install --ignore-workspace --lockfile=false && pnpm run smoke",
-      "docs": "https://proompteng.github.io/bilig/airbyte-workpaper-validation.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/airbyte-workpaper-validation"
-    },
-    {
-      "name": "meltano-workpaper-utility",
-      "type": "elt-utility-smoke-test",
-      "framework": "Meltano",
-      "command": "cd examples/meltano-workpaper-utility && pnpm install --ignore-workspace --lockfile=false && pnpm run smoke",
-      "docs": "https://proompteng.github.io/bilig/meltano-workpaper-utility.html",
-      "source": "https://github.com/proompteng/bilig/tree/main/examples/meltano-workpaper-utility"
     },
     {
       "name": "formula-clinic",
@@ -549,11 +442,6 @@
     "https://proompteng.github.io/bilig/lobehub-workpaper-mcp.html",
     "https://proompteng.github.io/bilig/anythingllm-workpaper-mcp.html",
     "https://proompteng.github.io/bilig/sim-workpaper-mcp.html",
-    "https://proompteng.github.io/bilig/fastmcp-workpaper-client.html",
-    "https://proompteng.github.io/bilig/agno-workpaper-mcp.html",
-    "https://proompteng.github.io/bilig/pydantic-ai-workpaper-mcp.html",
-    "https://proompteng.github.io/bilig/google-adk-workpaper-mcp.html",
-    "https://proompteng.github.io/bilig/microsoft-agent-framework-workpaper-mcp.html",
     "https://proompteng.github.io/bilig/openhands-workpaper-mcp.html",
     "https://github.com/proompteng/bilig/blob/main/docs/openhands-workpaper-mcp.md",
     "https://github.com/proompteng/bilig/blob/main/.agents/skills/bilig-workpaper/SKILL.md",
@@ -564,10 +452,6 @@
     "https://proompteng.github.io/bilig/opencode-workpaper-mcp.html",
     "https://github.com/proompteng/bilig/blob/main/docs/opencode-workpaper-mcp.md",
     "https://github.com/proompteng/bilig/blob/main/.opencode/agents/bilig-workpaper.md",
-    "https://proompteng.github.io/bilig/goose-workpaper-mcp.html",
-    "https://github.com/proompteng/bilig/tree/main/examples/goose-workpaper-mcp",
-    "https://proompteng.github.io/bilig/smolagents-workpaper-tool.html",
-    "https://proompteng.github.io/bilig/huggingface-workpaper-space.html",
     "https://bilig.proompteng.ai/mcp",
     "https://bilig.proompteng.ai/.well-known/mcp/server-card.json",
     "https://proompteng.github.io/bilig/agent-workpaper-tool-calling-recipe.html",
@@ -578,27 +462,12 @@
     "https://proompteng.github.io/bilig/openai-responses-workpaper-tool-call.html",
     "https://proompteng.github.io/bilig/browser-use-workpaper-formula-tool.html",
     "https://proompteng.github.io/bilig/chatgpt-apps-workpaper-mcp.html",
-    "https://proompteng.github.io/bilig/langgraph-workpaper-toolnode-spreadsheet.html",
-    "https://proompteng.github.io/bilig/mastra-workpaper-spreadsheet-tool.html",
     "https://proompteng.github.io/bilig/llamaindex-workpaper-spreadsheet-tool.html",
     "https://proompteng.github.io/bilig/crewai-workpaper-spreadsheet-tool.html",
     "https://proompteng.github.io/bilig/cloudflare-agents-workpaper-spreadsheet-tool.html",
-    "https://proompteng.github.io/bilig/semantic-kernel-workpaper-mcp.html",
     "https://proompteng.github.io/bilig/gemini-cli-workpaper-extension.html",
     "https://proompteng.github.io/bilig/node-framework-workpaper-adapters.html",
     "https://proompteng.github.io/bilig/n8n-workpaper-formula-readback.html",
-    "https://proompteng.github.io/bilig/dify-workpaper-formula-readback.html",
-    "https://proompteng.github.io/bilig/flowise-workpaper-formula-readback.html",
-    "https://proompteng.github.io/bilig/pipedream-workpaper-formula-readback.html",
-    "https://proompteng.github.io/bilig/triggerdev-workpaper-task.html",
-    "https://proompteng.github.io/bilig/inngest-workpaper-step.html",
-    "https://proompteng.github.io/bilig/airbyte-workpaper-validation.html",
-    "https://proompteng.github.io/bilig/meltano-workpaper-utility.html",
-    "https://proompteng.github.io/bilig/temporal-workpaper-activity.html",
-    "https://proompteng.github.io/bilig/airflow-workpaper-dag.html",
-    "https://proompteng.github.io/bilig/dagster-workpaper-asset.html",
-    "https://proompteng.github.io/bilig/kestra-workpaper-flow.html",
-    "https://proompteng.github.io/bilig/prefect-workpaper-flow.html",
     "https://proompteng.github.io/bilig/npm-provenance-package-trust.html"
   ]
 }
