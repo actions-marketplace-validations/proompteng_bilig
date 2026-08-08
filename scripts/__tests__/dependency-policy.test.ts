@@ -300,7 +300,8 @@ describe('repository dependency policy', () => {
   it('keeps production image deployment offline after the locked install', () => {
     const dockerfile = readFileSync(join(repoRoot, 'Dockerfile'), 'utf8')
 
-    expect(dockerfile).toContain('pnpm --filter @bilig/app deploy --prod --legacy --offline /out/bilig')
+    expect(dockerfile).toContain('pnpm --config.inject-workspace-packages=true --filter @bilig/app deploy --prod --offline /out/bilig')
+    expect(dockerfile).not.toContain('deploy --prod --legacy')
   })
 
   it('keeps Forgejo CI independent of operating-system package mirrors', () => {
