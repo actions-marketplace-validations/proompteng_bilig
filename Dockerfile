@@ -5,10 +5,6 @@ FROM node:24-bookworm-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4
 ENV PNPM_HOME="/pnpm"
 ENV PATH="/usr/local/bin:$PNPM_HOME:$PATH"
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 RUN corepack enable

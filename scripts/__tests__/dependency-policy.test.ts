@@ -289,6 +289,14 @@ describe('repository dependency policy', () => {
     expect(globalSetup).toContain('sheetJsCompatibilityHarness.read')
   })
 
+  it('keeps the application image build independent of Debian package mirrors', () => {
+    const dockerfile = readFileSync(join(repoRoot, 'Dockerfile'), 'utf8')
+    const buildBase = dockerfile.match(/AS build-base\n(?<body>[\s\S]*?)\nFROM /u)?.groups?.['body']
+
+    expect(buildBase).toBeDefined()
+    expect(buildBase).not.toContain('apt-get')
+  })
+
   it('keeps @bilig/excel-import runtime SheetJS imports isolated to the parser and writer boundary', () => {
     const violations = sourceFiles(join(repoRoot, 'packages/excel-import/src')).flatMap(runtimeXlsxImportViolations)
 
