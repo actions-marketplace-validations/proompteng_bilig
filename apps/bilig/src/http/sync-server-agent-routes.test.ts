@@ -2,6 +2,7 @@ import {
   createAgentSessionSnapshot,
   createReviewQueueItem,
   createSyncServer,
+  createZeroSyncStub,
   createWorkbookAgentServiceError,
   createWorkbookAgentServiceStub,
   describe,
@@ -505,6 +506,7 @@ describe('sync-server workbook agent public routes', () => {
   it('includes workbook agent observability in healthz when the service is enabled', async () => {
     const { app } = createSyncServer({
       logger: false,
+      zeroSyncService: createZeroSyncStub(),
       workbookAgentService: createWorkbookAgentServiceStub({
         getObservabilitySnapshot() {
           return {
@@ -566,6 +568,7 @@ describe('sync-server workbook agent public routes', () => {
       expect(response.json()).toEqual(
         expect.objectContaining({
           ok: true,
+          zeroSync: true,
           workbookAgent: expect.objectContaining({
             enabled: true,
             generatedAtUnixMs: 42,

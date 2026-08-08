@@ -71,7 +71,7 @@ export function registerSyncServerRuntimeRoutes(
   app.get('/healthz', async () => ({
     ok: true,
     service: 'bilig-app',
-    zeroSync: false,
+    zeroSync: options.zeroSyncService?.enabled ?? false,
     web: options.webEnabled,
     workbookAgent: options.workbookAgentService?.getObservabilitySnapshot() ?? { enabled: false },
   }))
