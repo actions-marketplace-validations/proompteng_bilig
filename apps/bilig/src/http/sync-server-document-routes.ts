@@ -1,7 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { decodeFrame, encodeFrame } from '@bilig/binary-protocol'
 import { createErrorEnvelope, type DocumentControlService, runPromise } from '@bilig/runtime-kernel'
-import { resolveSessionIdentity } from './session.js'
+import { resolveSessionIdentity, type RequestSessionResolver } from './session.js'
+import { resolveAuthorizedWorkbookSession } from './workbook-access.js'
 import type { ZeroSyncService } from '../zero/service.js'
 
 export function parseAfterRevisionQuery(value: string | undefined): number | null {
@@ -18,17 +19,32 @@ export function registerSyncServerDocumentRoutes(
   options: {
     documentService: DocumentControlService
     zeroSyncService?: ZeroSyncService
+    sessionResolver: RequestSessionResolver
   },
 ): void {
   const { documentService, zeroSyncService } = options
 
-  app.get('/v2/documents/:documentId/state', async (request: FastifyRequest<{ Params: { documentId: string } }>) => {
+  app.get('/v2/documents/:documentId/state', async (request: FastifyRequest<{ Params: { documentId: string } }>, reply) => {
+    await resolveAuthorizedWorkbookSession({
+      request,
+      reply,
+      documentId: request.params.documentId,
+      sessionResolver: options.sessionResolver,
+      ...(zeroSyncService ? { zeroSyncService } : {}),
+    })
     return await runPromise(documentService.getDocumentState(request.params.documentId))
   })
 
   app.get(
     '/v2/documents/:documentId/snapshot/latest',
     async (request: FastifyRequest<{ Params: { documentId: string } }>, reply: FastifyReply) => {
+      const session = await resolveAuthorizedWorkbookSession({
+        request,
+        reply,
+        documentId: request.params.documentId,
+        sessionResolver: options.sessionResolver,
+        ...(zeroSyncService ? { zeroSyncService } : {}),
+      })
       const snapshot = await runPromise(documentService.getLatestSnapshot(request.params.documentId))
       if (snapshot) {
         reply.header('x-bilig-snapshot-cursor', String(snapshot.cursor))
@@ -38,8 +54,9 @@ export function registerSyncServerDocumentRoutes(
 
       let zeroSnapshot = null
       if (zeroSyncService?.enabled) {
-        const session = resolveSessionIdentity(request, reply)
-        await zeroSyncService.ensureWorkbookDocument?.(request.params.documentId, session.userID)
+        if (options.sessionResolver.mode === 'demo') {
+          await zeroSyncService.ensureWorkbookDocument?.(request.params.documentId, session.userID)
+        }
         zeroSnapshot = await zeroSyncService.loadLatestWorkbookSnapshot?.(request.params.documentId)
       }
       if (!zeroSnapshot) {
@@ -73,8 +90,16 @@ export function registerSyncServerDocumentRoutes(
         reply.code(400)
         return createErrorEnvelope('INVALID_AFTER_REVISION', 'afterRevision must be a non-negative integer', false)
       }
-      const session = resolveSessionIdentity(request, reply)
-      await zeroSyncService.ensureWorkbookDocument?.(request.params.documentId, session.userID)
+      const session = await resolveAuthorizedWorkbookSession({
+        request,
+        reply,
+        documentId: request.params.documentId,
+        sessionResolver: options.sessionResolver,
+        zeroSyncService,
+      })
+      if (options.sessionResolver.mode === 'demo') {
+        await zeroSyncService.ensureWorkbookDocument?.(request.params.documentId, session.userID)
+      }
       reply.header('cache-control', 'no-store')
       return await zeroSyncService.loadAuthoritativeEvents(request.params.documentId, afterRevision)
     },
@@ -83,6 +108,13 @@ export function registerSyncServerDocumentRoutes(
   app.post(
     '/v2/documents/:documentId/frames',
     async (request: FastifyRequest<{ Params: { documentId: string }; Body: Buffer }>, reply: FastifyReply) => {
+      await resolveAuthorizedWorkbookSession({
+        request,
+        reply,
+        documentId: request.params.documentId,
+        sessionResolver: options.sessionResolver,
+        ...(zeroSyncService ? { zeroSyncService } : {}),
+      })
       const frame = decodeFrame(request.body)
       if (frame.documentId !== request.params.documentId) {
         reply.code(400)
@@ -99,8 +131,8 @@ export function registerSyncServerDocumentRoutes(
       reply.code(503)
       return createErrorEnvelope('ZERO_SYNC_DISABLED', 'Zero sync is not configured', true)
     }
-    resolveSessionIdentity(request, reply)
-    return await zeroSyncService.handleQuery(request)
+    const session = resolveSessionIdentity(request, reply, options.sessionResolver)
+    return await zeroSyncService.handleQuery(request, session, options.sessionResolver.mode)
   }
 
   const handleZeroMutate = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -108,8 +140,8 @@ export function registerSyncServerDocumentRoutes(
       reply.code(503)
       return createErrorEnvelope('ZERO_SYNC_DISABLED', 'Zero sync is not configured', true)
     }
-    resolveSessionIdentity(request, reply)
-    return await zeroSyncService.handleMutate(request)
+    const session = resolveSessionIdentity(request, reply, options.sessionResolver)
+    return await zeroSyncService.handleMutate(request, session, options.sessionResolver.mode)
   }
 
   app.post('/api/zero/v2/query', handleZeroQuery)

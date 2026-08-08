@@ -53,6 +53,7 @@ import {
   stringifyWorkbookAgentContextSyncKey,
 } from './workbook-agent-pane-helpers.js'
 import { useWorkbookAgentStream, type WorkbookAgentLiveSession } from './workbook-agent-stream.js'
+import { createLatestRequestGate } from './latest-request.js'
 
 export function useWorkbookAgentPane(input: {
   readonly currentUserId: string
@@ -103,8 +104,10 @@ export function useWorkbookAgentPane(input: {
   const getContextRef = useRef(getContext)
   const applyContextRef = useRef(applyContext)
   const syncAuthoritativeRevisionRef = useRef(syncAuthoritativeRevision)
-  const pendingSessionRequestRef = useRef<Promise<WorkbookAgentLiveSession> | null>(null)
+  const pendingSessionRequestRef = useRef<Promise<WorkbookAgentLiveSession | null> | null>(null)
   const promptSubmissionInFlightRef = useRef(false)
+  const promptSubmissionRequestRef = useRef(0)
+  const threadNavigationGateRef = useRef(createLatestRequestGate())
   const activeDraftKey = draftKey(snapshot?.threadId ?? null, threadScope)
   const perfSession = useMemo(
     () =>
@@ -372,7 +375,7 @@ export function useWorkbookAgentPane(input: {
     setSnapshot,
   })
 
-  const ensureSession = useCallback(async (): Promise<WorkbookAgentLiveSession> => {
+  const ensureSession = useCallback(async (): Promise<WorkbookAgentLiveSession | null> => {
     if (!apiEnabled) {
       throw new Error('Workbook assistant service is not configured for this app session.')
     }
@@ -384,10 +387,14 @@ export function useWorkbookAgentPane(input: {
     if (pendingSessionRequest) {
       return await pendingSessionRequest
     }
+    const navigationRequestId = threadNavigationGateRef.current.begin()
     const nextSessionRequest = (async () => {
       setIsLoading(true)
       try {
         const nextSnapshot = await client.createSession(getContextRef.current(), threadScope)
+        if (!threadNavigationGateRef.current.isCurrent(navigationRequestId)) {
+          return null
+        }
         persistSessionSnapshot(nextSnapshot)
         connectStream(nextSnapshot.threadId)
         setError(null)
@@ -397,12 +404,19 @@ export function useWorkbookAgentPane(input: {
         sessionRef.current = nextSession
         return nextSession
       } finally {
-        pendingSessionRequestRef.current = null
-        setIsLoading(false)
+        if (threadNavigationGateRef.current.isCurrent(navigationRequestId)) {
+          setIsLoading(false)
+        }
       }
     })()
     pendingSessionRequestRef.current = nextSessionRequest
-    return await nextSessionRequest
+    try {
+      return await nextSessionRequest
+    } finally {
+      if (pendingSessionRequestRef.current === nextSessionRequest) {
+        pendingSessionRequestRef.current = null
+      }
+    }
   }, [apiEnabled, client, connectStream, persistSessionSnapshot, threadScope])
 
   useEffect(() => {
@@ -474,11 +488,16 @@ export function useWorkbookAgentPane(input: {
           appliedBy,
           commandIndexes: normalizedCommandIndexes,
         })
+        if (sessionRef.current?.threadId !== activeSession.threadId) {
+          return
+        }
         persistSessionSnapshot(nextSnapshot)
         perfSession.markFirstAgentApplyVisible?.()
         setError(null)
       } catch (nextError) {
-        setError(nextError instanceof Error ? nextError.message : String(nextError))
+        if (sessionRef.current?.threadId === activeSession.threadId) {
+          setError(nextError instanceof Error ? nextError.message : String(nextError))
+        }
       } finally {
         setIsApplyingReviewItem(false)
       }
@@ -519,6 +538,11 @@ export function useWorkbookAgentPane(input: {
   }, [activeReviewBundle])
 
   useEffect(() => {
+    const threadNavigationGate = threadNavigationGateRef.current
+    const navigationRequestId = threadNavigationGate.begin()
+    promptSubmissionRequestRef.current += 1
+    promptSubmissionInFlightRef.current = false
+    setPendingUserPrompt(null)
     if (!enabled || !apiEnabled) {
       closeStream()
       resetContextSync()
@@ -559,6 +583,7 @@ export function useWorkbookAgentPane(input: {
       setIsLoading(false)
       return () => {
         cancelled = true
+        threadNavigationGate.invalidate()
         closeStream()
         clearPendingContextSync()
       }
@@ -568,18 +593,18 @@ export function useWorkbookAgentPane(input: {
       try {
         setIsLoading(true)
         const nextSnapshot = await client.loadThreadSnapshot(storedSession.threadId)
-        if (cancelled) {
+        if (cancelled || !threadNavigationGateRef.current.isCurrent(navigationRequestId)) {
           return
         }
         persistSessionSnapshot(nextSnapshot)
         connectStream(nextSnapshot.threadId)
         setError(null)
       } catch (nextError) {
-        if (!cancelled) {
+        if (!cancelled && threadNavigationGateRef.current.isCurrent(navigationRequestId)) {
           setError(nextError instanceof Error ? nextError.message : String(nextError))
         }
       } finally {
-        if (!cancelled) {
+        if (!cancelled && threadNavigationGateRef.current.isCurrent(navigationRequestId)) {
           setIsLoading(false)
         }
       }
@@ -587,6 +612,7 @@ export function useWorkbookAgentPane(input: {
     void bootstrapStoredSession()
     return () => {
       cancelled = true
+      threadNavigationGate.invalidate()
       closeStream()
       clearPendingContextSync()
     }
@@ -608,30 +634,47 @@ export function useWorkbookAgentPane(input: {
   const selectThread = useCallback(
     async (threadId: string) => {
       if (sessionRef.current?.threadId === threadId) {
+        threadNavigationGateRef.current.invalidate()
+        setIsLoading(false)
+        setError(null)
         return
       }
+      const navigationRequestId = threadNavigationGateRef.current.begin()
+      promptSubmissionRequestRef.current += 1
+      promptSubmissionInFlightRef.current = false
+      setPendingUserPrompt(null)
       try {
         setIsLoading(true)
         setError(null)
         const nextSnapshot = await client.loadThreadSnapshot(threadId)
+        if (!threadNavigationGateRef.current.isCurrent(navigationRequestId)) {
+          return
+        }
         persistSessionSnapshot(nextSnapshot)
         connectStream(nextSnapshot.threadId)
       } catch (nextError) {
-        setError(nextError instanceof Error ? nextError.message : String(nextError))
+        if (threadNavigationGateRef.current.isCurrent(navigationRequestId)) {
+          setError(nextError instanceof Error ? nextError.message : String(nextError))
+        }
       } finally {
-        setIsLoading(false)
+        if (threadNavigationGateRef.current.isCurrent(navigationRequestId)) {
+          setIsLoading(false)
+        }
       }
     },
     [client, connectStream, persistSessionSnapshot],
   )
 
   const startNewThread = useCallback(() => {
+    threadNavigationGateRef.current.invalidate()
+    promptSubmissionRequestRef.current += 1
     closeStream()
     clearStoredSession(storageScope)
     resetRecoveringStream()
     sessionRef.current = null
     pendingSessionRequestRef.current = null
     promptSubmissionInFlightRef.current = false
+    setIsLoading(false)
     setSnapshot(null)
     setPendingUserPrompt(null)
     setPreview(null)
@@ -675,21 +718,40 @@ export function useWorkbookAgentPane(input: {
       return
     }
     promptSubmissionInFlightRef.current = true
+    const submissionRequestId = promptSubmissionRequestRef.current + 1
+    promptSubmissionRequestRef.current = submissionRequestId
+    let submissionThreadId: string | null = null
     try {
       setError(null)
       setPendingUserPrompt(prompt)
       clearStoredDraft(storageScope, activeDraftKey)
       setDraft('')
       const activeSession = await ensureSession()
+      if (!activeSession || promptSubmissionRequestRef.current !== submissionRequestId) {
+        return
+      }
+      submissionThreadId = activeSession.threadId
       const nextSnapshot = await client.sendPrompt(activeSession.threadId, prompt, getContextRef.current())
+      if (promptSubmissionRequestRef.current !== submissionRequestId || sessionRef.current?.threadId !== activeSession.threadId) {
+        return
+      }
       persistSessionSnapshot(nextSnapshot)
       setPendingUserPrompt(null)
     } catch (nextError) {
+      if (promptSubmissionRequestRef.current !== submissionRequestId) {
+        return
+      }
+      const currentThreadId = sessionRef.current?.threadId ?? null
+      if ((submissionThreadId && currentThreadId !== submissionThreadId) || (!submissionThreadId && currentThreadId !== null)) {
+        return
+      }
       setPendingUserPrompt(null)
       setDraft(prompt)
       setError(nextError instanceof Error ? nextError.message : String(nextError))
     } finally {
-      promptSubmissionInFlightRef.current = false
+      if (promptSubmissionRequestRef.current === submissionRequestId) {
+        promptSubmissionInFlightRef.current = false
+      }
     }
   }, [activeDraftKey, client, draft, ensureSession, persistSessionSnapshot, storageScope])
 
@@ -700,9 +762,13 @@ export function useWorkbookAgentPane(input: {
     }
     try {
       const nextSnapshot = await client.interruptThread(activeSession.threadId)
-      setSnapshot(nextSnapshot)
+      if (sessionRef.current?.threadId === activeSession.threadId) {
+        setSnapshot(nextSnapshot)
+      }
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError))
+      if (sessionRef.current?.threadId === activeSession.threadId) {
+        setError(nextError instanceof Error ? nextError.message : String(nextError))
+      }
     }
   }, [client])
 
@@ -713,10 +779,15 @@ export function useWorkbookAgentPane(input: {
     }
     try {
       const nextSnapshot = await client.dismissReviewItem(activeSession.threadId, activeReviewBundle.id)
+      if (sessionRef.current?.threadId !== activeSession.threadId) {
+        return
+      }
       persistSessionSnapshot(nextSnapshot)
       setError(null)
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : String(nextError))
+      if (sessionRef.current?.threadId === activeSession.threadId) {
+        setError(nextError instanceof Error ? nextError.message : String(nextError))
+      }
     }
   }, [client, activeReviewBundle, persistSessionSnapshot])
 
@@ -728,10 +799,15 @@ export function useWorkbookAgentPane(input: {
       }
       try {
         const nextSnapshot = await client.reviewReviewItem(activeSession.threadId, activeReviewBundle.id, decision)
+        if (sessionRef.current?.threadId !== activeSession.threadId) {
+          return
+        }
         persistSessionSnapshot(nextSnapshot)
         setError(null)
       } catch (nextError) {
-        setError(nextError instanceof Error ? nextError.message : String(nextError))
+        if (sessionRef.current?.threadId === activeSession.threadId) {
+          setError(nextError instanceof Error ? nextError.message : String(nextError))
+        }
       }
     },
     [client, activeReviewBundle, persistSessionSnapshot],
@@ -747,9 +823,13 @@ export function useWorkbookAgentPane(input: {
         setError(null)
         setCancellingWorkflowRunId(runId)
         const nextSnapshot = await client.cancelWorkflowRun(activeSession.threadId, runId)
-        persistSessionSnapshot(nextSnapshot)
+        if (sessionRef.current?.threadId === activeSession.threadId) {
+          persistSessionSnapshot(nextSnapshot)
+        }
       } catch (nextError) {
-        setError(nextError instanceof Error ? nextError.message : String(nextError))
+        if (sessionRef.current?.threadId === activeSession.threadId) {
+          setError(nextError instanceof Error ? nextError.message : String(nextError))
+        }
       } finally {
         setCancellingWorkflowRunId((currentRunId) => (currentRunId === runId ? null : currentRunId))
       }

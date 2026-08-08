@@ -12,6 +12,19 @@ export type CsvDecimalSeparator = '.' | ','
 export interface CsvParseOptions {
   delimiter?: CsvDelimiter
   decimalSeparator?: CsvDecimalSeparator
+  maxCells?: number
+  maxRows?: number
+}
+
+export class CsvParseSizeLimitExceededError extends Error {
+  constructor(
+    readonly reason: 'cell-count' | 'row-count',
+    readonly observed: number,
+    readonly limit: number,
+  ) {
+    super(`CSV ${reason === 'cell-count' ? 'cell' : 'row'} count exceeds the configured limit (${observed} > ${limit})`)
+    this.name = 'CsvParseSizeLimitExceededError'
+  }
 }
 
 export interface ResolvedCsvParseOptions {
@@ -66,11 +79,31 @@ export function resolveCsvParseOptions(csv: string, options: CsvParseOptions = {
 
 export function parseCsv(csv: string, options: CsvParseOptions = {}): string[][] {
   const { delimiter } = resolveCsvParseOptions(csv, options)
+  assertCsvLimit(options.maxCells, 'maxCells')
+  assertCsvLimit(options.maxRows, 'maxRows')
   const rows: string[][] = []
   let currentRow: string[] = []
   let currentValue = ''
   let index = 0
   let inQuotes = false
+
+  let cellCount = 0
+  const pushCell = () => {
+    cellCount += 1
+    if (options.maxCells !== undefined && cellCount > options.maxCells) {
+      throw new CsvParseSizeLimitExceededError('cell-count', cellCount, options.maxCells)
+    }
+    currentRow.push(currentValue)
+    currentValue = ''
+  }
+  const pushRow = () => {
+    const rowCount = rows.length + 1
+    if (options.maxRows !== undefined && rowCount > options.maxRows) {
+      throw new CsvParseSizeLimitExceededError('row-count', rowCount, options.maxRows)
+    }
+    rows.push(currentRow)
+    currentRow = []
+  }
 
   while (index < csv.length) {
     const char = csv[index]!
@@ -99,17 +132,14 @@ export function parseCsv(csv: string, options: CsvParseOptions = {}): string[][]
     }
 
     if (char === delimiter) {
-      currentRow.push(currentValue)
-      currentValue = ''
+      pushCell()
       index += 1
       continue
     }
 
     if (char === '\r' || char === '\n') {
-      currentRow.push(currentValue)
-      currentValue = ''
-      rows.push(currentRow)
-      currentRow = []
+      pushCell()
+      pushRow()
       if (char === '\r' && nextChar === '\n') {
         index += 2
       } else {
@@ -122,12 +152,18 @@ export function parseCsv(csv: string, options: CsvParseOptions = {}): string[][]
     index += 1
   }
 
-  currentRow.push(currentValue)
+  pushCell()
   if (currentRow.length > 1 || currentRow[0] !== '' || rows.length > 0) {
-    rows.push(currentRow)
+    pushRow()
   }
 
   return rows
+}
+
+function assertCsvLimit(value: number | undefined, name: string): void {
+  if (value !== undefined && (!Number.isSafeInteger(value) || value < 0)) {
+    throw new Error(`${name} must be a non-negative safe integer`)
+  }
 }
 
 export function parseCsvCellInput(raw: string, options: CsvParseOptions = {}): CsvCellInput | undefined {

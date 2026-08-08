@@ -4,6 +4,7 @@ import {
   createAgentSessionSnapshot,
   createAgentSkillDiscoveryIndex,
   createDocumentServiceStub,
+  createSignedProxyTestSession,
   createSyncServer,
   createWorkbookAgentServiceStub,
   createZeroSyncStub,
@@ -658,8 +659,10 @@ describe('sync-server snapshots', () => {
         },
       ],
     }
+    const auth = createSignedProxyTestSession('owner-1')
     const { app } = createSyncServer({
       logger: false,
+      sessionResolver: auth.sessionResolver,
       documentService: createDocumentServiceStub({
         getLatestSnapshot(documentId: string) {
           expect(documentId).toBe('doc-1')
@@ -667,6 +670,9 @@ describe('sync-server snapshots', () => {
         },
       }),
       zeroSyncService: createZeroSyncStub({
+        async assertWorkbookAccess(documentId, session, mode) {
+          calls.push(`authorize:${documentId}:${session.userID}:${mode}`)
+        },
         async ensureWorkbookDocument(documentId, ownerUserId) {
           calls.push(`ensure:${documentId}:${ownerUserId ?? ''}`)
         },
@@ -686,9 +692,7 @@ describe('sync-server snapshots', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/v2/documents/doc-1/snapshot/latest',
-        headers: {
-          'x-bilig-user-id': 'owner-1',
-        },
+        headers: auth.headers,
       })
 
       expect(response.statusCode).toBe(200)
@@ -696,7 +700,7 @@ describe('sync-server snapshots', () => {
       expect(response.headers['x-bilig-calculated-cursor']).toBe('449')
       expect(response.headers['content-type']).toContain('application/vnd.bilig.workbook+json')
       expect(JSON.parse(response.body)).toEqual(snapshot)
-      expect(calls).toEqual(['ensure:doc-1:owner-1', 'load:doc-1'])
+      expect(calls).toEqual(['authorize:doc-1:owner-1:signed-proxy', 'load:doc-1'])
     } finally {
       await app.close()
     }
@@ -706,8 +710,10 @@ describe('sync-server snapshots', () => {
 describe('sync-server authoritative events', () => {
   it('returns authoritative workbook events from the zero sync service', async () => {
     const calls: string[] = []
+    const auth = createSignedProxyTestSession('owner-1')
     const { app } = createSyncServer({
       logger: false,
+      sessionResolver: auth.sessionResolver,
       zeroSyncService: createZeroSyncStub({
         async ensureWorkbookDocument(documentId, ownerUserId) {
           calls.push(`ensure:${documentId}:${ownerUserId ?? ''}`)
@@ -751,9 +757,7 @@ describe('sync-server authoritative events', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/v2/documents/doc-1/events?afterRevision=4',
-        headers: {
-          'x-bilig-user-id': 'owner-1',
-        },
+        headers: auth.headers,
       })
 
       expect(response.statusCode).toBe(200)
@@ -785,7 +789,7 @@ describe('sync-server authoritative events', () => {
           },
         ],
       })
-      expect(calls).toEqual(['ensure:doc-1:owner-1', 'events:doc-1:4'])
+      expect(calls).toEqual(['events:doc-1:4'])
     } finally {
       await app.close()
     }

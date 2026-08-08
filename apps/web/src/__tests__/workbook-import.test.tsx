@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import type { WorkbookLoadedResponse } from '@bilig/agent-api'
-import { CSV_CONTENT_TYPE, LEGACY_XLS_CONTENT_TYPE, XLSB_CONTENT_TYPE, XLSM_CONTENT_TYPE, XLSX_CONTENT_TYPE } from '@bilig/agent-api'
+import { CSV_CONTENT_TYPE, XLSM_CONTENT_TYPE, XLSX_CONTENT_TYPE } from '@bilig/agent-api'
 import type { ImportedWorkbookPreview } from '@bilig/excel-import/browser'
-import { act } from 'react'
+import { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import type { ToastT, ToastToDismiss } from 'sonner'
 import { toast } from 'sonner'
@@ -57,6 +57,16 @@ function createPreview(overrides: Partial<ImportedWorkbookPreview> = {}): Import
   }
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, reject, resolve }
+}
+
 function ImportHarness(props: {
   readonly previewFile?: Parameters<typeof useWorkbookImportPane>[0]['previewFile']
   readonly finalizeImport?: Parameters<typeof useWorkbookImportPane>[0]['finalizeImport']
@@ -104,8 +114,8 @@ describe('workbook import', () => {
     expect(resolveWorkbookImportContentType(new File(['alpha'], 'metrics.csv', { type: CSV_CONTENT_TYPE }))).toBe(CSV_CONTENT_TYPE)
     expect(resolveWorkbookImportContentType(new File(['alpha'], 'model.xlsx', { type: XLSX_CONTENT_TYPE }))).toBe(XLSX_CONTENT_TYPE)
     expect(resolveWorkbookImportContentType(new File(['alpha'], 'model.xlsm', { type: '' }))).toBe(XLSM_CONTENT_TYPE)
-    expect(resolveWorkbookImportContentType(new File(['alpha'], 'model.xlsb', { type: '' }))).toBe(XLSB_CONTENT_TYPE)
-    expect(resolveWorkbookImportContentType(new File(['alpha'], 'model.xls', { type: '' }))).toBe(LEGACY_XLS_CONTENT_TYPE)
+    expect(resolveWorkbookImportContentType(new File(['alpha'], 'model.xlsb', { type: '' }))).toBeNull()
+    expect(resolveWorkbookImportContentType(new File(['alpha'], 'model.xls', { type: '' }))).toBeNull()
     expect(resolveWorkbookImportContentType(new File(['alpha'], 'metrics.upload', { type: 'text/csv; charset=utf-8' }))).toBe(
       CSV_CONTENT_TYPE,
     )
@@ -116,10 +126,8 @@ describe('workbook import', () => {
       resolveWorkbookImportContentType(
         new File(['alpha'], 'model.upload', { type: 'application/vnd.ms-excel.sheet.binary.macroEnabled.12' }),
       ),
-    ).toBe(XLSB_CONTENT_TYPE)
-    expect(resolveWorkbookImportContentType(new File(['alpha'], 'model.upload', { type: 'application/vnd.ms-excel' }))).toBe(
-      LEGACY_XLS_CONTENT_TYPE,
-    )
+    ).toBeNull()
+    expect(resolveWorkbookImportContentType(new File(['alpha'], 'model.upload', { type: 'application/vnd.ms-excel' }))).toBeNull()
     expect(resolveWorkbookImportContentType(new File(['alpha'], 'notes.txt'))).toBeNull()
   })
 
@@ -279,7 +287,7 @@ describe('workbook import', () => {
     })
     await flushToasts()
 
-    expect(findActiveToast('import-error')?.title).toBe('Only local CSV and XLSX files can be staged for workbook import.')
+    expect(findActiveToast('import-error')?.title).toBe('Only local CSV, XLSX, and XLSM files can be staged for workbook import.')
 
     const file = new File(['Name,Value\nalpha,12'], 'metrics.csv', { type: CSV_CONTENT_TYPE })
     setInputFiles(input!, [file])
@@ -307,5 +315,117 @@ describe('workbook import', () => {
     await act(async () => {
       root.unmount()
     })
+  })
+
+  it('keeps the newest selected file when preview requests resolve out of order', async () => {
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+    const first = deferred<ImportedWorkbookPreview>()
+    const second = deferred<ImportedWorkbookPreview>()
+    const previewFile = vi
+      .fn<NonNullable<Parameters<typeof ImportHarness>[0]['previewFile']>>()
+      .mockReturnValueOnce(first.promise)
+      .mockReturnValueOnce(second.promise)
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+
+    await act(async () => {
+      root.render(<ImportHarness previewFile={previewFile} />)
+      await Promise.resolve()
+    })
+    await act(async () => {
+      host.querySelector("[data-testid='workbook-import-toggle']")?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    const input = host.querySelector<HTMLInputElement>("[data-testid='workbook-import-file']")!
+    setInputFiles(input, [new File(['first'], 'first.csv', { type: CSV_CONTENT_TYPE })])
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })))
+    setInputFiles(input, [new File(['second'], 'second.csv', { type: CSV_CONTENT_TYPE })])
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })))
+
+    await act(async () => {
+      second.resolve(createPreview({ fileName: 'second.csv', workbookName: 'second' }))
+      await second.promise
+    })
+    expect(host.textContent).toContain('second.csv')
+
+    await act(async () => {
+      first.resolve(createPreview({ fileName: 'first.csv', workbookName: 'first' }))
+      await first.promise
+    })
+    expect(host.textContent).toContain('second.csv')
+    expect(host.textContent).not.toContain('first.csv')
+
+    await act(async () => root.unmount())
+  })
+
+  it('keeps preview state live through React Strict Mode effect replay', async () => {
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+
+    await act(async () =>
+      root.render(
+        <StrictMode>
+          <ImportHarness previewFile={async () => createPreview()} />
+        </StrictMode>,
+      ),
+    )
+    await act(async () =>
+      host.querySelector("[data-testid='workbook-import-toggle']")?.dispatchEvent(new MouseEvent('click', { bubbles: true })),
+    )
+    const input = host.querySelector<HTMLInputElement>("[data-testid='workbook-import-file']")!
+    setInputFiles(input, [new File(['a,b'], 'strict.csv', { type: CSV_CONTENT_TYPE })])
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })))
+
+    expect(host.querySelector("[data-testid='workbook-import-preview-list']")).not.toBeNull()
+
+    await act(async () => root.unmount())
+  })
+
+  it('coalesces same-render duplicate import actions into one authoritative request', async () => {
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+    const completion = deferred<WorkbookLoadedResponse>()
+    const finalizeImport = vi.fn(() => completion.promise)
+    const navigateToWorkbook = vi.fn()
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+
+    await act(async () => {
+      root.render(
+        <ImportHarness finalizeImport={finalizeImport} navigateToWorkbook={navigateToWorkbook} previewFile={async () => createPreview()} />,
+      )
+    })
+    await act(async () => {
+      host.querySelector("[data-testid='workbook-import-toggle']")?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    const input = host.querySelector<HTMLInputElement>("[data-testid='workbook-import-file']")!
+    setInputFiles(input, [new File(['a,b'], 'metrics.csv', { type: CSV_CONTENT_TYPE })])
+    await act(async () => input.dispatchEvent(new Event('change', { bubbles: true })))
+
+    const importButton = host.querySelector("[data-testid='workbook-import-create']")!
+    act(() => {
+      importButton.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      importButton.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(finalizeImport).toHaveBeenCalledOnce()
+
+    await act(async () => {
+      completion.resolve({
+        kind: 'workbookLoaded',
+        id: 'load-once',
+        documentId: 'csv:once',
+        sessionId: 'csv:once:browser',
+        workbookName: 'metrics',
+        sheetNames: ['metrics'],
+        serverUrl: 'http://127.0.0.1:4321',
+        warnings: [],
+      })
+      await completion.promise
+    })
+    expect(navigateToWorkbook).toHaveBeenCalledOnce()
+
+    await act(async () => root.unmount())
   })
 })

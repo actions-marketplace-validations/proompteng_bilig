@@ -228,6 +228,38 @@ describe('workbook agent session registry', () => {
     expect(registry.tryGetSession('thr-evicted')).toBeNull()
   })
 
+  it('keeps running workflows resident even when their live thread is idle', () => {
+    const evicted: string[] = []
+    const registry = new WorkbookAgentSessionRegistry({ maxSessions: 1, now: () => 60 })
+    const workflowSession = createSessionState({
+      threadId: 'thr-workflow',
+      live: { ...createSessionState().live, lastAccessedAt: 1 },
+    })
+    workflowSession.durable.workflowRuns.push({
+      runId: 'workflow-1',
+      threadId: 'thr-workflow',
+      startedByUserId: 'alex@example.com',
+      workflowTemplate: 'summarizeWorkbook',
+      title: 'Summarize workbook',
+      summary: 'Running',
+      status: 'running',
+      createdAtUnixMs: 1,
+      updatedAtUnixMs: 1,
+      completedAtUnixMs: null,
+      errorMessage: null,
+      steps: [],
+      artifact: null,
+    })
+    registry.storeSession(workflowSession)
+    registry.storeSession(
+      createSessionState({ threadId: 'thr-idle', live: { ...createSessionState().live, lastAccessedAt: 2 } }),
+      (threadId) => evicted.push(threadId),
+    )
+
+    expect(evicted).toEqual(['thr-idle'])
+    expect(registry.tryGetSession('thr-workflow')).not.toBeNull()
+  })
+
   it('builds a disabled observability snapshot with zeroed counts', () => {
     expect(createDisabledWorkbookAgentObservabilitySnapshot(42)).toEqual({
       enabled: false,

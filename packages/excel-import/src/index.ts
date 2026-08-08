@@ -16,6 +16,8 @@ import {
   assertXlsxInspectionWithinMaterializationLimits,
   assertXlsxByteInputApiWithinLimit,
   assertXlsxSheetJsFallbackWithinMaterializationLimits,
+  assertXlsxSourceWithinMaterializationLimits,
+  assertXlsxZipWithinMaterializationLimits,
   denseSheetJsByteThreshold,
   largeSimpleInMemoryUntouchedExportSourceLimit,
   planXlsxImportRoute,
@@ -139,6 +141,7 @@ interface SheetJsImportModule {
     contentType: ExcelWorkbookImportContentType,
     workbookZip: Unzipped | null,
     sourceFileSizeBytes: number,
+    options?: XlsxImportOptions,
   ) => ImportedWorkbook
 }
 
@@ -394,6 +397,7 @@ export function importXlsxFromPreparedSheetJsParserData(
   contentType: ExcelWorkbookImportContentType,
   workbookZip: Unzipped | null,
   sourceFileSizeBytes: number,
+  options: XlsxImportOptions = {},
 ): ImportedWorkbook {
   return loadSheetJsImportModule().importXlsxFromPreparedSheetJsParserData(
     parserData,
@@ -401,6 +405,7 @@ export function importXlsxFromPreparedSheetJsParserData(
     contentType,
     workbookZip,
     sourceFileSizeBytes,
+    options,
   )
 }
 
@@ -520,6 +525,7 @@ export function importXlsx(bytes: Uint8Array | ArrayBuffer, fileName: string, op
     preReleasedOwnedSourceEvidence = releaseOwnedXlsxSourceBytes(ownedSource, (releasedBytes) => (bytes = releasedBytes))
   }
   const limits = resolveXlsxImportLimits(options)
+  assertXlsxZipWithinMaterializationLimits(workbookZip, limits)
   let route = planXlsxImportRoute({ workbookZip, sourceByteLength, options, inspection: null })
   let inspection = route.shouldInspectBeforeLargeSimpleRouting
     ? spooledUntouchedExportSource
@@ -636,21 +642,29 @@ function spooledSourceReadBytesLimitFor(options: XlsxImportOptions): number | fa
   return maxSourceBytes === undefined || !Number.isFinite(maxSourceBytes) ? false : maxSourceBytes
 }
 
-export function importXlsm(bytes: Uint8Array | ArrayBuffer, fileName: string): ImportedWorkbook {
+export function importXlsm(bytes: Uint8Array | ArrayBuffer, fileName: string, options: XlsxImportOptions = {}): ImportedWorkbook {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
-  assertXlsxByteInputApiWithinLimit(data.byteLength, 'importXlsm')
+  const limits = resolveXlsxImportLimits(options)
+  if (options.limits === undefined) {
+    assertXlsxByteInputApiWithinLimit(data.byteLength, 'importXlsm')
+  } else {
+    assertXlsxSourceWithinMaterializationLimits(data.byteLength, limits)
+  }
   const workbookZip = readValidXlsxZipContainer(data, 'lazy')
-  return importSheetJsWorkbook(data, fileName, XLSM_CONTENT_TYPE, workbookZip, data)
+  assertXlsxZipWithinMaterializationLimits(workbookZip, limits)
+  return importSheetJsWorkbook(data, fileName, XLSM_CONTENT_TYPE, workbookZip, data, options)
 }
 
-export function importXlsb(bytes: Uint8Array | ArrayBuffer, fileName: string): ImportedWorkbook {
+export function importXlsb(bytes: Uint8Array | ArrayBuffer, fileName: string, options: XlsxImportOptions = {}): ImportedWorkbook {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
-  return importSheetJsWorkbook(data, fileName, XLSB_CONTENT_TYPE, null)
+  assertXlsxSourceWithinMaterializationLimits(data.byteLength, resolveXlsxImportLimits(options))
+  return importSheetJsWorkbook(data, fileName, XLSB_CONTENT_TYPE, null, undefined, options)
 }
 
-export function importXls(bytes: Uint8Array | ArrayBuffer, fileName: string): ImportedWorkbook {
+export function importXls(bytes: Uint8Array | ArrayBuffer, fileName: string, options: XlsxImportOptions = {}): ImportedWorkbook {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
-  return importSheetJsWorkbook(data, fileName, LEGACY_XLS_CONTENT_TYPE, null)
+  assertXlsxSourceWithinMaterializationLimits(data.byteLength, resolveXlsxImportLimits(options))
+  return importSheetJsWorkbook(data, fileName, LEGACY_XLS_CONTENT_TYPE, null, undefined, options)
 }
 
 export function importWorkbookFile(
@@ -667,13 +681,13 @@ export function importWorkbookFile(
       : importXlsx(data, fileName, options.xlsx)
   }
   if (normalizedContentType === XLSM_CONTENT_TYPE) {
-    return importXlsm(bytes, fileName)
+    return importXlsm(bytes, fileName, options.xlsx)
   }
   if (normalizedContentType === XLSB_CONTENT_TYPE) {
-    return importXlsb(bytes, fileName)
+    return importXlsb(bytes, fileName, options.xlsx)
   }
   if (normalizedContentType === LEGACY_XLS_CONTENT_TYPE) {
-    return importXls(bytes, fileName)
+    return importXls(bytes, fileName, options.xlsx)
   }
   if (normalizedContentType === CSV_CONTENT_TYPE) {
     const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)

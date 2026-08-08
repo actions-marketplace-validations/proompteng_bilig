@@ -77,7 +77,8 @@ export function chooseWorkbookAgentEvictionCandidates(
   return sessions
     .filter((sessionState) => {
       const listeners = subscribers.get(sessionState.threadId)
-      return sessionState.live.status === 'idle' && (!listeners || listeners.size === 0)
+      const hasRunningWorkflow = sessionState.durable.workflowRuns.some((run) => run.status === 'running')
+      return sessionState.live.status === 'idle' && !hasRunningWorkflow && (!listeners || listeners.size === 0)
     })
     .toSorted((left, right) => left.live.lastAccessedAt - right.live.lastAccessedAt)
 }

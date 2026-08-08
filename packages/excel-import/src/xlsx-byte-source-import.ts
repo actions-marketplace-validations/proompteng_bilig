@@ -5,6 +5,7 @@ import { XLSX_CONTENT_TYPE } from './workbook-import-content-types.js'
 import {
   assertXlsxInspectionWithinMaterializationLimits,
   assertXlsxSheetJsFallbackWithinMaterializationLimits,
+  assertXlsxZipWithinMaterializationLimits,
   planXlsxImportRoute,
   resolveXlsxImportLimits,
   type XlsxImportOptions,
@@ -52,6 +53,7 @@ interface SheetJsImporterModule {
     contentType: typeof XLSX_CONTENT_TYPE,
     workbookZip: XlsxZipEntries,
     sourceByteLength: number,
+    options?: XlsxImportOptions,
   ) => ImportedWorkbook
 }
 
@@ -91,6 +93,7 @@ export function importXlsxFromZipByteSource(
     return importXlsxFromMaterializedSource(source, fileName, options)
   }
   const limits = resolveXlsxImportLimits(options)
+  assertXlsxZipWithinMaterializationLimits(workbookZip, limits)
   const sourceByteLength = source.byteLength
   let route = planXlsxImportRoute({ workbookZip, sourceByteLength, options, inspection: null })
   let inspection = route.shouldInspectBeforeLargeSimpleRouting
@@ -129,7 +132,7 @@ export function importXlsxFromZipByteSource(
   }
   assertXlsxSheetJsFallbackWithinMaterializationLimits(inspection, options, sourceByteLength)
   if (options.attachSourceReaderForUntouchedExport === false && !route.hasExternalWorkbookCompanions) {
-    const preparedFallback = importXlsxFromPreparedByteSourceFallback(source, fileName)
+    const preparedFallback = importXlsxFromPreparedByteSourceFallback(source, fileName, options)
     if (preparedFallback) {
       return preparedFallback
     }
@@ -137,7 +140,11 @@ export function importXlsxFromZipByteSource(
   return importXlsxFromMaterializedSource(source, fileName, options)
 }
 
-function importXlsxFromPreparedByteSourceFallback(source: XlsxZipByteSource, fileName: string): ImportedWorkbook | null {
+function importXlsxFromPreparedByteSourceFallback(
+  source: XlsxZipByteSource,
+  fileName: string,
+  options: XlsxByteSourceImportOptions,
+): ImportedWorkbook | null {
   const workbookZip = readXlsxZipEntriesLazyFromByteSource(borrowXlsxZipByteSource(source))
   if (!workbookZip) {
     return null
@@ -155,6 +162,7 @@ function importXlsxFromPreparedByteSourceFallback(source: XlsxZipByteSource, fil
     XLSX_CONTENT_TYPE,
     workbookZip,
     source.byteLength,
+    options,
   )
 }
 

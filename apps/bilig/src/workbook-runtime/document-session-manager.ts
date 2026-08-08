@@ -29,6 +29,9 @@ export interface DocumentSessionManagerOptions {
   browserAppBaseUrl?: string
   publicServerUrl?: string
   maxImportBytes?: number
+  maxImportCells?: number
+  maxImportFormulaCells?: number
+  maxImportUncompressedBytes?: number
 }
 
 export class DocumentSessionManager {

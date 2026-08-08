@@ -24,6 +24,7 @@ const deps = vi.hoisted(() => {
     handleQueryRequest: vi.fn(),
     handleMutateRequest: vi.fn(),
     loadWorkbookEventRecordsAfter: vi.fn(async () => []),
+    ensureWorkbookDocumentExists: vi.fn(async () => undefined),
     loadWorkbookRuntimeMetadata: vi.fn(async () => ({
       headRevision: 0,
       calculatedRevision: 0,
@@ -139,6 +140,10 @@ vi.mock('../workbook-mutation-store.js', () => ({
   }),
 }))
 
+vi.mock('../workbook-migration-store.js', () => ({
+  ensureWorkbookDocumentExists: deps.ensureWorkbookDocumentExists,
+}))
+
 vi.mock('../workbook-runtime-store.js', () => ({
   acquireWorkbookMutationLock: vi.fn(async () => undefined),
   loadWorkbookRuntimeMetadata: deps.loadWorkbookRuntimeMetadata,
@@ -146,6 +151,8 @@ vi.mock('../workbook-runtime-store.js', () => ({
 }))
 
 describe('zero sync service startup', () => {
+  const ownerSession = { userID: 'user-1', roles: ['editor'] }
+
   beforeEach(() => {
     vi.clearAllMocks()
     deps.loadWorkbookEventRecordsAfter.mockResolvedValue([])
@@ -220,18 +227,21 @@ describe('zero sync service startup', () => {
     const { createZeroSyncService } = await import('../service.js')
     const service = createZeroSyncService()
 
-    const result = await service.handleQuery({
-      protocol: 'https',
-      method: 'POST',
-      url: '/zero/query?hash=abc',
-      headers: {
-        host: ['   ', ' sheets.example.com:8443 '],
-        'x-bilig-user-id': 'user-1',
+    const result = await service.handleQuery(
+      {
+        protocol: 'https',
+        method: 'POST',
+        url: '/zero/query?hash=abc',
+        headers: {
+          host: ['   ', ' sheets.example.com:8443 '],
+        },
+        body: {
+          name: 'workbook.get',
+        },
       },
-      body: {
-        name: 'workbook.get',
-      },
-    })
+      ownerSession,
+      'demo',
+    )
 
     expect(result).toEqual({
       method: 'POST',
@@ -296,16 +306,19 @@ describe('zero sync service startup', () => {
     const service = createZeroSyncService()
 
     await expect(
-      service.handleQuery({
-        protocol: 'https',
-        method: 'POST',
-        url: '/zero/query',
-        headers: {
-          host: 'sheets.example.com',
-          'x-bilig-user-id': 'alex@example.com',
+      service.handleQuery(
+        {
+          protocol: 'https',
+          method: 'POST',
+          url: '/zero/query',
+          headers: {
+            host: 'sheets.example.com',
+          },
+          body: {},
         },
-        body: {},
-      }),
+        { userID: 'alex@example.com', roles: ['editor'] },
+        'demo',
+      ),
     ).resolves.toEqual({ ok: true })
   })
 
@@ -314,18 +327,21 @@ describe('zero sync service startup', () => {
     const service = createZeroSyncService()
 
     await expect(
-      service.handleMutate({
-        protocol: 'ftp',
-        method: 'POST',
-        url: '/zero/mutate',
-        headers: {
-          host: 'sheets.example.com',
-          'x-bilig-user-id': 'user-1',
+      service.handleMutate(
+        {
+          protocol: 'ftp',
+          method: 'POST',
+          url: '/zero/mutate',
+          headers: {
+            host: 'sheets.example.com',
+          },
+          body: {
+            mutations: [],
+          },
         },
-        body: {
-          mutations: [],
-        },
-      }),
+        ownerSession,
+        'demo',
+      ),
     ).rejects.toThrow('request protocol must be "http" or "https", got ftp')
     expect(deps.handleMutateRequest).not.toHaveBeenCalled()
   })
@@ -352,5 +368,54 @@ describe('zero sync service startup', () => {
     const service = createZeroSyncService()
 
     await expect(service.loadAuthoritativeEvents('book-1', 1)).rejects.toThrow('Invalid authoritative workbook event batch for book-1')
+  })
+
+  it('allows only the workbook owner or an administrator in private mode', async () => {
+    deps.loadWorkbookRuntimeMetadata.mockResolvedValue({
+      headRevision: 4,
+      calculatedRevision: 4,
+      ownerUserId: 'owner@example.com',
+    })
+    const { createZeroSyncService } = await import('../service.js')
+    const service = createZeroSyncService()
+
+    await expect(
+      service.assertWorkbookAccess?.('book-1', { userID: 'owner@example.com', roles: ['editor'] }, 'signed-proxy'),
+    ).resolves.toBeUndefined()
+    await expect(
+      service.assertWorkbookAccess?.('book-1', { userID: 'admin@example.com', roles: ['admin'] }, 'signed-proxy'),
+    ).resolves.toBeUndefined()
+    await expect(
+      service.assertWorkbookAccess?.('book-1', { userID: 'mallory@example.com', roles: ['editor'] }, 'signed-proxy'),
+    ).rejects.toMatchObject({
+      code: 'WORKBOOK_ACCESS_DENIED',
+      statusCode: 403,
+    })
+    expect(deps.ensureWorkbookDocumentExists).not.toHaveBeenCalled()
+  })
+
+  it('creates private workbook ownership only when the caller marks an explicit creation boundary', async () => {
+    deps.loadWorkbookRuntimeMetadata.mockResolvedValue({
+      headRevision: 0,
+      calculatedRevision: 0,
+      ownerUserId: 'owner@example.com',
+    })
+    const { createZeroSyncService } = await import('../service.js')
+    const service = createZeroSyncService()
+
+    await service.assertWorkbookAccess?.('new-book', { userID: 'owner@example.com', roles: ['editor'] }, 'signed-proxy', {
+      createIfMissing: true,
+    })
+
+    expect(deps.ensureWorkbookDocumentExists).toHaveBeenCalledOnce()
+    expect(deps.ensureWorkbookDocumentExists).toHaveBeenCalledWith(deps.pool, 'new-book', 'owner@example.com')
+  })
+
+  it('keeps explicit demo mode public without consulting private ownership', async () => {
+    const { createZeroSyncService } = await import('../service.js')
+    const service = createZeroSyncService()
+
+    await expect(service.assertWorkbookAccess?.('book-1', ownerSession, 'demo')).resolves.toBeUndefined()
+    expect(deps.loadWorkbookRuntimeMetadata).not.toHaveBeenCalled()
   })
 })

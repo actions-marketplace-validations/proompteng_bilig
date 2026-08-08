@@ -4,7 +4,7 @@ import {
   hasFullImporterOnlyPackageMetadata,
   shouldBypassLargeSimpleByteThresholdForPackageArtifacts,
 } from './xlsx-large-simple-package-artifact-threshold.js'
-import type { XlsxZipEntries } from './xlsx-zip.js'
+import { readXlsxZipEntryUncompressedSize, type XlsxZipEntries } from './xlsx-zip.js'
 
 export const denseSheetJsByteThreshold = 1_000_000
 export const xlsxByteInputApiLimit = denseSheetJsByteThreshold
@@ -17,12 +17,14 @@ export interface XlsxImportLimits {
   maxMaterializedSourceBytes?: number
   maxMaterializedCells?: number
   maxMaterializedFormulaCells?: number
+  maxUncompressedBytes?: number
 }
 
 const defaultSheetJsFallbackImportLimits: Required<XlsxImportLimits> = {
   maxMaterializedSourceBytes: denseSheetJsByteThreshold,
   maxMaterializedCells: denseSheetJsByteThreshold,
   maxMaterializedFormulaCells: largeCalcChainStreamingFormulaThreshold,
+  maxUncompressedBytes: Number.POSITIVE_INFINITY,
 }
 
 export interface XlsxExternalWorkbookInput {
@@ -93,28 +95,43 @@ export class XlsxImportSizeLimitExceededError extends Error {
   readonly limits: Required<XlsxImportLimits>
   readonly stats: LargeSimpleXlsxHeadlessInspectResult['stats'] | undefined
   readonly sourceByteLength: number | undefined
-  readonly reason: 'source-byte-count' | 'cell-count' | 'formula-cell-count'
+  readonly uncompressedByteLength: number | undefined
+  readonly observedCount: number
+  readonly reason: 'source-byte-count' | 'cell-count' | 'formula-cell-count' | 'uncompressed-byte-count'
 
   constructor(args: {
-    reason: 'source-byte-count' | 'cell-count' | 'formula-cell-count'
+    reason: 'source-byte-count' | 'cell-count' | 'formula-cell-count' | 'uncompressed-byte-count'
     limits: Required<XlsxImportLimits>
     stats?: LargeSimpleXlsxHeadlessInspectResult['stats']
     sourceByteLength?: number
+    uncompressedByteLength?: number
+    observedCount?: number
     message?: string
   }) {
     const observed =
       args.reason === 'source-byte-count'
         ? (args.sourceByteLength ?? 0)
-        : args.reason === 'cell-count'
-          ? (args.stats?.cellCount ?? 0)
-          : (args.stats?.formulaCellCount ?? 0)
+        : args.reason === 'uncompressed-byte-count'
+          ? (args.uncompressedByteLength ?? 0)
+          : args.reason === 'cell-count'
+            ? (args.observedCount ?? args.stats?.cellCount ?? 0)
+            : (args.observedCount ?? args.stats?.formulaCellCount ?? 0)
     const limit =
       args.reason === 'source-byte-count'
         ? args.limits.maxMaterializedSourceBytes
-        : args.reason === 'cell-count'
-          ? args.limits.maxMaterializedCells
-          : args.limits.maxMaterializedFormulaCells
-    const label = args.reason === 'source-byte-count' ? 'source byte' : args.reason === 'cell-count' ? 'cell' : 'formula cell'
+        : args.reason === 'uncompressed-byte-count'
+          ? args.limits.maxUncompressedBytes
+          : args.reason === 'cell-count'
+            ? args.limits.maxMaterializedCells
+            : args.limits.maxMaterializedFormulaCells
+    const label =
+      args.reason === 'source-byte-count'
+        ? 'source byte'
+        : args.reason === 'uncompressed-byte-count'
+          ? 'uncompressed ZIP byte'
+          : args.reason === 'cell-count'
+            ? 'cell'
+            : 'formula cell'
     super(
       args.message ??
         `XLSX import exceeds the materialized ${label} limit ` +
@@ -126,6 +143,8 @@ export class XlsxImportSizeLimitExceededError extends Error {
     this.limits = args.limits
     this.stats = args.stats
     this.sourceByteLength = args.sourceByteLength
+    this.uncompressedByteLength = args.uncompressedByteLength
+    this.observedCount = observed
   }
 }
 
@@ -153,9 +172,64 @@ export function resolveXlsxImportLimits(options: XlsxImportOptions): Required<Xl
     return null
   }
   return {
-    maxMaterializedSourceBytes: options.limits.maxMaterializedSourceBytes ?? Number.POSITIVE_INFINITY,
-    maxMaterializedCells: options.limits.maxMaterializedCells ?? Number.POSITIVE_INFINITY,
-    maxMaterializedFormulaCells: options.limits.maxMaterializedFormulaCells ?? Number.POSITIVE_INFINITY,
+    maxMaterializedSourceBytes: resolveXlsxImportLimit('maxMaterializedSourceBytes', options.limits.maxMaterializedSourceBytes),
+    maxMaterializedCells: resolveXlsxImportLimit('maxMaterializedCells', options.limits.maxMaterializedCells),
+    maxMaterializedFormulaCells: resolveXlsxImportLimit('maxMaterializedFormulaCells', options.limits.maxMaterializedFormulaCells),
+    maxUncompressedBytes: resolveXlsxImportLimit('maxUncompressedBytes', options.limits.maxUncompressedBytes),
+  }
+}
+
+function resolveXlsxImportLimit(name: keyof XlsxImportLimits, value: number | undefined): number {
+  if (value === undefined || value === Number.POSITIVE_INFINITY) {
+    return Number.POSITIVE_INFINITY
+  }
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new RangeError(`${name} must be a non-negative safe integer or Infinity`)
+  }
+  return value
+}
+
+export function assertXlsxMaterializedCountsWithinLimits(
+  counts: { readonly cellCount: number; readonly formulaCellCount: number },
+  limits: Required<XlsxImportLimits> | null,
+): void {
+  if (!limits) {
+    return
+  }
+  if (counts.cellCount > limits.maxMaterializedCells) {
+    throw new XlsxImportSizeLimitExceededError({
+      reason: 'cell-count',
+      limits,
+      observedCount: counts.cellCount,
+    })
+  }
+  if (counts.formulaCellCount > limits.maxMaterializedFormulaCells) {
+    throw new XlsxImportSizeLimitExceededError({
+      reason: 'formula-cell-count',
+      limits,
+      observedCount: counts.formulaCellCount,
+    })
+  }
+}
+
+export function assertXlsxZipWithinMaterializationLimits(zip: XlsxZipEntries, limits: Required<XlsxImportLimits> | null): void {
+  if (!limits || !Number.isFinite(limits.maxUncompressedBytes)) {
+    return
+  }
+  let uncompressedByteLength = 0
+  for (const path of Object.keys(zip)) {
+    const entryByteLength = readXlsxZipEntryUncompressedSize(zip, path)
+    if (entryByteLength === undefined) {
+      continue
+    }
+    uncompressedByteLength += entryByteLength
+    if (uncompressedByteLength > limits.maxUncompressedBytes) {
+      throw new XlsxImportSizeLimitExceededError({
+        reason: 'uncompressed-byte-count',
+        limits,
+        uncompressedByteLength,
+      })
+    }
   }
 }
 
@@ -246,7 +320,7 @@ export function planXlsxImportRoute(args: {
   }
 }
 
-function resolveXlsxSheetJsFallbackLimits(options: XlsxImportOptions): Required<XlsxImportLimits> | null {
+export function resolveXlsxSheetJsFallbackLimits(options: XlsxImportOptions): Required<XlsxImportLimits> | null {
   if (shouldAllowLegacyLargeSheetJsFallback(options)) {
     return null
   }

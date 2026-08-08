@@ -129,8 +129,25 @@ describe('workbook agent service session policy', () => {
   })
 
   it('chooses oldest idle sessions without subscribers as eviction candidates', () => {
+    const runningWorkflowSession = createSession({ threadId: 'thr-workflow', status: 'idle', lastAccessedAt: 1 })
+    runningWorkflowSession.durable.workflowRuns.push({
+      runId: 'workflow-1',
+      threadId: 'thr-workflow',
+      startedByUserId: 'alex@example.com',
+      workflowTemplate: 'summarizeWorkbook',
+      title: 'Summarize workbook',
+      summary: 'Running',
+      status: 'running',
+      createdAtUnixMs: 1,
+      updatedAtUnixMs: 1,
+      completedAtUnixMs: null,
+      errorMessage: null,
+      steps: [],
+      artifact: null,
+    })
     const candidates = chooseWorkbookAgentEvictionCandidates(
       [
+        runningWorkflowSession,
         createSession({ threadId: 'thr-1', status: 'idle', lastAccessedAt: 20 }),
         createSession({ threadId: 'thr-2', status: 'inProgress', activeTurnId: 'turn-2', lastAccessedAt: 10 }),
         createSession({ threadId: 'thr-3', status: 'idle', lastAccessedAt: 5 }),

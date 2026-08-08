@@ -46,6 +46,12 @@ describe('bilig app runtime config', () => {
     )
   })
 
+  it('rejects import budgets above the agent protocol limit', () => {
+    expect(() => resolveBiligAppRuntimeConfig({ BILIG_AGENT_IMPORT_MAX_BYTES: '67108865' })).toThrow(
+      'BILIG_AGENT_IMPORT_MAX_BYTES must not exceed 67108864',
+    )
+  })
+
   it.each([
     ['BILIG_PUBLIC_SERVER_URL', ''],
     ['BILIG_PUBLIC_SERVER_URL', '/relative'],

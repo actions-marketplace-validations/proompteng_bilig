@@ -1,10 +1,12 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import type { WorkbookAgentStreamEvent } from '@bilig/contracts'
 import { createErrorEnvelope } from '@bilig/runtime-kernel'
-import type { SessionIdentity } from './session.js'
+import type { RequestSessionResolver, SessionIdentity } from './session.js'
 import { resolveSessionIdentity } from './session.js'
+import { resolveAuthorizedWorkbookSession } from './workbook-access.js'
 import type { WorkbookAgentService } from '../codex-app/workbook-agent-service.js'
 import { isWorkbookAgentServiceError } from '../workbook-agent-errors.js'
+import type { ZeroSyncService } from '../zero/service.js'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -39,7 +41,30 @@ function readWorkbookAgentThreadRouteParams(request: FastifyRequest): {
   }
 }
 
-export function registerWorkbookAgentRoutes(app: FastifyInstance, workbookAgentService?: WorkbookAgentService): void {
+export function registerWorkbookAgentRoutes(
+  app: FastifyInstance,
+  workbookAgentService: WorkbookAgentService | undefined,
+  sessionResolver: RequestSessionResolver,
+  zeroSyncService?: ZeroSyncService,
+): void {
+  app.addHook('preHandler', async (request, reply) => {
+    const routeUrl = request.routeOptions.url ?? ''
+    if (!routeUrl.startsWith('/v2/documents/') || !routeUrl.includes('/chat/')) {
+      return
+    }
+    const params: unknown = request.params
+    if (!isRecord(params) || typeof params['documentId'] !== 'string') {
+      return
+    }
+    await resolveAuthorizedWorkbookSession({
+      request,
+      reply,
+      documentId: params['documentId'],
+      sessionResolver,
+      ...(zeroSyncService ? { zeroSyncService } : {}),
+    })
+  })
+
   const handleWorkbookAgentRequest = async <T>(
     request: FastifyRequest,
     reply: FastifyReply,
@@ -49,7 +74,7 @@ export function registerWorkbookAgentRoutes(app: FastifyInstance, workbookAgentS
       reply.code(503)
       return createErrorEnvelope('WORKBOOK_AGENT_DISABLED', 'Workbook agent service is not configured', true)
     }
-    const session = resolveSessionIdentity(request, reply)
+    const session = resolveSessionIdentity(request, reply, sessionResolver)
     reply.header('cache-control', 'no-store')
     try {
       return await task(workbookAgentService, session)
@@ -77,10 +102,6 @@ export function registerWorkbookAgentRoutes(app: FastifyInstance, workbookAgentS
       return await task(service, session, sessionSnapshot)
     })
   }
-
-  app.addHook('onClose', async () => {
-    await workbookAgentService?.close().catch(() => undefined)
-  })
 
   app.get('/v2/agent/observability', async (request, reply) => {
     return await handleWorkbookAgentRequest(request, reply, async (service) => service.getObservabilitySnapshot())
@@ -335,7 +356,7 @@ export function registerWorkbookAgentRoutes(app: FastifyInstance, workbookAgentS
         reply.code(503)
         return createErrorEnvelope('WORKBOOK_AGENT_DISABLED', 'Workbook agent service is not configured', true)
       }
-      const session = resolveSessionIdentity(request, reply)
+      const session = resolveSessionIdentity(request, reply, sessionResolver)
       let sessionSnapshot: Awaited<ReturnType<typeof workbookAgentService.createSession>>
       try {
         sessionSnapshot = await loadWorkbookAgentThreadSession(

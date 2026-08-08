@@ -5655,7 +5655,7 @@ export const formulaInventory = [
     protocolName: 'QUERY',
     protocolSupportsWasm: false,
     jsStatus: 'special-js-only',
-    wasmStatus: 'production',
+    wasmStatus: 'not-started',
     placeholder: false,
     registeredInCodebase: true,
   },

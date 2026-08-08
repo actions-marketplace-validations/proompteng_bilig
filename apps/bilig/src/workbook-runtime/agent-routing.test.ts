@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { CSV_CONTENT_TYPE, type AgentFrame } from '@bilig/agent-api'
+import { CSV_CONTENT_TYPE, LEGACY_XLS_CONTENT_TYPE, XLSB_CONTENT_TYPE, type AgentFrame } from '@bilig/agent-api'
 import { prepareWorkbookLoad, routeAgentFrame } from './agent-routing.js'
 
 describe('routeAgentFrame', () => {
@@ -121,5 +121,43 @@ describe('prepareWorkbookLoad', () => {
     expect(prepared.imported.preview.contentType).toBe(CSV_CONTENT_TYPE)
     expect(prepared.imported.sheetNames).toEqual(['upload'])
     expect(prepared.documentId).toMatch(/^csv:/)
+  })
+
+  it('rejects CSV imports that exceed the configured materialized cell budget', () => {
+    expect(() =>
+      prepareWorkbookLoad(
+        {
+          kind: 'loadWorkbookFile',
+          id: 'upload-limited',
+          replicaId: 'agent-local',
+          openMode: 'create',
+          fileName: 'upload.csv',
+          contentType: 'text/csv',
+          bytesBase64: Buffer.from('A,B\n1,2').toString('base64'),
+        },
+        {},
+        { maxImportCells: 3 },
+      ),
+    ).toThrow('CSV cell count exceeds the configured limit')
+  })
+
+  it.each([
+    ['legacy XLS', 'legacy.xls', LEGACY_XLS_CONTENT_TYPE],
+    ['XLSB', 'binary.xlsb', XLSB_CONTENT_TYPE],
+  ])('rejects %s before decoding or importing upload bytes', (_label, fileName, contentType) => {
+    expect(() =>
+      prepareWorkbookLoad(
+        {
+          kind: 'loadWorkbookFile',
+          id: 'upload-unsupported',
+          replicaId: 'agent-local',
+          openMode: 'create',
+          fileName,
+          contentType,
+          bytesBase64: 'not base64',
+        },
+        {},
+      ),
+    ).toThrow('The server accepts CSV, XLSX, and XLSM files')
   })
 })

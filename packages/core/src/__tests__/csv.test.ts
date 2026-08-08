@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ErrorCode, ValueTag, type CellSnapshot } from '@bilig/protocol'
-import { cellToCsvValue, parseCsv, parseCsvCellInput, serializeCsv } from '../csv.js'
+import { cellToCsvValue, CsvParseSizeLimitExceededError, parseCsv, parseCsvCellInput, serializeCsv } from '../csv.js'
 
 function mockCell(overrides: Partial<CellSnapshot>): CellSnapshot {
   return {
@@ -82,6 +82,13 @@ describe('csv helpers', () => {
       ['A', 'B'],
       ['1', '2'],
     ])
+  })
+
+  it('stops parsing before configured CSV row and cell budgets are exceeded', () => {
+    expect(() => parseCsv('a,b\nc,d', { maxCells: 3 })).toThrowError(CsvParseSizeLimitExceededError)
+    expect(() => parseCsv('a\nb', { maxRows: 1 })).toThrowError(
+      expect.objectContaining<CsvParseSizeLimitExceededError>({ reason: 'row-count', observed: 2, limit: 1 }),
+    )
   })
 
   it('auto-detects semicolon-delimited CSV rows', () => {

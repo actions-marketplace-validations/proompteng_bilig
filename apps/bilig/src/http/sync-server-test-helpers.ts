@@ -3,9 +3,11 @@ import type { WorkbookAgentThreadSnapshot } from '@bilig/contracts'
 import type { DocumentControlService } from '@bilig/runtime-kernel'
 import { Effect } from 'effect'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
+import { createHmac } from 'node:crypto'
 import { afterEach } from 'vitest'
 import type { WorkbookAgentService } from '../codex-app/workbook-agent-service.js'
 import type { ZeroSyncService } from '../zero/service.js'
+import { createRequestSessionResolver } from './session.js'
 export type { WorkbookAgentThreadSnapshot } from '@bilig/contracts'
 export type { WorkbookSnapshot } from '@bilig/protocol'
 export type { DocumentControlService } from '@bilig/runtime-kernel'
@@ -49,10 +51,33 @@ export async function startHttpServer(handler: (request: IncomingMessage, respon
 
 export const upstreamServers: TestServer[] = []
 
+export function createSignedProxyTestSession(userId: string, roles: readonly string[] = ['editor']) {
+  const proxySecret = 'sync-server-test-proxy-secret-at-least-32-bytes'
+  const timestamp = '1735689600'
+  const roleHeader = roles.join(',')
+  return {
+    sessionResolver: createRequestSessionResolver({
+      env: {
+        BILIG_AUTH_MODE: 'signed-proxy',
+        BILIG_AUTH_PROXY_SECRET: proxySecret,
+        BILIG_SESSION_SECRET: 'sync-server-test-session-secret-at-least-32-bytes',
+      },
+      now: () => 1_735_689_600_000,
+    }),
+    headers: {
+      'x-bilig-auth-user': userId,
+      'x-bilig-auth-roles': roleHeader,
+      'x-bilig-auth-timestamp': timestamp,
+      'x-bilig-auth-signature': createHmac('sha256', proxySecret).update(`${timestamp}\n${userId}\n${roleHeader}`).digest('base64url'),
+    },
+  }
+}
+
 afterEach(async () => {
   delete process.env['BILIG_ZERO_PROXY_UPSTREAM']
   delete process.env['BILIG_PERSIST_STATE']
   delete process.env['BILIG_REMOTE_MCP_ALLOWED_ORIGINS']
+  delete process.env['BILIG_REMOTE_MCP_ALLOW_LOCAL_ORIGINS']
   await Promise.all(upstreamServers.splice(0).map((server) => server.close()))
 })
 
@@ -67,6 +92,7 @@ export function createZeroSyncStub(overrides: Partial<ZeroSyncService> = {}): Ze
     async handleMutate() {
       throw new Error('not used')
     },
+    async assertWorkbookAccess() {},
     async inspectWorkbook<T>(_documentId: string, _task: (runtime: never) => T | Promise<T>) {
       throw new Error('not used')
     },

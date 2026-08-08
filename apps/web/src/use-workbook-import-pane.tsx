@@ -1,22 +1,12 @@
 import { Button } from '@base-ui/react/button'
 import type { WorkbookLoadedResponse } from '@bilig/agent-api'
-import type { ImportedWorkbookPreview } from '@bilig/excel-import/browser'
 import { Upload } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { WorkbookImportPanel } from './WorkbookImportPanel.js'
 import { cn } from './cn.js'
 import { workbookHeaderActionButtonClass } from './workbook-header-controls.js'
-import {
-  finalizeWorkbookImport,
-  previewWorkbookImport,
-  resolveImportedWorkbookNavigationUrl,
-  resolveWorkbookImportContentType,
-} from './workbook-import-client.js'
-
-interface StagedWorkbookImport {
-  file: File
-  preview: ImportedWorkbookPreview
-}
+import { finalizeWorkbookImport, previewWorkbookImport, resolveImportedWorkbookNavigationUrl } from './workbook-import-client.js'
+import { useWorkbookImportController } from './use-workbook-import-controller.js'
 
 export function useWorkbookImportPane(input: {
   readonly currentDocumentId: string
@@ -34,79 +24,17 @@ export function useWorkbookImportPane(input: {
       window.location.assign(resolveImportedWorkbookNavigationUrl(result))
     },
   } = input
-  const [isOpen, setIsOpen] = useState(false)
-  const [isPreviewing, setIsPreviewing] = useState(false)
-  const [isImporting, setIsImporting] = useState(false)
-  const [stagedImport, setStagedImport] = useState<StagedWorkbookImport | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const stageFile = useCallback(
-    async (file: File | null) => {
-      if (!enabled || file === null) {
-        return
-      }
-      const contentType = resolveWorkbookImportContentType(file)
-      if (!contentType) {
-        setStagedImport(null)
-        setError('Only local CSV and XLSX files can be staged for workbook import.')
-        setIsOpen(true)
-        return
-      }
-      setIsOpen(true)
-      setError(null)
-      setIsPreviewing(true)
-      try {
-        const preview = await previewFile({
-          file,
-          contentType,
-        })
-        setStagedImport({
-          file,
-          preview,
-        })
-      } catch (nextError) {
-        setStagedImport(null)
-        setError(nextError instanceof Error ? nextError.message : String(nextError))
-      } finally {
-        setIsPreviewing(false)
-      }
-    },
-    [enabled, previewFile],
-  )
-
-  const importStagedFile = useCallback(
-    async (openMode: 'create' | 'replace') => {
-      if (!enabled || !stagedImport || isImporting) {
-        return
-      }
-      setError(null)
-      setIsImporting(true)
-      try {
-        const result = await finalizeImport({
-          file: stagedImport.file,
-          contentType: stagedImport.preview.contentType,
-          openMode,
-          ...(openMode === 'replace' ? { documentId: currentDocumentId } : {}),
-        })
-        navigateToWorkbook(result)
-      } catch (nextError) {
-        setError(nextError instanceof Error ? nextError.message : String(nextError))
-      } finally {
-        setIsImporting(false)
-      }
-    },
-    [currentDocumentId, enabled, finalizeImport, isImporting, navigateToWorkbook, stagedImport],
-  )
+  const controller = useWorkbookImportController({ currentDocumentId, enabled, previewFile, finalizeImport, navigateToWorkbook })
 
   const importToggle = useMemo(
     () => (
       <Button
         aria-controls="workbook-import-panel"
-        aria-expanded={isOpen}
+        aria-expanded={controller.isOpen}
         aria-label="Import workbook"
         className={cn(
-          workbookHeaderActionButtonClass({ active: isOpen, iconOnly: true }),
-          isOpen
+          workbookHeaderActionButtonClass({ active: controller.isOpen, iconOnly: true }),
+          controller.isOpen
             ? 'border-transparent bg-[var(--color-mauve-100)] text-[var(--color-mauve-900)] shadow-none'
             : 'border-transparent bg-transparent text-[var(--color-mauve-700)] shadow-none hover:bg-[var(--color-mauve-100)] hover:text-[var(--color-mauve-900)]',
           'max-[420px]:hidden',
@@ -116,47 +44,41 @@ export function useWorkbookImportPane(input: {
         title="Import workbook"
         type="button"
         onClick={() => {
-          setIsOpen((current) => !current)
+          controller.toggle()
         }}
       >
         <Upload aria-hidden="true" className="size-4" strokeWidth={1.9} />
       </Button>
     ),
-    [enabled, isOpen],
+    [controller, enabled],
   )
 
   const importPanel = useMemo(
     () => (
       <WorkbookImportPanel
         enabled={enabled}
-        isImporting={isImporting}
-        isOpen={isOpen}
-        isPreviewing={isPreviewing}
-        stagedPreview={stagedImport?.preview ?? null}
-        onClose={() => {
-          setIsOpen(false)
-        }}
+        isImporting={controller.isImporting}
+        isOpen={controller.isOpen}
+        isPreviewing={controller.isPreviewing}
+        stagedPreview={controller.stagedPreview}
+        onClose={controller.close}
         onFileSelected={(file) => {
-          void stageFile(file)
+          void controller.stageFile(file)
         }}
         onImportAsNew={() => {
-          void importStagedFile('create')
+          void controller.importStagedFile('create')
         }}
         onReplaceCurrent={() => {
-          void importStagedFile('replace')
+          void controller.importStagedFile('replace')
         }}
       />
     ),
-    [enabled, importStagedFile, isImporting, isOpen, isPreviewing, stageFile, stagedImport?.preview],
+    [controller, enabled],
   )
 
-  const clearImportError = useCallback(() => {
-    setError(null)
-  }, [])
-
   return {
-    clearImportError,
-    importError: error,
+    clearImportError: controller.clearError,
+    importError: controller.error,
     importPanel,
     importToggle,
   }

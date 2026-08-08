@@ -287,7 +287,13 @@ async function readSourceDerivedRuntimeData(): Promise<SourceDerivedRuntimeData>
   ])
 
   const jsSpecialBuiltinNames = new Set(extractStringArray(getVariableInitializer(capabilitySource, 'jsSpecialBuiltinNames')))
-  const wasmProductionBuiltinNames = new Set(extractStringArray(getVariableInitializer(capabilitySource, 'wasmProductionBuiltinNames')))
+  const wasmProductionBuiltinAliases = extractStringArray(getVariableInitializer(capabilitySource, 'wasmProductionBuiltinAliases'))
+  const wasmProductionBuiltinNames = new Set([
+    ...BUILTINS.filter((builtin) => builtin.supportsWasm && !builtin.name.startsWith('__')).map((builtin) =>
+      normalizeFormulaName(builtin.name),
+    ),
+    ...wasmProductionBuiltinAliases,
+  ])
   jsSpecialBuiltinNames.forEach((name) => implementedBuiltinNames.add(name))
 
   const implementedScalarPlaceholderBuiltinNames = new Set(

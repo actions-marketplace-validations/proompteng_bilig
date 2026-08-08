@@ -19,7 +19,123 @@ import {
   vi,
 } from './workbook-agent-pane-test-helpers.js'
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
+}
+
 describe('workbook agent pane rendering composer and stream basics', () => {
+  it('keeps the latest selected thread when snapshot requests resolve out of order', async () => {
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+    const threadTwo = deferred<Response>()
+    const threadThree = deferred<Response>()
+    const zero = createMockZeroAgentHarness({
+      initialThreadSummaries: [
+        createThreadSummary({ threadId: 'thr-1', updatedAtUnixMs: 1 }),
+        createThreadSummary({ threadId: 'thr-2', updatedAtUnixMs: 2 }),
+        createThreadSummary({ threadId: 'thr-3', updatedAtUnixMs: 3 }),
+      ],
+      initialWorkflowRuns: [],
+    })
+    sessionStorage.setItem(agentStorageKey(), JSON.stringify({ threadId: 'thr-1' }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = requestUrl(input)
+        if (url.endsWith('/chat/threads/thr-1')) {
+          return new Response(JSON.stringify(createSnapshot({ threadId: 'thr-1' })), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          })
+        }
+        if (url.endsWith('/chat/threads/thr-2')) {
+          return await threadTwo.promise
+        }
+        if (url.endsWith('/chat/threads/thr-3')) {
+          return await threadThree.promise
+        }
+        throw new Error(`Unexpected fetch to ${url}`)
+      }),
+    )
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+
+    await act(async () => {
+      root.render(<AgentHarness zero={zero.zero} zeroEnabled />)
+    })
+    const openTwo = host.querySelector("[data-testid='workbook-agent-thread-thr-2']")!
+    const openThree = host.querySelector("[data-testid='workbook-agent-thread-thr-3']")!
+    act(() => {
+      openTwo.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      openThree.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    await act(async () => {
+      threadThree.resolve(
+        new Response(
+          JSON.stringify(
+            createSnapshot({
+              threadId: 'thr-3',
+              entries: [
+                {
+                  id: 'three',
+                  kind: 'assistant',
+                  turnId: 'turn-three',
+                  text: 'Newest thread snapshot',
+                  phase: null,
+                  toolName: null,
+                  toolStatus: null,
+                  argumentsText: null,
+                  outputText: null,
+                  success: null,
+                },
+              ],
+            }),
+          ),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      )
+      await threadThree.promise
+    })
+    expect(host.textContent).toContain('Newest thread snapshot')
+
+    await act(async () => {
+      threadTwo.resolve(
+        new Response(
+          JSON.stringify(
+            createSnapshot({
+              threadId: 'thr-2',
+              entries: [
+                {
+                  id: 'two',
+                  kind: 'assistant',
+                  turnId: 'turn-two',
+                  text: 'Stale thread snapshot',
+                  phase: null,
+                  toolName: null,
+                  toolStatus: null,
+                  argumentsText: null,
+                  outputText: null,
+                  success: null,
+                },
+              ],
+            }),
+          ),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      )
+      await threadTwo.promise
+    })
+    expect(host.textContent).toContain('Newest thread snapshot')
+    expect(host.textContent).not.toContain('Stale thread snapshot')
+
+    await act(async () => root.unmount())
+  })
+
   it('renders the assistant panel without the skill-card strip', async () => {
     ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
     vi.stubGlobal(

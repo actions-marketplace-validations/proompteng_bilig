@@ -24,8 +24,7 @@ import {
   type WorkbookAgentExecutionRecord,
   type WorkbookAgentPreviewSummary,
 } from '@bilig/agent-api'
-import type { SessionIdentity } from '../http/session.js'
-import { resolveSessionIdentity } from '../http/session.js'
+import type { BiligAuthMode, SessionIdentity } from '../http/session.js'
 import { WorkbookRuntimeManager, type WorkbookRuntime } from '../workbook-runtime/runtime-manager.js'
 import { createWorkbookRuntimeStoreConnection, createZeroDbProvider, createZeroPool, resolveZeroDatabaseUrl } from './db.js'
 import { handleServerMutator } from './server-mutators.js'
@@ -84,12 +83,48 @@ export interface ZeroSyncRequestLike {
   readonly body?: unknown
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function readRequiredDocumentId(args: unknown): string {
+  if (!isRecord(args) || typeof args['documentId'] !== 'string' || args['documentId'].trim().length === 0) {
+    throw createWorkbookAgentServiceError({
+      code: 'WORKBOOK_DOCUMENT_ID_REQUIRED',
+      message: 'Workbook mutations require a non-empty documentId',
+      statusCode: 400,
+      retryable: false,
+    })
+  }
+  return args['documentId']
+}
+
+function readZeroQueryDocumentIds(body: unknown): string[] {
+  if (!Array.isArray(body) || body[0] !== 'transform' || !Array.isArray(body[1])) {
+    return []
+  }
+  const documentIds = new Set<string>()
+  for (const request of body[1]) {
+    if (!isRecord(request) || !Array.isArray(request['args'])) {
+      continue
+    }
+    documentIds.add(readRequiredDocumentId(request['args'][0]))
+  }
+  return [...documentIds]
+}
+
 export interface ZeroSyncService {
   readonly enabled: boolean
   initialize(): Promise<void>
   close(): Promise<void>
-  handleQuery(request: ZeroSyncRequestLike): Promise<unknown>
-  handleMutate(request: ZeroSyncRequestLike): Promise<unknown>
+  handleQuery(request: ZeroSyncRequestLike, session: SessionIdentity, authMode: BiligAuthMode): Promise<unknown>
+  handleMutate(request: ZeroSyncRequestLike, session: SessionIdentity, authMode: BiligAuthMode): Promise<unknown>
+  assertWorkbookAccess?(
+    documentId: string,
+    session: SessionIdentity,
+    authMode: BiligAuthMode,
+    options?: { readonly createIfMissing?: boolean },
+  ): Promise<void>
   inspectWorkbook<T>(documentId: string, task: (runtime: WorkbookRuntime) => Promise<T> | T): Promise<T>
   applyServerMutator(name: string, args: unknown, session?: SessionIdentity): Promise<void>
   applyAgentCommandBundle(
@@ -169,6 +204,10 @@ class DisabledZeroSyncService implements ZeroSyncService {
   }
 
   async handleMutate(): Promise<never> {
+    throw new Error('Zero sync is not configured')
+  }
+
+  async assertWorkbookAccess(): Promise<never> {
     throw new Error('Zero sync is not configured')
   }
 
@@ -268,8 +307,8 @@ class EnabledZeroSyncService implements ZeroSyncService {
     await this.pool.end()
   }
 
-  async handleQuery(request: ZeroSyncRequestLike): Promise<unknown> {
-    const session = resolveSessionIdentity(request)
+  async handleQuery(request: ZeroSyncRequestLike, session: SessionIdentity, authMode: BiligAuthMode): Promise<unknown> {
+    await this.assertQueryWorkbookAccess(request.body, session, authMode)
     return await handleQueryRequest(
       (name, args) => executeZeroQueryTransform(name, args, session.userID),
       schema,
@@ -277,16 +316,48 @@ class EnabledZeroSyncService implements ZeroSyncService {
     )
   }
 
-  async handleMutate(request: ZeroSyncRequestLike): Promise<unknown> {
-    const session = resolveSessionIdentity(request)
+  async handleMutate(request: ZeroSyncRequestLike, session: SessionIdentity, authMode: BiligAuthMode): Promise<unknown> {
     return await handleMutateRequest(
       this.dbProvider,
       (transact) =>
         transact(async (tx, name, args) => {
+          await this.assertWorkbookAccess(readRequiredDocumentId(args), session, authMode)
           return await handleServerMutator(tx, name, args, this.runtimeManager, session)
         }),
       fastifyRequestToWebRequest(request),
     )
+  }
+
+  async assertWorkbookAccess(
+    documentId: string,
+    session: SessionIdentity,
+    authMode: BiligAuthMode,
+    options: { readonly createIfMissing?: boolean } = {},
+  ): Promise<void> {
+    if (authMode === 'demo') {
+      return
+    }
+    if (options.createIfMissing) {
+      await ensureWorkbookDocumentExists(this.pool, documentId, session.userID)
+    }
+    if (session.roles.includes('admin')) {
+      return
+    }
+    const metadata = await loadWorkbookRuntimeMetadata(this.runtimeStore, documentId)
+    if (metadata.ownerUserId === session.userID) {
+      return
+    }
+    throw createWorkbookAgentServiceError({
+      code: 'WORKBOOK_ACCESS_DENIED',
+      message: `User ${session.userID} does not have access to workbook ${documentId}`,
+      statusCode: 403,
+      retryable: false,
+    })
+  }
+
+  private async assertQueryWorkbookAccess(body: unknown, session: SessionIdentity, authMode: BiligAuthMode): Promise<void> {
+    const documentIds = readZeroQueryDocumentIds(body)
+    await Promise.all(documentIds.map((documentId) => this.assertWorkbookAccess(documentId, session, authMode)))
   }
 
   async inspectWorkbook<T>(documentId: string, task: (runtime: WorkbookRuntime) => Promise<T> | T): Promise<T> {

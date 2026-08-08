@@ -277,6 +277,18 @@ describe('repository dependency policy', () => {
     expect(violations).toEqual([])
   })
 
+  it('keeps SheetJS available only through the pinned repository test harness', () => {
+    const manifest = packageManifest('.')
+    const dependencies = objectField(manifest, 'dependencies')
+    const devDependencies = objectField(manifest, 'devDependencies')
+    const globalSetup = readFileSync(join(repoRoot, 'scripts/vitest-global-setup.ts'), 'utf8')
+
+    expect(dependencies).not.toHaveProperty('xlsx')
+    expect(devDependencies).toHaveProperty('xlsx', 'npm:@e965/xlsx@0.20.3')
+    expect(globalSetup).toContain("from 'xlsx'")
+    expect(globalSetup).toContain('sheetJsCompatibilityHarness.read')
+  })
+
   it('keeps @bilig/excel-import runtime SheetJS imports isolated to the parser and writer boundary', () => {
     const violations = sourceFiles(join(repoRoot, 'packages/excel-import/src')).flatMap(runtimeXlsxImportViolations)
 

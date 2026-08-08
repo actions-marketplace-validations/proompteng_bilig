@@ -31,6 +31,11 @@ interface WorkPaperMcpRemoteRouteOptions {
   env?: Record<string, string | undefined>
 }
 
+interface WorkPaperMcpCorsPolicy {
+  allowedOrigins: ReadonlySet<string>
+  allowsLocalOrigins: boolean
+}
+
 interface JsonRpcSuccess<Result> {
   jsonrpc: '2.0'
   id: string | number | null | undefined
@@ -122,8 +127,8 @@ function createWorkPaperMcpRemoteServerCard(): Record<string, unknown> {
   }
 }
 
-function handleWorkPaperMcpPost(request: FastifyRequest<{ Body: unknown }>, reply: FastifyReply, env: Record<string, string | undefined>) {
-  const originStatus = applyCorsHeaders(request, reply, env)
+function handleWorkPaperMcpPost(request: FastifyRequest<{ Body: unknown }>, reply: FastifyReply, corsPolicy: WorkPaperMcpCorsPolicy) {
+  const originStatus = applyCorsHeaders(request, reply, corsPolicy)
   if (originStatus === 'forbidden') {
     return sendHttpJsonRpcError(reply, 403, -32000, 'Forbidden Origin header')
   }
@@ -159,8 +164,8 @@ function handleWorkPaperMcpPost(request: FastifyRequest<{ Body: unknown }>, repl
   return result.response
 }
 
-function handleWorkPaperMcpOptions(request: FastifyRequest, reply: FastifyReply, env: Record<string, string | undefined>) {
-  const originStatus = applyCorsHeaders(request, reply, env)
+function handleWorkPaperMcpOptions(request: FastifyRequest, reply: FastifyReply, corsPolicy: WorkPaperMcpCorsPolicy) {
+  const originStatus = applyCorsHeaders(request, reply, corsPolicy)
   if (originStatus === 'forbidden') {
     return sendHttpJsonRpcError(reply, 403, -32000, 'Forbidden Origin header')
   }
@@ -177,8 +182,8 @@ function handleWorkPaperMcpServerCard(reply: FastifyReply): Record<string, unkno
   return createWorkPaperMcpRemoteServerCard()
 }
 
-function handleWorkPaperMcpUnsupportedMethod(request: FastifyRequest, reply: FastifyReply, env: Record<string, string | undefined>) {
-  const originStatus = applyCorsHeaders(request, reply, env)
+function handleWorkPaperMcpUnsupportedMethod(request: FastifyRequest, reply: FastifyReply, corsPolicy: WorkPaperMcpCorsPolicy) {
+  const originStatus = applyCorsHeaders(request, reply, corsPolicy)
   if (originStatus === 'forbidden') {
     return sendHttpJsonRpcError(reply, 403, -32000, 'Forbidden Origin header')
   }
@@ -199,13 +204,13 @@ function applyCommonMcpHeaders(reply: FastifyReply, protocolVersion: string): vo
   reply.header('mcp-protocol-version', protocolVersion)
 }
 
-function applyCorsHeaders(request: FastifyRequest, reply: FastifyReply, env: Record<string, string | undefined>): 'allowed' | 'forbidden' {
+function applyCorsHeaders(request: FastifyRequest, reply: FastifyReply, corsPolicy: WorkPaperMcpCorsPolicy): 'allowed' | 'forbidden' {
   const origin = readSingleHeader(request.headers.origin)
   if (!origin) {
     return 'allowed'
   }
 
-  if (!isAllowedOrigin(origin, env)) {
+  if (!isAllowedOrigin(origin, corsPolicy)) {
     return 'forbidden'
   }
 
@@ -214,19 +219,66 @@ function applyCorsHeaders(request: FastifyRequest, reply: FastifyReply, env: Rec
   return 'allowed'
 }
 
-function isAllowedOrigin(origin: string, env: Record<string, string | undefined>): boolean {
-  if (isLocalOrigin(origin)) {
+function isAllowedOrigin(origin: string, corsPolicy: WorkPaperMcpCorsPolicy): boolean {
+  if (corsPolicy.allowsLocalOrigins && isLocalOrigin(origin)) {
     return true
   }
 
-  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...parseAllowedOrigins(env['BILIG_REMOTE_MCP_ALLOWED_ORIGINS'])]).has(origin)
+  return corsPolicy.allowedOrigins.has(origin)
 }
 
-function parseAllowedOrigins(value: string | undefined): string[] {
-  return (value ?? '')
+function resolveWorkPaperMcpCorsPolicy(env: Record<string, string | undefined>): WorkPaperMcpCorsPolicy {
+  const configuredOrigins = env['BILIG_REMOTE_MCP_ALLOWED_ORIGINS']
+  const allowedOrigins =
+    configuredOrigins === undefined ? new Set<string>(DEFAULT_ALLOWED_ORIGINS) : new Set(parseAllowedOrigins(configuredOrigins))
+  return {
+    allowedOrigins,
+    allowsLocalOrigins: parseBoolean(
+      env['BILIG_REMOTE_MCP_ALLOW_LOCAL_ORIGINS'],
+      env['NODE_ENV'] !== 'production',
+      'BILIG_REMOTE_MCP_ALLOW_LOCAL_ORIGINS',
+    ),
+  }
+}
+
+function parseAllowedOrigins(value: string): string[] {
+  return value
     .split(',')
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0)
+    .map(normalizeConfiguredOrigin)
+}
+
+function normalizeConfiguredOrigin(origin: string): string {
+  try {
+    const url = new URL(origin)
+    if (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      url.username.length === 0 &&
+      url.password.length === 0 &&
+      url.pathname === '/' &&
+      url.search.length === 0 &&
+      url.hash.length === 0
+    ) {
+      return url.origin
+    }
+  } catch {
+    // Report every invalid shape through the same configuration error.
+  }
+  throw new Error('BILIG_REMOTE_MCP_ALLOWED_ORIGINS entries must be HTTP(S) origins without credentials, paths, queries, or fragments')
+}
+
+function parseBoolean(value: string | undefined, fallback: boolean, name: string): boolean {
+  if (value === undefined) {
+    return fallback
+  }
+  if (value === 'true') {
+    return true
+  }
+  if (value === 'false') {
+    return false
+  }
+  throw new Error(`${name} must be either "true" or "false"`)
 }
 
 function isLocalOrigin(origin: string): boolean {
@@ -299,13 +351,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export function registerWorkPaperMcpRemoteRoutes(app: FastifyInstance, options: WorkPaperMcpRemoteRouteOptions = {}): void {
   const env = options.env ?? process.env
+  const corsPolicy = resolveWorkPaperMcpCorsPolicy(env)
   for (const endpoint of MCP_SERVER_CARD_ENDPOINTS) {
     app.get(endpoint, async (_request, reply) => handleWorkPaperMcpServerCard(reply))
   }
   for (const endpoint of MCP_ENDPOINTS) {
-    app.options(endpoint, async (request, reply) => handleWorkPaperMcpOptions(request, reply, env))
-    app.get(endpoint, async (request, reply) => handleWorkPaperMcpUnsupportedMethod(request, reply, env))
-    app.delete(endpoint, async (request, reply) => handleWorkPaperMcpUnsupportedMethod(request, reply, env))
-    app.post(endpoint, async (request: FastifyRequest<{ Body: unknown }>, reply) => handleWorkPaperMcpPost(request, reply, env))
+    app.options(endpoint, async (request, reply) => handleWorkPaperMcpOptions(request, reply, corsPolicy))
+    app.get(endpoint, async (request, reply) => handleWorkPaperMcpUnsupportedMethod(request, reply, corsPolicy))
+    app.delete(endpoint, async (request, reply) => handleWorkPaperMcpUnsupportedMethod(request, reply, corsPolicy))
+    app.post(endpoint, async (request: FastifyRequest<{ Body: unknown }>, reply) => handleWorkPaperMcpPost(request, reply, corsPolicy))
   }
 }

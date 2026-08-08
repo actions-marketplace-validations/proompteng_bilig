@@ -1,13 +1,20 @@
 import {
+  CSV_CONTENT_TYPE,
+  MAX_AGENT_WORKBOOK_IMPORT_BYTES,
+  XLSM_CONTENT_TYPE,
+  XLSX_CONTENT_TYPE,
   type AgentFrame,
   type AgentRequest,
   type AgentResponse,
   type LoadWorkbookFileRequest,
+  type WorkbookImportContentType,
   type WorkbookLoadedResponse,
   normalizeWorkbookImportContentType,
 } from '@bilig/agent-api'
 import { importWorkbookFile, type ImportedWorkbook } from '@bilig/excel-import'
 import { buildBrowserUrl, createImportedDocumentId, decodeWorkbookBase64, normalizeBaseUrl } from './session-shared.js'
+
+const serverWorkbookImportContentTypes = new Set<WorkbookImportContentType>([CSV_CONTENT_TYPE, XLSX_CONTENT_TYPE, XLSM_CONTENT_TYPE])
 
 export interface AgentFrameContext {
   serverUrl?: string
@@ -16,6 +23,9 @@ export interface AgentFrameContext {
 
 export interface WorkbookLoadPreparationOptions {
   maxImportBytes?: number
+  maxImportCells?: number
+  maxImportFormulaCells?: number
+  maxImportUncompressedBytes?: number
   publicServerUrl?: string
   browserAppBaseUrl?: string
   defaultServerUrl?: string
@@ -64,8 +74,8 @@ export function prepareWorkbookLoad(
   options: WorkbookLoadPreparationOptions = {},
 ): PreparedWorkbookLoad {
   const contentType = normalizeWorkbookImportContentType(request.contentType)
-  if (!contentType) {
-    throw new Error('Unsupported workbook upload content type')
+  if (!contentType || !serverWorkbookImportContentTypes.has(contentType)) {
+    throw new Error('Unsupported workbook upload content type. The server accepts CSV, XLSX, and XLSM files.')
   }
   if (request.openMode === 'replace' && !request.documentId) {
     throw new Error('Workbook replace uploads require documentId')
@@ -73,11 +83,29 @@ export function prepareWorkbookLoad(
 
   const bytes = decodeWorkbookBase64(request.bytesBase64)
   const maxImportBytes = options.maxImportBytes ?? 10 * 1024 * 1024
+  if (maxImportBytes > MAX_AGENT_WORKBOOK_IMPORT_BYTES) {
+    throw new Error(`Workbook import limit must not exceed ${MAX_AGENT_WORKBOOK_IMPORT_BYTES} bytes`)
+  }
   if (bytes.byteLength > maxImportBytes) {
     throw new Error(`Workbook upload exceeds ${maxImportBytes} bytes`)
   }
 
-  const imported = importWorkbookFile(bytes, request.fileName, contentType)
+  const maxImportCells = options.maxImportCells ?? 1_000_000
+  const maxImportFormulaCells = options.maxImportFormulaCells ?? 250_000
+  const maxImportUncompressedBytes =
+    options.maxImportUncompressedBytes ?? Math.max(maxImportBytes, Math.min(maxImportBytes * 20, 256 * 1024 * 1024))
+  const imported = importWorkbookFile(bytes, request.fileName, contentType, {
+    csv: { maxCells: maxImportCells },
+    xlsx: {
+      nativeOnly: true,
+      limits: {
+        maxMaterializedSourceBytes: maxImportBytes,
+        maxMaterializedCells: maxImportCells,
+        maxMaterializedFormulaCells: maxImportFormulaCells,
+        maxUncompressedBytes: maxImportUncompressedBytes,
+      },
+    },
+  })
   const documentId = request.documentId ?? createImportedDocumentId(contentType)
   const sessionId = normalizeSessionId(documentId, request.replicaId)
   const serverUrl = normalizeBaseUrl(context.serverUrl ?? options.publicServerUrl ?? options.defaultServerUrl ?? 'http://127.0.0.1:4321')

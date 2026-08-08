@@ -1,10 +1,31 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import { decodeAgentFrame, encodeAgentFrame } from '@bilig/agent-api'
+import { MAX_AGENT_WORKBOOK_IMPORT_BYTES, decodeAgentFrame, encodeAgentFrame } from '@bilig/agent-api'
 import type { RuntimeSession } from '@bilig/contracts'
 import { createRuntimeSession, type DocumentControlService, resolveRequestBaseUrl, runPromise } from '@bilig/runtime-kernel'
 import type { BiligRuntimeConfig } from '@bilig/zero-sync'
 import type { WorkbookAgentService } from '../codex-app/workbook-agent-service.js'
-import { resolveRequestSession, resolveSessionIdentity } from './session.js'
+import { resolveAgentDocumentId } from '../workbook-runtime/document-supervisor-shared.js'
+import type { ZeroSyncService } from '../zero/service.js'
+import { resolveRequestSession, resolveSessionIdentity, type RequestSessionResolver } from './session.js'
+import { resolveAuthorizedWorkbookSession, resolveWorkbookSessionWithAuthority } from './workbook-access.js'
+
+const DEFAULT_MAX_IMPORT_BYTES = 10 * 1024 * 1024
+const AGENT_FRAME_ENVELOPE_BYTES = 64 * 1024
+
+function resolveAgentFrameBodyLimit(maxImportBytes = DEFAULT_MAX_IMPORT_BYTES): number {
+  if (!Number.isSafeInteger(maxImportBytes) || maxImportBytes <= 0) {
+    throw new Error('maxImportBytes must be a positive safe integer')
+  }
+  if (maxImportBytes > MAX_AGENT_WORKBOOK_IMPORT_BYTES) {
+    throw new Error(`maxImportBytes must not exceed ${MAX_AGENT_WORKBOOK_IMPORT_BYTES}`)
+  }
+  const base64Bytes = 4 * Math.ceil(maxImportBytes / 3)
+  const bodyLimit = base64Bytes + AGENT_FRAME_ENVELOPE_BYTES
+  if (!Number.isSafeInteger(bodyLimit)) {
+    throw new Error('maxImportBytes is too large to derive a safe request body limit')
+  }
+  return bodyLimit
+}
 
 function resolveBooleanEnv(value: string | undefined, fallback: boolean, name: string): boolean {
   if (value === undefined || value.length === 0) {
@@ -40,6 +61,9 @@ export function registerSyncServerRuntimeRoutes(
       readonly browserAppBaseUrl?: string
     }
     webEnabled: boolean
+    sessionResolver: RequestSessionResolver
+    zeroSyncService?: ZeroSyncService
+    maxImportBytes?: number
   },
 ): void {
   const webRuntimeConfig = resolveWebRuntimeConfig(options.env)
@@ -53,7 +77,7 @@ export function registerSyncServerRuntimeRoutes(
   }))
 
   app.get('/runtime-config.json', async (request, reply) => {
-    const session = resolveSessionIdentity(request, reply)
+    const session = resolveSessionIdentity(request, reply, options.sessionResolver)
     reply.header('cache-control', 'no-store')
     return {
       ...webRuntimeConfig,
@@ -63,11 +87,11 @@ export function registerSyncServerRuntimeRoutes(
   })
 
   const handleSessionRequest = async (request: FastifyRequest, reply: FastifyReply) => {
-    const session = resolveSessionIdentity(request, reply)
-    const requestSession = resolveRequestSession(request)
+    const requestSession = resolveRequestSession(request, options.sessionResolver)
+    options.sessionResolver.persist(reply, requestSession)
     return createRuntimeSession({
-      authToken: session.userID,
-      userId: session.userID,
+      authToken: requestSession.userId,
+      userId: requestSession.userId,
       roles: requestSession.roles,
       isAuthenticated: requestSession.isAuthenticated,
       authSource: requestSession.authSource,
@@ -75,14 +99,49 @@ export function registerSyncServerRuntimeRoutes(
   }
   app.get('/v2/session', handleSessionRequest)
 
-  app.post('/v2/agent/frames', async (request: FastifyRequest<{ Body: Buffer }>, reply: FastifyReply) => {
-    const response = await runPromise(
-      options.documentService.handleAgentFrame(decodeAgentFrame(request.body), {
-        serverUrl: resolveRequestBaseUrl(request, '127.0.0.1:4321'),
-        ...(options.runtimeConfig.browserAppBaseUrl ? { browserAppBaseUrl: options.runtimeConfig.browserAppBaseUrl } : {}),
-      }),
-    )
-    reply.header('content-type', 'application/octet-stream')
-    return Buffer.from(encodeAgentFrame(response))
-  })
+  app.post(
+    '/v2/agent/frames',
+    { bodyLimit: resolveAgentFrameBodyLimit(options.maxImportBytes) },
+    async (request: FastifyRequest<{ Body: Buffer }>, reply: FastifyReply) => {
+      const frame = decodeAgentFrame(request.body)
+      const createsWorkbook = frame.kind === 'request' && frame.request.kind === 'loadWorkbookFile' && frame.request.openMode === 'create'
+      const documentId = resolveAgentDocumentId(frame)
+      if (documentId) {
+        await resolveAuthorizedWorkbookSession({
+          request,
+          reply,
+          documentId,
+          sessionResolver: options.sessionResolver,
+          ...(options.zeroSyncService ? { zeroSyncService: options.zeroSyncService } : {}),
+        })
+      } else if (createsWorkbook) {
+        resolveWorkbookSessionWithAuthority({
+          request,
+          reply,
+          sessionResolver: options.sessionResolver,
+          ...(options.zeroSyncService ? { zeroSyncService: options.zeroSyncService } : {}),
+        })
+      } else {
+        resolveSessionIdentity(request, reply, options.sessionResolver)
+      }
+      const response = await runPromise(
+        options.documentService.handleAgentFrame(frame, {
+          serverUrl: resolveRequestBaseUrl(request, '127.0.0.1:4321'),
+          ...(options.runtimeConfig.browserAppBaseUrl ? { browserAppBaseUrl: options.runtimeConfig.browserAppBaseUrl } : {}),
+        }),
+      )
+      if (response.kind === 'response' && response.response.kind === 'workbookLoaded') {
+        await resolveAuthorizedWorkbookSession({
+          request,
+          reply,
+          documentId: response.response.documentId,
+          sessionResolver: options.sessionResolver,
+          createIfMissing: createsWorkbook,
+          ...(options.zeroSyncService ? { zeroSyncService: options.zeroSyncService } : {}),
+        })
+      }
+      reply.header('content-type', 'application/octet-stream')
+      return Buffer.from(encodeAgentFrame(response))
+    },
+  )
 }

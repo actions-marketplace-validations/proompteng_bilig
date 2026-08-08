@@ -51,6 +51,9 @@ export interface LocalWorkbookSessionManagerOptions {
   browserAppBaseUrl?: string
   publicServerUrl?: string
   maxImportBytes?: number
+  maxImportCells?: number
+  maxImportFormulaCells?: number
+  maxImportUncompressedBytes?: number
 }
 
 export interface LocalDocumentStateSummary {

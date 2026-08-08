@@ -63,7 +63,7 @@
     "lint:fix": "oxlint --config .oxlintrc.json --type-aware --fix packages apps e2e scripts",
     "analyze:dead-code": "knip --include files,dependencies --no-progress",
     "analyze:exports": "knip --workspace apps/bilig --include exports --no-progress",
-    "analyze:cycles": "depcruise --config .dependency-cruiser.cjs apps/bilig/src apps/web/src packages/agent-api/src packages/core/src packages/formula/src packages/grid/src packages/runtime-kernel/src packages/worker-transport/src",
+    "analyze:cycles": "depcruise --config .dependency-cruiser.cjs apps/*/src packages/*/src",
     "source-size:check": "bun scripts/check-source-file-size.ts",
     "test-size:check": "bun scripts/check-test-file-size.ts",
     "analyze:quality": "pnpm repo-garbage:check && pnpm examples:check && pnpm source-size:check && pnpm test-size:check && pnpm analyze:dead-code && pnpm analyze:exports && pnpm analyze:cycles",
@@ -130,7 +130,7 @@
     "@types/react": "19.2.14",
     "@types/react-reconciler": "^0.33.0",
     "@vitest/coverage-v8": "4.1.2",
-    "ajv": "8.17.1",
+    "ajv": "8.20.0",
     "dependency-cruiser": "^17.3.10",
     "fast-check": "4.6.0",
     "fflate": "0.3.11",
@@ -145,6 +145,7 @@
     "typescript": "6.0.2",
     "vite": "8.0.9",
     "vitest": "4.1.2",
+    "xlsx": "npm:@e965/xlsx@0.20.3",
     "yaml": "2.8.3"
   },
   "simple-git-hooks": {

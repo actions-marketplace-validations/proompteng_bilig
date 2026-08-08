@@ -9,41 +9,28 @@ import type {
   WorkbookPivotValueSnapshot,
   WorkbookSnapshot,
 } from '@bilig/protocol'
+import { MAX_AGENT_FRAME_BYTES, MAX_AGENT_FRAME_PAYLOAD_BYTES } from './agent-frame-limits.js'
+import { isAgentFramePayload } from './agent-frame-schema.js'
 
 export const AGENT_PROTOCOL_VERSION = 1
 export const AGENT_STDIN_MAGIC = 0x41474e54
 
+export { MAX_AGENT_WORKBOOK_IMPORT_BYTES } from './agent-frame-limits.js'
+
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder()
 
-export const XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-export const XLSM_CONTENT_TYPE = 'application/vnd.ms-excel.sheet.macroenabled.12'
-export const XLSB_CONTENT_TYPE = 'application/vnd.ms-excel.sheet.binary.macroenabled.12'
-export const LEGACY_XLS_CONTENT_TYPE = 'application/vnd.ms-excel'
-export const CSV_CONTENT_TYPE = 'text/csv'
-export const WORKBOOK_IMPORT_CONTENT_TYPES = [
-  XLSX_CONTENT_TYPE,
-  XLSM_CONTENT_TYPE,
-  XLSB_CONTENT_TYPE,
-  LEGACY_XLS_CONTENT_TYPE,
+export {
   CSV_CONTENT_TYPE,
-] as const
-export type WorkbookImportContentType = (typeof WORKBOOK_IMPORT_CONTENT_TYPES)[number]
+  LEGACY_XLS_CONTENT_TYPE,
+  WORKBOOK_IMPORT_CONTENT_TYPES,
+  XLSB_CONTENT_TYPE,
+  XLSM_CONTENT_TYPE,
+  XLSX_CONTENT_TYPE,
+  normalizeWorkbookImportContentType,
+  type WorkbookImportContentType,
+} from './workbook-import-content-types.js'
 export type WorkbookFileOpenMode = 'create' | 'replace'
-
-export function normalizeWorkbookImportContentType(contentType: string): WorkbookImportContentType | null {
-  const mediaType = contentType.split(';', 1)[0]?.trim().toLowerCase() ?? ''
-  if (
-    mediaType === XLSX_CONTENT_TYPE ||
-    mediaType === XLSM_CONTENT_TYPE ||
-    mediaType === XLSB_CONTENT_TYPE ||
-    mediaType === LEGACY_XLS_CONTENT_TYPE ||
-    mediaType === CSV_CONTENT_TYPE
-  ) {
-    return mediaType
-  }
-  return null
-}
 
 export interface LoadWorkbookFileRequest {
   kind: 'loadWorkbookFile'
@@ -180,84 +167,11 @@ export {
   type WorkbookAgentToolName,
 } from './workbook-agent-tool-names.js'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function isWorkbookImportContentType(value: unknown): value is string {
-  return typeof value === 'string' && normalizeWorkbookImportContentType(value) !== null
-}
-
-function isLoadWorkbookFileRequest(value: unknown): value is LoadWorkbookFileRequest {
-  return (
-    isRecord(value) &&
-    value['kind'] === 'loadWorkbookFile' &&
-    typeof value['id'] === 'string' &&
-    typeof value['replicaId'] === 'string' &&
-    (value['openMode'] === 'create' || value['openMode'] === 'replace') &&
-    (value['documentId'] === undefined || typeof value['documentId'] === 'string') &&
-    typeof value['fileName'] === 'string' &&
-    isWorkbookImportContentType(value['contentType']) &&
-    typeof value['bytesBase64'] === 'string'
-  )
-}
-
-function isWorkbookLoadedResponse(value: unknown): value is WorkbookLoadedResponse {
-  return (
-    isRecord(value) &&
-    value['kind'] === 'workbookLoaded' &&
-    typeof value['id'] === 'string' &&
-    typeof value['documentId'] === 'string' &&
-    typeof value['sessionId'] === 'string' &&
-    typeof value['workbookName'] === 'string' &&
-    Array.isArray(value['sheetNames']) &&
-    value['sheetNames'].every((entry) => typeof entry === 'string') &&
-    typeof value['serverUrl'] === 'string' &&
-    (value['browserUrl'] === undefined || typeof value['browserUrl'] === 'string') &&
-    Array.isArray(value['warnings']) &&
-    value['warnings'].every((entry) => typeof entry === 'string')
-  )
-}
-
-function isAgentRequest(value: unknown): value is AgentRequest {
-  if (!isRecord(value) || typeof value['kind'] !== 'string' || typeof value['id'] !== 'string') {
-    return false
-  }
-  if (value['kind'] === 'loadWorkbookFile') {
-    return isLoadWorkbookFileRequest(value)
-  }
-  return true
-}
-
-function isAgentResponse(value: unknown): value is AgentResponse {
-  if (!isRecord(value) || typeof value['kind'] !== 'string' || typeof value['id'] !== 'string') {
-    return false
-  }
-  if (value['kind'] === 'workbookLoaded') {
-    return isWorkbookLoadedResponse(value)
-  }
-  return true
-}
-
-function isAgentFrame(value: unknown): value is AgentFrame {
-  const kind = isRecord(value) ? value['kind'] : undefined
-  if (typeof kind !== 'string') {
-    return false
-  }
-  switch (kind) {
-    case 'request':
-      return isRecord(value) && isAgentRequest(value['request'])
-    case 'response':
-      return isRecord(value) && isAgentResponse(value['response'])
-    case 'event':
-      return isRecord(value) && 'event' in value
-    default:
-      return false
-  }
-}
-
 export function encodeAgentFrame(frame: AgentFrame): Uint8Array {
   const payload = textEncoder.encode(JSON.stringify(frame))
+  if (payload.byteLength > MAX_AGENT_FRAME_PAYLOAD_BYTES) {
+    throw new Error('Agent frame exceeds the protocol size limit')
+  }
   const output = new Uint8Array(10 + payload.byteLength)
   const view = new DataView(output.buffer)
   view.setUint32(0, AGENT_STDIN_MAGIC, true)
@@ -269,6 +183,9 @@ export function encodeAgentFrame(frame: AgentFrame): Uint8Array {
 
 export function decodeAgentFrame(bytes: Uint8Array | ArrayBuffer): AgentFrame {
   const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
+  if (data.byteLength > MAX_AGENT_FRAME_BYTES) {
+    throw new Error('Agent frame exceeds the protocol size limit')
+  }
   if (data.byteLength < 10) {
     throw new Error('Agent frame too short')
   }
@@ -285,7 +202,7 @@ export function decodeAgentFrame(bytes: Uint8Array | ArrayBuffer): AgentFrame {
     throw new Error('Agent frame length mismatch')
   }
   const parsed: unknown = JSON.parse(textDecoder.decode(data.subarray(10)))
-  if (!isAgentFrame(parsed)) {
+  if (!isAgentFramePayload(parsed)) {
     throw new Error('Invalid agent frame payload')
   }
   return parsed
@@ -308,6 +225,9 @@ export function decodeStdioMessages(buffer: Uint8Array): {
 
   while (offset + 4 <= buffer.byteLength) {
     const length = new DataView(buffer.buffer, buffer.byteOffset + offset, 4).getUint32(0, true)
+    if (length > MAX_AGENT_FRAME_BYTES) {
+      throw new Error('Agent frame exceeds the protocol size limit')
+    }
     if (offset + 4 + length > buffer.byteLength) {
       break
     }

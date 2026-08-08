@@ -1,3 +1,5 @@
+import { MAX_AGENT_WORKBOOK_IMPORT_BYTES } from '@bilig/agent-api'
+
 export interface BiligAppRuntimeConfig {
   readonly host: string
   readonly appPort: number
@@ -12,6 +14,9 @@ export function resolveBiligAppRuntimeConfig(env: Readonly<Record<string, string
   const publicServerUrl = parseOptionalHttpUrl(env['BILIG_PUBLIC_SERVER_URL'], `http://127.0.0.1:${appPort}`, 'BILIG_PUBLIC_SERVER_URL')
   const browserAppBaseUrl = parseOptionalHttpUrl(env['BILIG_WEB_APP_BASE_URL'], publicServerUrl, 'BILIG_WEB_APP_BASE_URL')
   const maxImportBytes = parseOptionalPositiveInteger(env['BILIG_AGENT_IMPORT_MAX_BYTES'], 'BILIG_AGENT_IMPORT_MAX_BYTES')
+  if (maxImportBytes !== undefined && maxImportBytes > MAX_AGENT_WORKBOOK_IMPORT_BYTES) {
+    throw new Error(`BILIG_AGENT_IMPORT_MAX_BYTES must not exceed ${MAX_AGENT_WORKBOOK_IMPORT_BYTES}`)
+  }
 
   return {
     host,

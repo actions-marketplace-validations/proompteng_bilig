@@ -44,6 +44,9 @@ export function createWorkbookLoadOptions(
 ): WorkbookLoadHandlerOptions {
   return {
     ...(baseOptions.maxImportBytes !== undefined ? { maxImportBytes: baseOptions.maxImportBytes } : {}),
+    ...(baseOptions.maxImportCells !== undefined ? { maxImportCells: baseOptions.maxImportCells } : {}),
+    ...(baseOptions.maxImportFormulaCells !== undefined ? { maxImportFormulaCells: baseOptions.maxImportFormulaCells } : {}),
+    ...(baseOptions.maxImportUncompressedBytes !== undefined ? { maxImportUncompressedBytes: baseOptions.maxImportUncompressedBytes } : {}),
     ...(baseOptions.publicServerUrl ? { publicServerUrl: baseOptions.publicServerUrl } : {}),
     ...(baseOptions.browserAppBaseUrl ? { browserAppBaseUrl: baseOptions.browserAppBaseUrl } : {}),
     ...handlers,

@@ -6,7 +6,7 @@ module.exports = {
       severity: 'error',
       comment: 'Keep the main app and workbook runtime packages acyclic.',
       from: {
-        path: '^(apps/(bilig|web)|packages/(agent-api|core|formula|grid|runtime-kernel|worker-transport))/src',
+        path: '^(apps|packages)/[^/]+/src',
       },
       to: {
         circular: true,
@@ -17,7 +17,7 @@ module.exports = {
       severity: 'error',
       comment: 'Production modules must not import test files directly.',
       from: {
-        path: '^(apps/(bilig|web)|packages/(agent-api|core|formula|grid|runtime-kernel|worker-transport))/src',
+        path: '^(apps|packages)/[^/]+/src',
         pathNot: '[.](?:spec|test)[.](?:js|mjs|cjs|jsx|ts|mts|cts|tsx)$',
       },
       to: {

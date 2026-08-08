@@ -8,6 +8,7 @@ import { createZeroSyncService } from './zero/service.js'
 import { createWorkbookAgentService } from './codex-app/workbook-agent-service.js'
 import { logError } from './runtime-logger.js'
 import { resolveBiligAppRuntimeConfig } from './app-runtime-config.js'
+import { createApplicationShutdown, registerApplicationShutdownSignals } from './app-shutdown.js'
 
 async function main() {
   const { host, appPort, publicServerUrl, browserAppBaseUrl, maxImportBytes } = resolveBiligAppRuntimeConfig()
@@ -38,29 +39,38 @@ async function main() {
 
   await zeroSyncService.initialize()
 
-  const { app: syncApp } = createSyncServer({
+  const { app: syncApp, closeWorkbookAgent } = createSyncServer({
     sessionManager,
     documentService,
     zeroSyncService,
     workbookAgentService,
+    ...(maxImportBytes !== undefined ? { maxImportBytes } : {}),
+  })
+
+  const shutdown = createApplicationShutdown({
+    closeHttpServer: async () => await syncApp.close(),
+    closeWorkbookAgent,
+    closePersistence: async () => await zeroSyncService.close(),
+  })
+  const removeShutdownSignals = registerApplicationShutdownSignals({
+    shutdown,
+    onError: (error) => {
+      process.exitCode = 1
+      logError('Failed to shut down Bilig cleanly', error)
+    },
   })
 
   try {
     await syncApp.listen({ host, port: appPort })
     syncApp.log.info({ host, appPort, zeroSync: zeroSyncService.enabled }, 'bilig app listening')
   } catch (error) {
+    removeShutdownSignals()
     try {
-      await workbookAgentService.close()
+      await shutdown('startup-error')
     } catch (closeError) {
-      logError('Failed to close workbook agent service', closeError)
+      logError('Failed to clean up after Bilig startup error', closeError)
     }
-    try {
-      await zeroSyncService.close()
-    } catch (closeError) {
-      logError('Failed to close zero sync service', closeError)
-    }
-    logError(error)
-    process.exit(1)
+    throw error
   }
 }
 
@@ -69,6 +79,6 @@ void (async () => {
     await main()
   } catch (error) {
     logError(error)
-    process.exit(1)
+    process.exitCode = 1
   }
 })()

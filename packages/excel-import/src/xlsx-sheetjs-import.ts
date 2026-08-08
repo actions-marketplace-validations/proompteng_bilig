@@ -87,6 +87,7 @@ import { readImportedWorkbookPrintPageSetup } from './xlsx-print-page-setup.js'
 import { readImportedWorkbookPrinterSettings } from './xlsx-printer-settings.js'
 import { readImportedWorkbookProtectedRanges } from './xlsx-protected-ranges.js'
 import { readImportedWorkbookRichTextArtifacts } from './xlsx-rich-text-artifacts.js'
+import { createSheetJsMaterializationCounter } from './xlsx-sheetjs-materialization-counter.js'
 import { readImportedWorkbookSheetProperties } from './xlsx-sheet-properties.js'
 import { readImportedWorkbookSheetProtections } from './xlsx-sheet-protection.js'
 import { readImportedWorkbookSheetVisibilities } from './xlsx-sheet-visibility.js'
@@ -285,6 +286,7 @@ export function importXlsxFromPreparedSheetJsParserData(
   contentType: ExcelWorkbookImportContentType,
   workbookZip: Unzipped | null,
   sourceFileSizeBytes: number,
+  options: XlsxImportOptions = {},
 ): ImportedWorkbook {
   releaseFallbackInflatedZipEntries(workbookZip)
   const workbook = readSheetJsWorkbookFromParserData(parserData, false)
@@ -295,6 +297,7 @@ export function importXlsxFromPreparedSheetJsParserData(
     workbookZip,
     fallbackArtifactSource: parserData,
     sourceFileSizeBytes,
+    options,
   })
 }
 
@@ -312,7 +315,7 @@ function readSheetJsWorkbookFromParserData(parserData: Uint8Array, denseSheetJsP
   })
 }
 
-function importParsedSheetJsWorkbook(args: {
+export function importParsedSheetJsWorkbook(args: {
   readonly workbook: SheetJsWorkBook
   readonly fileName: string
   readonly contentType: ExcelWorkbookImportContentType
@@ -451,7 +454,6 @@ function importParsedSheetJsWorkbook(args: {
   let ignoredCommentsSeen = false
   let externalWorkbookReferenceWarningSeen = warnings.includes(externalWorkbookReferencesWarning)
   let volatileFormulaWarningSeen = false
-  let formulaCellCount = 0
   let cachedFormulaValueCount = 0
   let unsupportedDataTableFormulaCount = 0
   const styleCatalog = new Map<string, CellStyleRecord>()
@@ -460,6 +462,7 @@ function importParsedSheetJsWorkbook(args: {
   const importedArrayFormulaSpills: NonNullable<WorkbookMetadataSnapshot['spills']> = []
   const previewSheets: ImportedWorkbookSheetPreview[] = []
   const runtimeSheetCells: ImportedRuntimeSheetCells[] = []
+  const materializationCounter = createSheetJsMaterializationCounter(options ?? {})
   const sheets = workbook.SheetNames.map((sheetName, order) => {
     const sheet = chartSheetNames.has(sheetName) ? undefined : workbook.Sheets[sheetName]
     if (!sheet) {
@@ -511,6 +514,10 @@ function importParsedSheetJsWorkbook(args: {
     const range = sheet['!ref'] ? decodeCellRange(sheet['!ref']) : null
     const cells: WorkbookSnapshot['sheets'][number]['cells'] = []
     const runtimeCellCoords: ImportedRuntimeCellCoordinate[] = []
+    const pushMaterializedCell = (cell: WorkbookSnapshot['sheets'][number]['cells'][number], row: number, column: number) => {
+      materializationCounter.recordCell(cell)
+      pushImportedSnapshotCell(cells, runtimeCellCoords, cell, row, column)
+    }
     const styleRuns: RectangularStyleRun[] = []
     let openStyleRunsByKey = new Map<string, RectangularStyleRun>()
     let activeStyleRow: number | null = null
@@ -552,7 +559,6 @@ function importParsedSheetJsWorkbook(args: {
       }
     }
     const recordImportedFormulaDiagnostics = (result: NonNullable<ReturnType<typeof buildImportedFormulaSnapshotCell>>) => {
-      formulaCellCount += 1
       if (result.hasCachedLiteral) {
         cachedFormulaValueCount += 1
       }
@@ -624,7 +630,7 @@ function importParsedSheetJsWorkbook(args: {
         flushActiveStyleRun()
       }
       if (nextCell.value !== undefined || nextCell.formula !== undefined || nextCell.format !== undefined) {
-        pushImportedSnapshotCell(cells, runtimeCellCoords, nextCell, row, column)
+        pushMaterializedCell(nextCell, row, column)
       }
     }
     for (const [address, formulaManifest] of [...(importedWorksheetFormulaManifests?.entries() ?? [])]
@@ -659,7 +665,7 @@ function importParsedSheetJsWorkbook(args: {
         flushActiveStyleRun()
       }
       recordImportedFormulaDiagnostics(formulaResult)
-      pushImportedSnapshotCell(cells, runtimeCellCoords, nextCell, decoded.r, decoded.c)
+      pushMaterializedCell(nextCell, decoded.r, decoded.c)
     }
     for (const [address, formula] of [...importedDataTableFormulaCells.formulaCells.entries()]
       .filter(([candidateAddress]) => !seenCellAddresses.has(candidateAddress))
@@ -694,7 +700,7 @@ function importParsedSheetJsWorkbook(args: {
         flushActiveStyleRun()
       }
       recordImportedFormulaDiagnostics(formulaResult)
-      pushImportedSnapshotCell(cells, runtimeCellCoords, nextCell, decoded.r, decoded.c)
+      pushMaterializedCell(nextCell, decoded.r, decoded.c)
     }
     const missingStyledAddresses = new Set([...(importedStylesByAddress?.keys() ?? []), ...(importedFormatsByAddress?.keys() ?? [])])
     for (const missingAddress of [...missingStyledAddresses]
@@ -710,13 +716,13 @@ function importParsedSheetJsWorkbook(args: {
       }
       const importedFormat = importedFormatsByAddress?.get(missingAddress)
       if (importedFormat !== undefined) {
-        pushImportedSnapshotCell(cells, runtimeCellCoords, { address: missingAddress, format: importedFormat }, decoded.r, decoded.c)
+        pushMaterializedCell({ address: missingAddress, format: importedFormat }, decoded.r, decoded.c)
       }
     }
     for (const [address, value] of importedWorksheetTextValues ?? []) {
       if (!seenCellAddresses.has(address)) {
         const decoded = decodeCellAddress(address)
-        pushImportedSnapshotCell(cells, runtimeCellCoords, { address, value }, decoded.r, decoded.c)
+        pushMaterializedCell({ address, value }, decoded.r, decoded.c)
       }
     }
     flushActiveStyleRow()
@@ -838,7 +844,7 @@ function importParsedSheetJsWorkbook(args: {
   }
 
   if (workbookZip) {
-    warnings.push(...readImportedWorkbookCalculationWarnings(workbookZip, { hasFormulaCells: formulaCellCount > 0 }))
+    warnings.push(...readImportedWorkbookCalculationWarnings(workbookZip, { hasFormulaCells: materializationCounter.formulaCellCount > 0 }))
   }
 
   const importedFormulaAudit = workbookZip
@@ -861,7 +867,7 @@ function importParsedSheetJsWorkbook(args: {
 
   const shouldUseCachedFormulaOpenModeForImportedWorkbook = shouldUseCachedFormulaOpenMode({
     cachedFormulaValueCount,
-    formulaCellCount,
+    formulaCellCount: materializationCounter.formulaCellCount,
     calculationSettings: importedCalculationSettings,
     formulaAudit: importedFormulaAudit,
   })

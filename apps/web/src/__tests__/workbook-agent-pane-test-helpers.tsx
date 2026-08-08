@@ -261,8 +261,9 @@ export function AgentHarness(props: {
   readonly zero?: Parameters<typeof useWorkbookAgentPane>[0]['zero']
   readonly zeroEnabled?: boolean
   readonly apiEnabled?: boolean
+  readonly showNewThreadControl?: boolean
 }) {
-  const { agentError, agentPanel, clearAgentError } = useWorkbookAgentPane({
+  const { agentError, agentPanel, clearAgentError, startNewThread } = useWorkbookAgentPane({
     currentUserId: props.currentUserId ?? 'alex@example.com',
     documentId: 'doc-1',
     enabled: true,
@@ -301,6 +302,11 @@ export function AgentHarness(props: {
             : []
         }
       />
+      {props.showNewThreadControl ? (
+        <button data-testid="test-start-new-thread" type="button" onClick={startNewThread}>
+          New thread
+        </button>
+      ) : null}
       {agentPanel}
     </div>
   )

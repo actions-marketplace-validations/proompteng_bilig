@@ -14,6 +14,7 @@ import { registerSyncServerZeroProxyRoutes, resolveZeroProxyUpstream } from './s
 import { registerWorkPaperMcpRemoteRoutes } from './workpaper-mcp-remote-routes.js'
 import { registerWorkPaperN8nRoutes } from './workpaper-n8n-routes.js'
 import { registerWorkPaperOpenApiRoutes } from './workpaper-openapi-routes.js'
+import { createRequestSessionResolver, type RequestSessionResolver } from './session.js'
 import type { WorksheetExecutor } from '../workbook-runtime/worksheet-executor.js'
 import type { ZeroSyncService } from '../zero/service.js'
 import type { WorkbookAgentService } from '../codex-app/workbook-agent-service.js'
@@ -24,6 +25,8 @@ export interface SyncServerOptions {
   worksheetExecutor?: WorksheetExecutor | null
   zeroSyncService?: ZeroSyncService
   workbookAgentService?: WorkbookAgentService
+  sessionResolver?: RequestSessionResolver
+  maxImportBytes?: number
   logger?: boolean
 }
 
@@ -35,7 +38,15 @@ export function createSyncServer(options: SyncServerOptions = {}) {
   const documentService = options.documentService ?? new SyncDocumentSupervisor(sessionManager)
   const zeroSyncService = options.zeroSyncService
   const workbookAgentService = options.workbookAgentService
+  const sessionResolver = options.sessionResolver ?? createRequestSessionResolver()
   const app = Fastify({ logger: options.logger ?? true })
+  let workbookAgentClosePromise: Promise<void> | null = null
+  const closeWorkbookAgent = (): Promise<void> => {
+    workbookAgentClosePromise ??= workbookAgentService?.close() ?? Promise.resolve()
+    return workbookAgentClosePromise
+  }
+
+  app.addHook('onClose', closeWorkbookAgent)
 
   app.addHook('onSend', async (_request, reply, payload) => {
     applySyncServerSecurityHeaders(reply)
@@ -46,7 +57,7 @@ export function createSyncServer(options: SyncServerOptions = {}) {
     done(null, body)
   })
 
-  registerWorkbookAgentRoutes(app, workbookAgentService)
+  registerWorkbookAgentRoutes(app, workbookAgentService, sessionResolver, zeroSyncService)
 
   if (zeroProxyUpstream) {
     registerSyncServerZeroProxyRoutes(app, zeroProxyUpstream)
@@ -57,11 +68,15 @@ export function createSyncServer(options: SyncServerOptions = {}) {
     env: process.env,
     runtimeConfig,
     webEnabled: webDistRoot !== null,
+    sessionResolver,
+    ...(options.maxImportBytes !== undefined ? { maxImportBytes: options.maxImportBytes } : {}),
+    ...(zeroSyncService ? { zeroSyncService } : {}),
     ...(workbookAgentService ? { workbookAgentService } : {}),
   })
 
   registerSyncServerDocumentRoutes(app, {
     documentService,
+    sessionResolver,
     ...(zeroSyncService ? { zeroSyncService } : {}),
   })
 
@@ -72,5 +87,5 @@ export function createSyncServer(options: SyncServerOptions = {}) {
 
   registerSyncServerSpaRoutes(app, webDistRoot)
 
-  return { app, sessionManager, documentService }
+  return { app, sessionManager, documentService, closeWorkbookAgent }
 }

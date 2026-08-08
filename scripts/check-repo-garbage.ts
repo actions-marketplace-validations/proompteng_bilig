@@ -18,6 +18,10 @@ const retainedExampleManifests = new Set([
 const allowedScorecardPaths = new Set(['.github/workflows/scorecard-code-scanning.yml', '.github/workflows/scorecard.yml'])
 
 const forbiddenTrackedPathPatterns = [
+  /^(?:coverage|playwright-report|test-results|artifacts\/fuzz|\.tmp)(?:\/|$)/u,
+  /(?:^|\/)\.DS_Store$/u,
+  /\.tsbuildinfo$/u,
+  /(?:^|\/)(?:npm|pnpm)-debug\.log/u,
   /^internal\/growth\//u,
   /^packages\/storage-browser(?:\/|$)/u,
   /product-hunt/u,

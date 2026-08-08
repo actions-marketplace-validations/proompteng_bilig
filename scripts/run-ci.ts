@@ -376,6 +376,7 @@ try {
 
   allCompleted.push(
     ...(await runSequential('static direct checks', [
+      directPackageScript('production dependency audit', 'security:audit'),
       direct(
         'lint',
         workspaceBin('oxlint'),
@@ -396,6 +397,9 @@ try {
         '--configLoader',
         'runner',
       ),
+      pnpm('dead code analysis', 'analyze:dead-code'),
+      pnpm('server export analysis', 'analyze:exports'),
+      pnpm('full dependency graph analysis', 'analyze:cycles'),
       direct('source size check', 'bun', 'scripts/check-source-file-size.ts'),
       direct('test size check', 'bun', 'scripts/check-test-file-size.ts'),
       direct('typecheck', workspaceBin('tsc'), '-b', '--pretty', 'false'),

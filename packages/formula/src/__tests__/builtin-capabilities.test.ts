@@ -1,7 +1,17 @@
+import { BUILTINS } from '@bilig/protocol'
 import { describe, expect, it } from 'vitest'
 import { builtinJsSpecialNames, builtinWasmEnabledNames, getBuiltinCapability } from '../builtin-capabilities.js'
 
 describe('builtin capabilities', () => {
+  it('derives production WASM policy from the generated protocol descriptors', () => {
+    const publicProtocolBuiltins = BUILTINS.filter((builtin) => !builtin.name.startsWith('__'))
+    expect(publicProtocolBuiltins.filter((builtin) => builtinWasmEnabledNames.has(builtin.name) !== builtin.supportsWasm)).toEqual([])
+    expect(builtinWasmEnabledNames.has('AVERAGE')).toBe(true)
+    expect(builtinWasmEnabledNames.has('FORECAST.LINEAR')).toBe(true)
+    expect(builtinWasmEnabledNames.has('USE.THE.COUNTIF')).toBe(true)
+    expect(builtinWasmEnabledNames.has('QUERY')).toBe(false)
+  })
+
   it('tracks native production coverage for the current promoted builtin set', () => {
     expect(builtinWasmEnabledNames.has('SUM')).toBe(true)
     expect(builtinWasmEnabledNames.has('COUNTBLANK')).toBe(true)
