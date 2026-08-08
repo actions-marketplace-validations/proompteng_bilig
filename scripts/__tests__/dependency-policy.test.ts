@@ -297,6 +297,12 @@ describe('repository dependency policy', () => {
     expect(buildBase).not.toContain('apt-get')
   })
 
+  it('keeps production image deployment offline after the locked install', () => {
+    const dockerfile = readFileSync(join(repoRoot, 'Dockerfile'), 'utf8')
+
+    expect(dockerfile).toContain('pnpm --filter @bilig/app deploy --prod --legacy --offline /out/bilig')
+  })
+
   it('keeps Forgejo CI independent of operating-system package mirrors', () => {
     const workflow = readFileSync(join(repoRoot, '.forgejo/workflows/forgejo-ci.yml'), 'utf8')
 
