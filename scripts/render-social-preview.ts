@@ -211,8 +211,6 @@ async function renderPreview(svg: string): Promise<Buffer> {
 }
 
 const svg = await buildSvg()
-const image = await renderPreview(svg)
-requirePngDimensions(image, 'rendered social preview')
 
 if (checkMode) {
   const existingSvg = await readFile(svgOutputPath, 'utf8')
@@ -224,6 +222,8 @@ if (checkMode) {
   requirePngDimensions(existingImage, 'committed social preview')
   console.log(`social preview source and dimensions are current: ${outputPath}`)
 } else {
+  const image = await renderPreview(svg)
+  requirePngDimensions(image, 'rendered social preview')
   await mkdir(dirname(outputPath), { recursive: true })
   await writeFile(svgOutputPath, svg)
   await writeFile(outputPath, image)

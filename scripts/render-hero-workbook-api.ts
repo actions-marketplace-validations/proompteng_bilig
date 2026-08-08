@@ -189,8 +189,6 @@ async function renderPng(svg: string): Promise<Buffer> {
 }
 
 const svg = await buildSvg()
-const image = await renderPng(svg)
-requirePngDimensions(image, 'rendered hero asset')
 
 if (checkMode) {
   const existingSvg = await readFile(svgOutputPath, 'utf8')
@@ -201,6 +199,8 @@ if (checkMode) {
   requirePngDimensions(existingImage, outputPath)
   console.log(`hero asset is current: ${outputPath}`)
 } else {
+  const image = await renderPng(svg)
+  requirePngDimensions(image, 'rendered hero asset')
   await mkdir(assetsRoot, { recursive: true })
   await writeFile(svgOutputPath, svg)
   await writeFile(outputPath, image)
