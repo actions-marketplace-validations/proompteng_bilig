@@ -55,6 +55,11 @@ jobs:
       - name: Install generated asset renderer
         run: |
           set -eu
+          sed -i \
+            -e 's|http://archive.ubuntu.com/ubuntu/|https://archive.ubuntu.com/ubuntu/|g' \
+            -e 's|http://security.ubuntu.com/ubuntu/|https://security.ubuntu.com/ubuntu/|g' \
+            /etc/apt/sources.list.d/ubuntu.sources
+          ! grep -q 'URIs: http://' /etc/apt/sources.list.d/ubuntu.sources
           apt-get update
           apt-get install -y --no-install-recommends librsvg2-bin
           rsvg-convert --version
@@ -131,6 +136,11 @@ jobs:
       - name: Install browser GPU dependencies
         run: |
           set -eu
+          sed -i \
+            -e 's|http://archive.ubuntu.com/ubuntu/|https://archive.ubuntu.com/ubuntu/|g' \
+            -e 's|http://security.ubuntu.com/ubuntu/|https://security.ubuntu.com/ubuntu/|g' \
+            /etc/apt/sources.list.d/ubuntu.sources
+          ! grep -q 'URIs: http://' /etc/apt/sources.list.d/ubuntu.sources
           apt-get update
           apt-get install -y --no-install-recommends libvulkan1 mesa-vulkan-drivers vulkan-tools
           vulkaninfo --summary || true

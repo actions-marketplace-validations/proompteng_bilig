@@ -297,6 +297,15 @@ describe('repository dependency policy', () => {
     expect(buildBase).not.toContain('apt-get')
   })
 
+  it('forces HTTPS package mirrors before every Forgejo apt update', () => {
+    const workflow = readFileSync(join(repoRoot, '.forgejo/workflows/forgejo-ci.yml'), 'utf8')
+    const aptUpdateCount = workflow.match(/\bapt-get update\b/gu)?.length ?? 0
+    const httpMirrorGuardCount = workflow.match(/! grep -q 'URIs: http:\/\/'/gu)?.length ?? 0
+
+    expect(aptUpdateCount).toBeGreaterThan(0)
+    expect(httpMirrorGuardCount).toBe(aptUpdateCount)
+  })
+
   it('keeps @bilig/excel-import runtime SheetJS imports isolated to the parser and writer boundary', () => {
     const violations = sourceFiles(join(repoRoot, 'packages/excel-import/src')).flatMap(runtimeXlsxImportViolations)
 
